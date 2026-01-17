@@ -1,0 +1,12 @@
+.admin-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 24px;
+}
+
+@media (max-width: 390px) {
+  .admin-dashboard {
+    padding: 16px;
+  }
+}

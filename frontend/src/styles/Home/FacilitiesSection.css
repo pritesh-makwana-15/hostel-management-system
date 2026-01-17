@@ -1,0 +1,36 @@
+.section {
+  max-width: 1440px;
+  margin: auto;
+  padding: 80px 24px;
+}
+
+.section-title {
+  text-align: center;
+  font-size: 36px;
+  font-weight: 600;
+  margin-bottom: 48px;
+}
+
+.facility-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 24px;
+}
+
+.facility-card {
+  background: #ffffff;
+  padding: 28px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.facility-card h3 {
+  margin-top: 16px;
+  margin-bottom: 8px;
+  font-size: 18px;
+}
+
+.facility-card p {
+  font-size: 14px;
+  color: #6b7280;
+}

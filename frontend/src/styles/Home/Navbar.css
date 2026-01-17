@@ -1,0 +1,134 @@
+.home-nav-navbar {
+  position: sticky;
+  top: 0;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  z-index: 100;
+}
+
+.home-nav-container {
+  max-width: 1440px;
+  margin: auto;
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* LEFT LOGO */
+.home-nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  font-weight: 600;
+  color: #1f3c88;
+}
+
+.home-nav-logo-icon {
+  background: #1f3c88;
+  color: #ffffff;
+  padding: 8px;
+  border-radius: 8px;
+  display: flex;
+}
+
+.home-nav-logo-text {
+  font-size: 15px;
+}
+
+/* RIGHT SIDE */
+.home-nav-right {
+  display: flex;
+  align-items: center;
+}
+
+/* Menu Links */
+.home-nav-links a {
+  margin: 0 14px;
+  text-decoration: none;
+  color: #6b7280;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.home-nav-links a:hover {
+  color: #1f3c88;
+}
+
+/* Actions */
+.home-nav-actions {
+  display: flex;
+  align-items: center;
+  margin-left: 16px;
+}
+
+.home-nav-btn-primary,
+.home-nav-btn-outline {
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 6px;
+  padding: 9px 18px;
+  transition: all 0.2s ease;
+}
+
+.home-nav-btn-primary {
+  background: #1f3c88;
+  color: #ffffff;
+}
+
+.home-nav-btn-primary:hover {
+  background: #162f6a;
+}
+
+.home-nav-btn-outline {
+  margin-left: 10px;
+  border: 1.5px solid #1f3c88;
+  color: #1f3c88;
+}
+
+.home-nav-btn-outline:hover {
+  background: #1f3c88;
+  color: #ffffff;
+}
+
+/* Mobile */
+.home-nav-mobile-toggle {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #1f3c88;
+}
+
+.home-nav-mobile-menu {
+  background: #ffffff;
+  border-top: 1px solid #e5e7eb;
+  padding: 16px 24px;
+}
+
+.home-nav-mobile-menu a {
+  display: block;
+  padding: 10px 0;
+  text-decoration: none;
+  color: #2e2e2e;
+  font-weight: 500;
+}
+
+.home-nav-mobile-actions {
+  margin-top: 12px;
+  display: flex;
+  gap: 12px;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .home-nav-right {
+    display: none;
+  }
+
+  .home-nav-mobile-toggle {
+    display: block;
+  }
+}

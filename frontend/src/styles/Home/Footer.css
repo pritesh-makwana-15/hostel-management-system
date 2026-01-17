@@ -1,0 +1,17 @@
+.footer {
+  background: #1f3c88;
+  color: #ffffff;
+  text-align: center;
+  padding: 32px;
+  margin-top: 80px;
+}
+
+.footer p {
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+.socials svg {
+  margin: 0 8px;
+  cursor: pointer;
+}
