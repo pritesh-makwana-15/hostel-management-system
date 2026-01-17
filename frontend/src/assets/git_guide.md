@@ -1,0 +1,431 @@
+Alright 👍
+Below is a **VERY DETAILED, PROFESSIONAL, START-TO-END GUIDE** for your **HMS (Hostel Management System)** so **3 members can collaborate smoothly using Git & GitHub**.
+Think of this as **industry-level documentation** you can even include in your project report.
+
+---
+
+# 🏗 HMS PROJECT – GIT & GITHUB COLLABORATION GUIDE
+
+*(For 3 Members – React + Spring Boot)*
+
+---
+
+## 🧩 OVERALL COLLABORATION FLOW (Big Picture)
+
+```
+Local PC (Each Member)
+   ↓
+Personal Branch
+   ↓
+Pull Request
+   ↓
+Main Branch (Stable Code)
+```
+
+👉 **Main branch = always stable & working**
+👉 **Everyone works on their own branch**
+
+---
+
+# 🔹 PHASE 1: PRE-REQUIREMENTS (ALL MEMBERS)
+
+## 1️⃣ Install Required Software
+
+### A) Git
+
+* Download: [https://git-scm.com](https://git-scm.com)
+* Verify:
+
+```bash
+git --version
+```
+
+### B) VS Code
+
+* Install GitHub-related extensions (optional):
+
+  * GitLens
+  * GitHub Pull Requests
+
+### C) GitHub Account
+
+* Everyone must have:
+
+  * Verified email
+  * Proper username (professional)
+
+---
+
+## 2️⃣ Configure Git (ALL MEMBERS – ONE TIME)
+
+Run these commands **once** on each machine:
+
+```bash
+git config --global user.name "Your Full Name"
+git config --global user.email "your-email@gmail.com"
+```
+
+Verify:
+
+```bash
+git config --list
+```
+
+---
+
+# 🔹 PHASE 2: REPOSITORY CREATION (TEAM LEADER ONLY)
+
+## 3️⃣ Create GitHub Repository
+
+1. GitHub → **New Repository**
+2. Repository name:
+
+   ```
+   hostel-management-system
+   ```
+3. Description:
+
+   ```
+   Hostel Management System - React + Spring Boot
+   ```
+4. Visibility: **Private**
+5. ❌ Do NOT initialize with README
+6. Click **Create Repository**
+
+---
+
+## 4️⃣ Decide Project Folder Structure (IMPORTANT)
+
+### ✅ Recommended Professional Structure
+
+```txt
+hostel-management-system/
+│
+├── frontend/                 # React
+│   ├── src/
+│   ├── public/
+│   ├── package.json
+│
+├── backend/                  # Spring Boot
+│   ├── src/main/java/
+│   ├── src/main/resources/
+│   ├── pom.xml
+│
+├── docs/                     # Documentation
+│   ├── api-docs.md
+│   ├── database-design.md
+│
+├── README.md
+├── .gitignore
+```
+
+---
+
+# 🔹 PHASE 3: INITIALIZE GIT (LEADER)
+
+## 5️⃣ Initialize Git Locally
+
+```bash
+cd hostel-management-system
+git init
+```
+
+---
+
+## 6️⃣ Create `.gitignore` (CRITICAL)
+
+```gitignore
+# Node
+node_modules/
+dist/
+
+# Environment
+.env
+
+# Java
+target/
+*.class
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+```
+
+👉 **Never commit secrets or node_modules**
+
+---
+
+## 7️⃣ First Commit & Push
+
+```bash
+git add .
+git commit -m "Initial HMS project structure"
+git branch -M main
+git remote add origin https://github.com/USERNAME/hostel-management-system.git
+git push -u origin main
+```
+
+---
+
+## 8️⃣ Add Team Members
+
+GitHub → Repository → **Settings → Collaborators**
+
+* Add Friend 1
+* Add Friend 2
+* Permission: **Write**
+
+---
+
+# 🔹 PHASE 4: TEAM MEMBERS SETUP
+
+## 9️⃣ Clone Repository (FRIENDS)
+
+```bash
+git clone https://github.com/USERNAME/hostel-management-system.git
+cd hostel-management-system
+```
+
+---
+
+## 🔟 Install Dependencies
+
+### Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+### Backend
+
+```bash
+cd backend
+mvn spring-boot:run
+```
+
+---
+
+# 🔹 PHASE 5: BRANCHING STRATEGY (VERY IMPORTANT)
+
+## ❌ NEVER WORK ON `main`
+
+### Branch Naming Convention
+
+```
+<name>-<role>
+```
+
+### Example:
+
+| Member   | Branch         |
+| -------- | -------------- |
+| You      | `pritish-lead` |
+| Friend 1 | `frontend-dev` |
+| Friend 2 | `backend-dev`  |
+
+---
+
+## 1️⃣1️⃣ Create Branch (Each Member)
+
+```bash
+git checkout -b frontend-dev
+```
+
+Verify:
+
+```bash
+git branch
+```
+
+---
+
+# 🔹 PHASE 6: DAILY DEVELOPMENT WORKFLOW (EVERY DAY)
+
+## 🔁 STEP 1: Sync With Main (MANDATORY)
+
+```bash
+git checkout main
+git pull origin main
+```
+
+---
+
+## 🔁 STEP 2: Update Your Branch
+
+```bash
+git checkout frontend-dev
+git merge main
+```
+
+---
+
+## 🔁 STEP 3: Work on Code
+
+Examples:
+
+* Frontend: Pages, Components, CSS
+* Backend: APIs, Entities, Repositories
+
+---
+
+## 🔁 STEP 4: Check Status
+
+```bash
+git status
+```
+
+---
+
+## 🔁 STEP 5: Commit Changes
+
+```bash
+git add .
+git commit -m "Create student dashboard layout"
+```
+
+### ✅ Good Commit Messages
+
+✔ `Add login API with JWT`
+✔ `Fix navbar responsive issue`
+❌ `changes`
+❌ `update`
+
+---
+
+## 🔁 STEP 6: Push to Your Branch
+
+```bash
+git push origin frontend-dev
+```
+
+---
+
+# 🔹 PHASE 7: PULL REQUEST & MERGING
+
+## 1️⃣2️⃣ Create Pull Request (PR)
+
+1. GitHub → Repo
+2. Click **Compare & Pull Request**
+3. Base: `main`
+4. Compare: `frontend-dev`
+5. Description:
+
+   ```
+   - Added dashboard UI
+   - Implemented sidebar
+   - No breaking changes
+   ```
+6. Click **Create Pull Request**
+
+---
+
+## 1️⃣3️⃣ Code Review (Leader)
+
+Check:
+
+* Code style
+* No console errors
+* App runs successfully
+
+---
+
+## 1️⃣4️⃣ Merge PR
+
+* Click **Merge Pull Request**
+* Delete branch (optional)
+
+---
+
+# 🔹 PHASE 8: HANDLING CONFLICTS (REAL WORLD)
+
+## When Conflict Happens
+
+```bash
+git pull origin main
+```
+
+Git will show:
+
+```
+CONFLICT (content): Merge conflict in file
+```
+
+---
+
+## How to Fix
+
+1. Open conflicted file
+2. Resolve manually
+3. Save file
+4. Run:
+
+```bash
+git add .
+git commit -m "Resolve merge conflict"
+```
+
+---
+
+# 🔹 PHASE 9: TASK MANAGEMENT (RECOMMENDED)
+
+## Use GitHub Issues
+
+* Create tasks:
+
+  * Login Page
+  * JWT Auth
+  * Admin Dashboard
+* Assign to members
+* Track progress
+
+---
+
+# 🔹 PHASE 10: FINAL PROJECT FREEZE
+
+Before submission:
+
+```bash
+git checkout main
+git pull origin main
+```
+
+* Test frontend
+* Test backend
+* Verify database
+
+---
+
+# 🧠 PROFESSIONAL BEST PRACTICES
+
+✅ One feature per branch
+✅ Small commits
+✅ Daily pull from main
+✅ Clear communication
+❌ No force push
+❌ No direct main commits
+
+---
+
+# 🎯 FINAL RESULT
+
+✔ Clean Git history
+✔ No lost code
+✔ Team collaboration
+✔ Industry-level workflow
+
+---
+
+## 🔥 NEXT I CAN HELP YOU WITH
+
+* README.md (professional)
+* GitHub Issues template
+* Branch protection rules
+* Conflict solving demo
+* Deployment workflow
+
+Just tell me what you want next 😊

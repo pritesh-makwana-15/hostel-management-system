@@ -335,3 +335,10 @@ Icon strategy (SVG / icon font)
 
 This is ONLY the Admin Dashboard main page.
 All future admin pages will reuse this exact layout and design system.
+
+git remote add origin https://github.com/priteshmakwana/hostel-management-system.git
+
+
+
+
+hi form pritesh
