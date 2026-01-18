@@ -1,293 +1,437 @@
-FINAL CLAUDE AI PROMPT
-(React + CSS | SAME-TO-SAME | 3-Screen Responsive)
+Alright 👍
+Below is a **VERY DETAILED, PROFESSIONAL, START-TO-END GUIDE** for your **HMS (Hostel Management System)** so **3 members can collaborate smoothly using Git & GitHub**.
+Think of this as **industry-level documentation** you can even include in your project report.
 
-You are a senior frontend developer and UI engineer.
+---
 
-I have uploaded three reference images of an HMS Admin Dashboard (Main Page):
+# 🏗 HMS PROJECT – GIT & GITHUB COLLABORATION GUIDE
 
-Desktop
+*(For 3 Members – React + Spring Boot)*
 
-Tablet
+---
 
-Mobile
+## 🧩 OVERALL COLLABORATION FLOW (Big Picture)
 
-⚠️ ABSOLUTE RULE
+```
+Local PC (Each Member)
+   ↓
+Personal Branch
+   ↓
+Pull Request
+   ↓
+Main Branch (Stable Code)
+```
 
-Build the UI SAME-TO-SAME as the uploaded images
+👉 **Main branch = always stable & working**
+👉 **Everyone works on their own branch**
 
-❌ Do NOT redesign
+---
 
-❌ Do NOT change spacing, layout, or hierarchy
+# 🔹 PHASE 1: PRE-REQUIREMENTS (ALL MEMBERS)
 
-❌ Do NOT improvise UI/UX decisions
+## 1️⃣ Install Required Software
 
-The uploaded images are the single source of truth.
+### A) Git
 
-🎯 GOAL
+* Download: [https://git-scm.com](https://git-scm.com)
+* Verify:
 
-Convert the uploaded HMS Admin Dashboard designs into a production-ready frontend using:
+```bash
+git --version
+```
 
-✅ React JSX (component-based)
+### B) VS Code
 
-✅ Normal CSS (component-based CSS files)
+* Install GitHub-related extensions (optional):
 
-❌ NO Tailwind
+  * GitLens
+  * GitHub Pull Requests
 
-❌ NO inline styles
+### C) GitHub Account
 
-❌ NO UI libraries (MUI, Ant, Bootstrap, etc.)
+* Everyone must have:
 
-👉 Frontend only (no backend, no API logic)
+  * Verified email
+  * Proper username (professional)
 
-🎨 HMS DESIGN SYSTEM (LOCKED — DO NOT CHANGE)
-Colors
+---
 
-Primary: #1F3C88
+## 2️⃣ Configure Git (ALL MEMBERS – ONE TIME)
 
-Secondary: #2BBBAD
+Run these commands **once** on each machine:
 
-Background: #F4F6F9
+```bash
+git config --global user.name "Your Full Name"
+git config --global user.email "your-email@gmail.com"
+```
 
-Card Background: #FFFFFF
+Verify:
 
-Text
+```bash
+git config --list
+```
 
-Primary: #2E2E2E
+---
 
-Secondary: #6B7280
+# 🔹 PHASE 2: REPOSITORY CREATION (TEAM LEADER ONLY)
 
-Border
+## 3️⃣ Create GitHub Repository
 
-Color: #E5E7EB
+1. GitHub → **New Repository**
+2. Repository name:
 
-Font
+   ```
+   hostel-management-system
+   ```
+3. Description:
 
-Inter (400, 500, 600)
+   ```
+   Hostel Management System - React + Spring Boot
+   ```
+4. Visibility: **Private**
+5. ❌ Do NOT initialize with README
+6. Click **Create Repository**
 
-Radius
+---
 
-Cards: 8px
+## 4️⃣ Decide Project Folder Structure (IMPORTANT)
 
-Buttons / Inputs: 6px
+### ✅ Recommended Professional Structure
 
-Shadow
+```txt
+hostel-management-system/
+│
+├── frontend/                 # React
+│   ├── src/
+│   ├── public/
+│   ├── package.json
+│
+├── backend/                  # Spring Boot
+│   ├── src/main/java/
+│   ├── src/main/resources/
+│   ├── pom.xml
+│
+├── docs/                     # Documentation
+│   ├── api-docs.md
+│   ├── database-design.md
+│
+├── README.md
+├── .gitignore
+```
 
-Cards: 0px 4px 12px rgba(0,0,0,0.08)
+---
 
-Hover: 0px 6px 18px rgba(0,0,0,0.12)
+# 🔹 PHASE 3: INITIALIZE GIT (LEADER)
 
-Style
+## 5️⃣ Initialize Git Locally
 
-Professional • Clean • Institutional • ERP / College Management Dashboard
-(No flashy colors, no neon, no rounded cartoon UI)
+```bash
+cd hostel-management-system
+git init
+```
 
-📐 RESPONSIVE SCREENS (MANDATORY)
+---
 
-You must build all three layouts explicitly:
+## 6️⃣ Create `.gitignore` (CRITICAL)
 
-🖥 Desktop
+```gitignore
+# Node
+node_modules/
+dist/
 
-Width: 1440px
+# Environment
+.env
 
-Fixed sidebar visible
+# Java
+target/
+*.class
 
-Full navbar with search input
+# IDE
+.vscode/
+.idea/
 
-6 stat cards in one row
+# OS
+.DS_Store
+```
 
-Tables for Recent Activity
+👉 **Never commit secrets or node_modules**
 
-📱 Tablet
+---
 
-Width: 1200px
+## 7️⃣ First Commit & Push
 
-Fixed sidebar (narrower)
+```bash
+git add .
+git commit -m "Initial HMS project structure"
+git branch -M main
+git remote add origin https://github.com/USERNAME/hostel-management-system.git
+git push -u origin main
+```
 
-Stat cards: 3 per row
+---
 
-Charts and lists resized but NOT removed
+## 8️⃣ Add Team Members
 
-Table layout preserved
+GitHub → Repository → **Settings → Collaborators**
 
-📱 Mobile
+* Add Friend 1
+* Add Friend 2
+* Permission: **Write**
 
-Width: 390px
+---
 
-Sidebar becomes hamburger drawer
+# 🔹 PHASE 4: TEAM MEMBERS SETUP
 
-Search becomes icon
+## 9️⃣ Clone Repository (FRIENDS)
 
-Stat cards: 2 per row
+```bash
+git clone https://github.com/USERNAME/hostel-management-system.git
+cd hostel-management-system
+```
 
-Alerts stacked vertically
+---
 
-Recent Activity becomes card layout (not table)
+## 🔟 Install Dependencies
 
-➡️ Each screen must visually match its uploaded image.
+### Frontend
 
-🧱 PAGE TO BUILD
-ADMIN DASHBOARD (MAIN PAGE ONLY)
-1️⃣ Top Navbar (All Screens)
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-Match image exactly:
+### Backend
 
-HMS logo (left)
+```bash
+cd backend
+mvn spring-boot:run
+```
 
-Page title: Dashboard
+---
 
-Search input (desktop/tablet)
+# 🔹 PHASE 5: BRANCHING STRATEGY (VERY IMPORTANT)
 
-Search icon only (mobile)
+## ❌ NEVER WORK ON `main`
 
-Notification bell
+### Branch Naming Convention
 
-Admin avatar + dropdown:
+```
+<name>-<role>
+```
 
-Profile
+### Example:
 
-Settings
+| Member   | Branch         |
+| -------- | -------------- |
+| You      | `pritish-lead` |
+| Friend 1 | `frontend-dev` |
+| Friend 2 | `backend-dev`  |
 
-Logout
+---
 
-2️⃣ Left Sidebar
+## 1️⃣1️⃣ Create Branch (Each Member)
 
-Desktop & Tablet
+```bash
+git checkout -b frontend-dev
+```
 
-Fixed sidebar
+Verify:
 
-Primary blue background
+```bash
+git branch
+```
 
-Active menu highlight
+---
 
-Icons + text
+# 🔹 PHASE 6: DAILY DEVELOPMENT WORKFLOW (EVERY DAY)
 
-Menu items:
+## 🔁 STEP 1: Sync With Main (MANDATORY)
 
-Dashboard (active)
+```bash
+git checkout main
+git pull origin main
+```
 
-Students
+---
 
-Wardens
+## 🔁 STEP 2: Update Your Branch
 
-Rooms & Beds
+```bash
+git checkout frontend-dev
+git merge main
+```
 
-Fees
+---
 
-Complaints
+## 🔁 STEP 3: Work on Code
 
-Attendance
+Examples:
 
-Announcements
+* Frontend: Pages, Components, CSS
+* Backend: APIs, Entities, Repositories
 
-Employees
+---
 
-Expenses
+## 🔁 STEP 4: Check Status
 
-Certificates
+```bash
+git status
+```
 
-Settings
+---
 
-Collapse button at bottom
+## 🔁 STEP 5: Commit Changes
 
-Mobile
+```bash
+git add .
+git commit -m "Create student dashboard layout"
+```
 
-Sidebar converts to hamburger slide drawer
+### ✅ Good Commit Messages
 
-3️⃣ Main Content Area
-📊 Statistics Cards
+✔ `Add login API with JWT`
+✔ `Fix navbar responsive issue`
+❌ `changes`
+❌ `update`
 
-6 cards
+---
 
-Icon + title + value + description
+## 🔁 STEP 6: Push to Your Branch
 
-Exact order & spacing from image:
+```bash
+git push origin frontend-dev
+```
 
-Total Students
+---
 
-Total Rooms
+# 🔹 PHASE 7: PULL REQUEST & MERGING
 
-Occupied Beds
+## 1️⃣2️⃣ Create Pull Request (PR)
 
-Available Beds
+1. GitHub → Repo
+2. Click **Compare & Pull Request**
+3. Base: `main`
+4. Compare: `frontend-dev`
+5. Description:
 
-Total Wardens
+   ```
+   - Added dashboard UI
+   - Implemented sidebar
+   - No breaking changes
+   ```
+6. Click **Create Pull Request**
 
-Monthly Fee Collection (₹)
+---
 
-⚡ Quick Actions
+## 1️⃣3️⃣ Code Review (Leader)
 
-Card with icon buttons:
+Check:
 
-Add Student
+* Code style
+* No console errors
+* App runs successfully
 
-Add Room
+---
 
-Add Warden
+## 1️⃣4️⃣ Merge PR
 
-Collect Fee
+* Click **Merge Pull Request**
+* Delete branch (optional)
 
-New Announcement
+---
 
-View Complaints
+# 🔹 PHASE 8: HANDLING CONFLICTS (REAL WORLD)
 
-Desktop/tablet: grid
+## When Conflict Happens
 
-Mobile: 2-column grid
+```bash
+git pull origin main
+```
 
-🚨 Alerts & Pending Items
+Git will show:
 
-Two cards (stack on mobile):
+```
+CONFLICT (content): Merge conflict in file
+```
 
-Pending Complaints
+---
 
-Complaint title
+## How to Fix
 
-Student name
+1. Open conflicted file
+2. Resolve manually
+3. Save file
+4. Run:
 
-Status badge (Pending / Critical / Open)
+```bash
+git add .
+git commit -m "Resolve merge conflict"
+```
 
-View button
+---
 
-Pending Fees
+# 🔹 PHASE 9: TASK MANAGEMENT (RECOMMENDED)
 
-Student name
+## Use GitHub Issues
 
-Amount
+* Create tasks:
 
-Due date
+  * Login Page
+  * JWT Auth
+  * Admin Dashboard
+* Assign to members
+* Track progress
 
-Collect Now button
+---
 
-📈 Charts & Analytics
+# 🔹 PHASE 10: FINAL PROJECT FREEZE
 
-Two cards:
+Before submission:
 
-Monthly Fee Collection (bar/line — UI placeholder only)
+```bash
+git checkout main
+git pull origin main
+```
 
-Room Occupancy (donut — UI placeholder only)
+* Test frontend
+* Test backend
+* Verify database
 
-Charts stacked vertically on mobile
+---
 
-👥 Recent Activity
+# 🧠 PROFESSIONAL BEST PRACTICES
 
-Desktop/Tablet: table layout
+✅ One feature per branch
+✅ Small commits
+✅ Daily pull from main
+✅ Clear communication
+❌ No force push
+❌ No direct main commits
 
-Mobile: stacked cards
+---
 
-Columns:
+# 🎯 FINAL RESULT
 
-Type
+✔ Clean Git history
+✔ No lost code
+✔ Team collaboration
+✔ Industry-level workflow
 
-Description
+---
 
-Date & Time
+## 🔥 NEXT I CAN HELP YOU WITH
 
-Status badge
+* README.md (professional)
+* GitHub Issues template
+* Branch protection rules
+* Conflict solving demo
+* Deployment workflow
 
-🧩 UI RULES (STRICT)
+Just tell me what you want next 😊
 
-Card-based layout everywhere
 
+<<<<<<< Updated upstream
 Exact padding, spacing, and alignment from images
 
 Icons positioned exactly as reference
@@ -342,3 +486,6 @@ git remote add origin https://github.com/priteshmakwana/hostel-management-system
 
 
 hi form pritesh
+=======
+hi 18-01-26 pritesh
+>>>>>>> Stashed changes
