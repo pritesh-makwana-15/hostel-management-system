@@ -431,7 +431,6 @@ git pull origin main
 Just tell me what you want next 😊
 
 
-<<<<<<< Updated upstream
 Exact padding, spacing, and alignment from images
 
 Icons positioned exactly as reference
@@ -476,7 +475,6 @@ Icon strategy (SVG / icon font)
 👉 ASK ME FIRST — do not assume
 
 🔒 FINAL NOTE
-
 This is ONLY the Admin Dashboard main page.
 All future admin pages will reuse this exact layout and design system.
 
@@ -486,6 +484,5 @@ git remote add origin https://github.com/priteshmakwana/hostel-management-system
 
 
 hi form pritesh
-=======
 hi 18-01-26 pritesh
->>>>>>> Stashed changes
+11.30
