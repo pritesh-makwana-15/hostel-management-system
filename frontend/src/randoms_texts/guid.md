@@ -1,6 +1,6 @@
 # HMS Admin Dashboard - Complete Implementation Guide
 
-## 📁 Project Structure
+## 📁 Project Structure-
 
 ```
 src/
