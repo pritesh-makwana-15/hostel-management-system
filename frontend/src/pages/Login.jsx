@@ -17,7 +17,7 @@ const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  // Initialize dummy users on first load
+  // Initialize dummy users on first loaD
   useEffect(() => {
     const existingUsers = localStorage.getItem('hms_users');
     
