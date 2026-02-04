@@ -11,7 +11,15 @@ import Login from './pages/Login';
 
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
-import ManageStudents from './pages/admin/ManageStudents';
+
+// Admin - Student Management Pages
+import StudentsList from './pages/admin/students/StudentsList';
+import AddStudent from './pages/admin/students/AddStudent';
+import EditStudent from './pages/admin/students/EditStudent';
+import AssignRoom from './pages/admin/students/AssignRoom';
+import StudentProfile from './pages/admin/students/StudentProfile';
+
+// Other Admin Pages
 import ManageWardens from './pages/admin/ManageWardens';
 import ManageRooms from './pages/admin/ManageRooms';
 import ManageFees from './pages/admin/ManageFees';
@@ -67,7 +75,15 @@ function App() {
       {/* Protected Routes - Admin */}
       <Route element={<DashboardLayout />}>
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
-        <Route path="/admin/students" element={<ManageStudents />} />
+        
+        {/* Student Management Routes */}
+        <Route path="/admin/students" element={<StudentsList />} />
+        <Route path="/admin/students/add" element={<AddStudent />} />
+        <Route path="/admin/students/edit/:id" element={<EditStudent />} />
+        <Route path="/admin/students/assign/:id" element={<AssignRoom />} />
+        <Route path="/admin/students/profile/:id" element={<StudentProfile />} />
+        
+        {/* Other Admin Routes */}
         <Route path="/admin/wardens" element={<ManageWardens />} />
         <Route path="/admin/rooms" element={<ManageRooms />} />
         <Route path="/admin/fees" element={<ManageFees />} />
