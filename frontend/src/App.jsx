@@ -1,6 +1,5 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-// import { useAuth } from './hooks/useAuth';
 
 // Layouts
 import AuthLayout from './layouts/AuthLayout';
@@ -19,9 +18,15 @@ import EditStudent from './pages/admin/students/EditStudent';
 import AssignRoom from './pages/admin/students/AssignRoom';
 import StudentProfile from './pages/admin/students/StudentProfile';
 
+// Admin - Rooms & Beds Management Pages
+import RoomsList from './pages/admin/rooms/RoomsList';
+import AddRoom from './pages/admin/rooms/AddRoom';
+import EditRoom from './pages/admin/rooms/EditRoom';
+import BedAllocation from './pages/admin/rooms/BedAllocation';
+import RoomOccupancy from './pages/admin/rooms/RoomOccupancy';
+
 // Other Admin Pages
 import ManageWardens from './pages/admin/ManageWardens';
-import ManageRooms from './pages/admin/ManageRooms';
 import ManageFees from './pages/admin/ManageFees';
 import ManageComplaints from './pages/admin/ManageComplaints';
 import ManageAttendance from './pages/admin/ManageAttendance';
@@ -58,11 +63,8 @@ import Inquiry from './pages/visitor/Inquiry';
 import './styles/variables.css';
 
 function App() {
-  // Uncomment when useAuth is implemented
-  // const { user } = useAuth();
-  
   // Temporary: For development without auth
-  const user = null; // Set to { role: 'admin' } or { role: 'warden' } or { role: 'student' } for testing
+  const user = null; // Set to { role: 'admin' } for testing
 
   return (
     <Routes>
@@ -83,9 +85,15 @@ function App() {
         <Route path="/admin/students/assign/:id" element={<AssignRoom />} />
         <Route path="/admin/students/profile/:id" element={<StudentProfile />} />
         
+        {/* Rooms & Beds Management Routes */}
+        <Route path="/admin/rooms" element={<RoomsList />} />
+        <Route path="/admin/rooms/add" element={<AddRoom />} />
+        <Route path="/admin/rooms/:roomId/edit" element={<EditRoom />} />
+        <Route path="/admin/rooms/:roomId/beds" element={<BedAllocation />} />
+        <Route path="/admin/rooms/occupancy" element={<RoomOccupancy />} />
+        
         {/* Other Admin Routes */}
         <Route path="/admin/wardens" element={<ManageWardens />} />
-        <Route path="/admin/rooms" element={<ManageRooms />} />
         <Route path="/admin/fees" element={<ManageFees />} />
         <Route path="/admin/complaints" element={<ManageComplaints />} />
         <Route path="/admin/attendance" element={<ManageAttendance />} />

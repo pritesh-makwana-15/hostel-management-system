@@ -1,0 +1,215 @@
+/* Room Occupancy Overview Page Styles */
+
+.room-occupancy-page {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Page Header */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.page-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.page-title {
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.breadcrumb-separator {
+  color: var(--text-secondary);
+}
+
+.breadcrumb-active {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+/* Occupancy Grid */
+.occupancy-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+
+.occupancy-card {
+  background: var(--card-bg);
+  border-radius: var(--radius-card);
+  padding: 24px;
+  box-shadow: var(--shadow);
+  transition: all 0.2s;
+}
+
+.occupancy-card:hover {
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-2px);
+}
+
+.occupancy-card-header {
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.room-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.room-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.room-type-badge {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.badge-ac {
+  background: rgba(31, 60, 136, 0.1);
+  color: var(--primary);
+}
+
+.badge-non-ac {
+  background: rgba(43, 187, 173, 0.1);
+  color: var(--secondary);
+}
+
+.occupancy-card-body {
+  margin-bottom: 20px;
+}
+
+.occupancy-text {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.occupancy-value {
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.occupancy-label {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.progress-bar-container {
+  width: 100%;
+  height: 8px;
+  background: var(--background);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.progress-bar {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.occupancy-percentage {
+  font-size: 14px;
+  font-weight: 600;
+  text-align: right;
+}
+
+.occupancy-card-actions {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-button);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: white;
+}
+
+.action-btn-view {
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.action-btn-view:hover {
+  background: var(--primary);
+  color: white;
+}
+
+.action-btn-manage {
+  color: var(--text-secondary);
+}
+
+.action-btn-manage:hover {
+  background: var(--background);
+  color: var(--text-primary);
+  border-color: var(--text-primary);
+}
+
+/* Tablet Responsive */
+@media (max-width: 1024px) {
+  .occupancy-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .room-occupancy-page {
+    padding: 16px;
+  }
+
+  .occupancy-card {
+    padding: 16px;
+  }
+
+  .room-title {
+    font-size: 16px;
+  }
+
+  .occupancy-value {
+    font-size: 24px;
+  }
+
+  .occupancy-card-actions {
+    grid-template-columns: 1fr;
+  }
+}

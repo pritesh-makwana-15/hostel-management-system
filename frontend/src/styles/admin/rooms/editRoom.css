@@ -1,0 +1,36 @@
+/* Edit Room Page Styles - Inherits from addRoom.css */
+@import './addRoom.css';
+
+.edit-room-page {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Occupied/Available badges for bed preview */
+.occupied-badge {
+  background: rgba(239, 68, 68, 0.15);
+  color: #EF4444;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.available-badge {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10B981;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.maintenance-badge {
+  background: rgba(245, 158, 11, 0.15);
+  color: #F59E0B;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
