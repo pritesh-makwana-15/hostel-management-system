@@ -1,47 +1,51 @@
 package com.hms.hms.controller;
 
-
+import com.hms.hms.dto.RegisterRequest;
 import com.hms.hms.entity.Warden;
 import com.hms.hms.service.WardenService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @CrossOrigin(origins = "*")
-@RequestMapping("/warden")
+@RequestMapping("/api/warden")
 public class WardenController {
-
 
     @Autowired
     private WardenService wardenService;
 
     @GetMapping
-    public List<Warden> getallWarden(){
-        return wardenService.getallWarden();
+    @PreAuthorize("hasAnyRole('ADMIN', 'WARDEN')")
+    public List<Warden> getAllWardens() {
+        return wardenService.getAllWardens();
     }
 
     @PostMapping
-    public Warden saveallWarden(@RequestBody Warden warden){
-        return wardenService.saveallWarden(warden);
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Warden> createWarden(@RequestBody RegisterRequest request) {
+        return ResponseEntity.ok(wardenService.createWarden(request));
     }
 
     @GetMapping("/{id}")
-    public Warden getById(@PathVariable Integer id){
-        return wardenService.getById(id);
+    @PreAuthorize("hasAnyRole('ADMIN', 'WARDEN')")
+    public ResponseEntity<Warden> getById(@PathVariable Long id) {
+        Warden warden = wardenService.getById(id);
+        return warden != null ? ResponseEntity.ok(warden) : ResponseEntity.notFound().build();
     }
 
     @PutMapping("/{id}")
-    public Warden updateWarden(@RequestBody Warden warden,@PathVariable Integer id){
-        warden.setId(id);
-        return wardenService.updateWarden(warden);
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Warden> updateWarden(@PathVariable Long id, @RequestBody RegisterRequest request) {
+        return ResponseEntity.ok(wardenService.updateWarden(id, request));
     }
 
     @DeleteMapping("/{id}")
-    public String deleteWardenById(@PathVariable Integer id){
-        return wardenService.deleteWardenById(id);
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<String> deleteWarden(@PathVariable Long id) {
+        return ResponseEntity.ok(wardenService.deleteWarden(id));
     }
-
-
 }

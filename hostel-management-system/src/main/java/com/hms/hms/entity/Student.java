@@ -6,13 +6,13 @@ import lombok.*;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "warden")
+@Table(name = "student")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Warden {
+public class Student {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,14 +23,17 @@ public class Warden {
     private User user;
 
     @ManyToOne
-    @JoinColumn(name = "admin_id")
-    private Admin admin;
+    @JoinColumn(name = "warden_id")
+    private Warden warden;
 
-    @Column(length = 10)
-    private String gender;
+    @Column(name = "room_id")
+    private Long roomId;
 
-    @Column(columnDefinition = "TEXT")
-    private String address;
+    @Column(length = 50)
+    private String course;
+
+    @Column(name = "dob")
+    private LocalDate dob;
 
     @Column(name = "join_date")
     private LocalDate joinDate;

@@ -1,14 +1,14 @@
 package com.hms.hms.repository;
 
+import com.hms.hms.entity.Student;
 import com.hms.hms.entity.User;
-import com.hms.hms.entity.Warden;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
 @Repository
-public interface WardenRepository extends JpaRepository<Warden, Long> {
-    Optional<Warden> findByUser(User user);
-    Optional<Warden> findByUserId(Long userId);
+public interface StudentRepository extends JpaRepository<Student, Long> {
+    Optional<Student> findByUser(User user);
+    Optional<Student> findByUserId(Long userId);
 }

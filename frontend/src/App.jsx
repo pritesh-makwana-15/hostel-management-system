@@ -1,5 +1,5 @@
-import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Navigate, Routes, Route } from 'react-router-dom';
+import { useAuth } from './hooks/useAuth';
 
 // Layouts
 import AuthLayout from './layouts/AuthLayout';
@@ -10,22 +10,16 @@ import Login from './pages/Login';
 
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
-
-// Admin - Student Management Pages
 import StudentsList from './pages/admin/students/StudentsList';
 import AddStudent from './pages/admin/students/AddStudent';
 import EditStudent from './pages/admin/students/EditStudent';
 import AssignRoom from './pages/admin/students/AssignRoom';
 import StudentProfile from './pages/admin/students/StudentProfile';
-
-// Admin - Rooms & Beds Management Pages
 import RoomsList from './pages/admin/rooms/RoomsList';
 import AddRoom from './pages/admin/rooms/AddRoom';
 import EditRoom from './pages/admin/rooms/EditRoom';
 import BedAllocation from './pages/admin/rooms/BedAllocation';
 import RoomOccupancy from './pages/admin/rooms/RoomOccupancy';
-
-// Other Admin Pages
 import ManageWardens from './pages/admin/ManageWardens';
 import ManageFees from './pages/admin/ManageFees';
 import ManageComplaints from './pages/admin/ManageComplaints';
@@ -62,37 +56,89 @@ import Inquiry from './pages/visitor/Inquiry';
 // Import CSS Variables
 import './styles/variables.css';
 
+// ─── ProtectedRoute Component ────────────────────────────────
+// Redirects to /login if not authenticated
+// Redirects to /unauthorized if wrong role
+function ProtectedRoute({ children, allowedRole }) {
+  const { isAuthenticated, user, loading } = useAuth();
+
+  // Wait for localStorage hydration before redirecting
+  if (loading) {
+    return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>Loading...</div>;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (allowedRole && user?.role !== allowedRole) {
+    return <Navigate to="/unauthorized" replace />;
+  }
+
+  return children;
+}
+
+// ─── Unauthorized Page ───────────────────────────────────────
+function UnauthorizedPage() {
+  const { user } = useAuth();
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100vh', gap: '16px' }}>
+      <h1 style={{ fontSize: '2rem' }}>403 — Access Denied</h1>
+      <p>You do not have permission to view this page.</p>
+      {user && (
+        <a href={`/${user.role.toLowerCase()}/dashboard`} style={{ color: '#4f46e5' }}>
+          Go to your dashboard
+        </a>
+      )}
+    </div>
+  );
+}
+
+// ─── App ─────────────────────────────────────────────────────
 function App() {
-  // Temporary: For development without auth
-  const user = null; // Set to { role: 'admin' } for testing
+  const { isAuthenticated, user, loading } = useAuth();
+
+  if (loading) {
+    return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>Loading...</div>;
+  }
 
   return (
     <Routes>
       {/* Public Routes */}
       <Route element={<AuthLayout />}>
         <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
+        <Route
+          path="/login"
+          element={
+            isAuthenticated
+              ? <Navigate to={`/${user.role.toLowerCase()}/dashboard`} replace />
+              : <Login />
+          }
+        />
       </Route>
 
+      {/* Utility Routes */}
+      <Route path="/unauthorized" element={<UnauthorizedPage />} />
+
       {/* Protected Routes - Admin */}
-      <Route element={<DashboardLayout />}>
+      <Route
+        element={
+          <ProtectedRoute allowedRole="ADMIN">
+            <DashboardLayout />
+          </ProtectedRoute>
+        }
+      >
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
-        
-        {/* Student Management Routes */}
         <Route path="/admin/students" element={<StudentsList />} />
         <Route path="/admin/students/add" element={<AddStudent />} />
         <Route path="/admin/students/edit/:id" element={<EditStudent />} />
         <Route path="/admin/students/assign/:id" element={<AssignRoom />} />
         <Route path="/admin/students/profile/:id" element={<StudentProfile />} />
-        
-        {/* Rooms & Beds Management Routes */}
         <Route path="/admin/rooms" element={<RoomsList />} />
         <Route path="/admin/rooms/add" element={<AddRoom />} />
         <Route path="/admin/rooms/:roomId/edit" element={<EditRoom />} />
         <Route path="/admin/rooms/:roomId/beds" element={<BedAllocation />} />
         <Route path="/admin/rooms/occupancy" element={<RoomOccupancy />} />
-        
-        {/* Other Admin Routes */}
         <Route path="/admin/wardens" element={<ManageWardens />} />
         <Route path="/admin/fees" element={<ManageFees />} />
         <Route path="/admin/complaints" element={<ManageComplaints />} />
@@ -104,7 +150,13 @@ function App() {
       </Route>
 
       {/* Protected Routes - Warden */}
-      <Route element={<DashboardLayout />}>
+      <Route
+        element={
+          <ProtectedRoute allowedRole="WARDEN">
+            <DashboardLayout />
+          </ProtectedRoute>
+        }
+      >
         <Route path="/warden/dashboard" element={<WardenDashboard />} />
         <Route path="/warden/attendance" element={<WardenAttendance />} />
         <Route path="/warden/mess" element={<MessManagement />} />
@@ -115,7 +167,13 @@ function App() {
       </Route>
 
       {/* Protected Routes - Student */}
-      <Route element={<DashboardLayout />}>
+      <Route
+        element={
+          <ProtectedRoute allowedRole="STUDENT">
+            <DashboardLayout />
+          </ProtectedRoute>
+        }
+      >
         <Route path="/student/dashboard" element={<StudentDashboard />} />
         <Route path="/student/fees" element={<FeePayment />} />
         <Route path="/student/leave" element={<LeaveApplication />} />
@@ -132,14 +190,8 @@ function App() {
         <Route path="/visitor/inquiry" element={<Inquiry />} />
       </Route>
 
-      {/* Default Redirects */}
-      <Route
-        path="/"
-        element={
-          user ? <Navigate to={`/${user.role}/dashboard`} /> : <Navigate to="/login" />
-        }
-      />
-      <Route path="*" element={<Navigate to="/admin/dashboard" />} />
+      {/* Catch-all */}
+      <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );
 }

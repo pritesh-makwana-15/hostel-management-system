@@ -1,86 +1,32 @@
 package com.hms.hms.entity;
 
-
 import jakarta.persistence.*;
-
-import java.util.List;
+import lombok.*;
 
 @Entity
 @Table(name = "admin")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Admin {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    private Integer id;
-    private String username;
-    private String password;
-    private String name;
-    private String email;
-    private Long phone;
-    private String role;
+    @OneToOne
+    @JoinColumn(name = "user_id", nullable = false, unique = true)
+    private User user;
 
-    @OneToMany(mappedBy = "admin")
-    private List<Warden> wardens;
+    @Column(length = 50)
+    private String designation;
 
-    public Admin(){
+    @Column(length = 15)
+    private String phone;
 
-    }
-
-    public void setId(Integer id){
-        this.id =id;
-    }
-    public Integer getId(){
-        return this.id;
-    }
-
-    public void setUsername(String username){
-        this.username =username;
-    }
-    public String getUsername(){
-        return this.username;
-    }
-
-    public void setPassword(String password){
-        this.password =password;
-    }
-    public String getPassword(){
-        return this.password;
-    }
-
-    public void setName(String name){
-        this.name =name;
-    }
-    public String getName(){
-        return this.name;
-    }
-
-    public void setEmail(String email){
-        this.email =email;
-    }
-    public String getEmail(){
-        return this.email;
-    }
-
-    public void setPhone(Long phone){
-        this.phone =phone;
-    }
-    public Long getPhone(){
-        return this.phone;
-    }
-
-    public void setRole(String role){
-        this.role =role;
-    }
-    public String getRole(){
-        return this.role;
-    }
-
-    public List<Warden> getWardens() {
-        return wardens;
-    }
-    public void setWardens(List<Warden> wardens) {
-        this.wardens = wardens;
-    }
+    // Helper: get name/email from user
+    public String getName() { return user != null ? user.getName() : null; }
+    public String getEmail() { return user != null ? user.getEmail() : null; }
 }
-
