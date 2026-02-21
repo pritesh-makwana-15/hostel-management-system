@@ -1,19 +1,19 @@
 import React, { useState } from 'react';
-import { useLocation } from 'react-router-dom';
-import { Menu, Search, Bell, Building2 } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Menu, Search, Bell, Building2, LogOut, User, Settings } from 'lucide-react';
+import { useAuth } from '../../hooks/useAuth';
 import '../../styles/admin/Navbar.css';
 
 const Navbar = ({ onMenuClick, userRole = 'admin' }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
 
-  // Get page title based on current route
   const getPageTitle = () => {
     const path = location.pathname;
     const segments = path.split('/');
     const lastSegment = segments[segments.length - 1];
-    
-    // Capitalize and format the title
     if (lastSegment === 'dashboard') return 'Dashboard';
     return lastSegment
       .split('-')
@@ -31,6 +31,7 @@ const Navbar = ({ onMenuClick, userRole = 'admin' }) => {
   };
 
   const getUserInitial = () => {
+    if (user?.name) return user.name.charAt(0).toUpperCase();
     switch (userRole) {
       case 'admin': return 'A';
       case 'warden': return 'W';
@@ -38,6 +39,13 @@ const Navbar = ({ onMenuClick, userRole = 'admin' }) => {
       default: return 'U';
     }
   };
+
+const handleLogout = () => {
+  console.log('logout clicked');
+  setShowDropdown(false);
+  logout();
+  navigate('/login');
+};
 
   return (
     <header className="navbar">
@@ -65,7 +73,7 @@ const Navbar = ({ onMenuClick, userRole = 'admin' }) => {
           <span className="navbar-badge">3</span>
         </button>
         <div className="navbar-profile">
-          <button 
+          <button
             className="navbar-avatar"
             onClick={() => setShowDropdown(!showDropdown)}
           >
@@ -73,9 +81,21 @@ const Navbar = ({ onMenuClick, userRole = 'admin' }) => {
           </button>
           {showDropdown && (
             <div className="navbar-dropdown">
-              <button className="navbar-dropdown-item">Profile</button>
-              <button className="navbar-dropdown-item">Settings</button>
-              <button className="navbar-dropdown-item">Logout</button>
+              {user?.name && (
+                <div className="navbar-dropdown-user">
+                  <strong>{user.name}</strong>
+                  <small>{user.email}</small>
+                </div>
+              )}
+              <button className="navbar-dropdown-item">
+                <User size={16} /> Profile
+              </button>
+              <button className="navbar-dropdown-item">
+                <Settings size={16} /> Settings
+              </button>
+              <button className="navbar-dropdown-item logout" onClick={handleLogout}>
+                <LogOut size={16} /> Logout
+              </button>
             </div>
           )}
         </div>

@@ -6,13 +6,14 @@ import {
   Wallet, Receipt, Settings, LogOut, ChevronLeft, X,
   ClipboardList, UtensilsCrossed, FileText
 } from 'lucide-react';
+import { useAuth } from '../../hooks/useAuth';
 import '../../styles/admin/Sidebar.css';
 
 const Sidebar = ({ isOpen, onClose, userRole = 'admin' }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { logout } = useAuth();
 
-  // Menu items based on user role
   const getMenuItems = () => {
     switch (userRole) {
       case 'admin':
@@ -29,7 +30,6 @@ const Sidebar = ({ isOpen, onClose, userRole = 'admin' }) => {
           { id: 'expenses', label: 'Expenses', icon: Wallet, route: '/admin/expenses' },
           { id: 'certificates', label: 'Certificates', icon: Receipt, route: '/admin/certificates' }
         ];
-      
       case 'warden':
         return [
           { id: 'dashboard', label: 'Dashboard', icon: Home, route: '/warden/dashboard' },
@@ -40,7 +40,6 @@ const Sidebar = ({ isOpen, onClose, userRole = 'admin' }) => {
           { id: 'rooms', label: 'Rooms', icon: Building2, route: '/warden/rooms' },
           { id: 'announcements', label: 'Announcements', icon: Megaphone, route: '/warden/announcements' }
         ];
-      
       case 'student':
         return [
           { id: 'dashboard', label: 'Dashboard', icon: Home, route: '/student/dashboard' },
@@ -51,7 +50,6 @@ const Sidebar = ({ isOpen, onClose, userRole = 'admin' }) => {
           { id: 'mess', label: 'Mess Menu', icon: UtensilsCrossed, route: '/student/mess' },
           { id: 'announcements', label: 'Announcements', icon: Megaphone, route: '/student/announcements' }
         ];
-      
       default:
         return [];
     }
@@ -70,19 +68,19 @@ const Sidebar = ({ isOpen, onClose, userRole = 'admin' }) => {
 
   const handleNavigate = (route) => {
     navigate(route);
-    if (window.innerWidth < 768) {
-      onClose();
-    }
+    if (window.innerWidth < 768) onClose();
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
   };
 
   return (
     <>
-      {/* Mobile Overlay */}
       {isOpen && <div className="sidebar-overlay" onClick={onClose} />}
 
-      {/* Sidebar */}
       <aside className={`sidebar ${isOpen ? 'sidebar-open' : ''}`}>
-        {/* Logo & Title */}
         <div className="sidebar-header">
           <div className="sidebar-logo">
             <Building2 size={24} />
@@ -93,7 +91,6 @@ const Sidebar = ({ isOpen, onClose, userRole = 'admin' }) => {
           </button>
         </div>
 
-        {/* Menu Items */}
         <nav className="sidebar-nav">
           {menuItems.map((item) => {
             const Icon = item.icon;
@@ -111,13 +108,12 @@ const Sidebar = ({ isOpen, onClose, userRole = 'admin' }) => {
           })}
         </nav>
 
-        {/* Bottom Actions */}
         <div className="sidebar-bottom">
           <button className="sidebar-item">
             <Settings size={20} />
             <span>Settings</span>
           </button>
-          <button className="sidebar-item">
+          <button className="sidebar-item" onClick={handleLogout}>
             <LogOut size={20} />
             <span>Logout</span>
           </button>

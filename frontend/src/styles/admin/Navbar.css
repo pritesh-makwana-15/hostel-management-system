@@ -151,6 +151,18 @@
   background: var(--background);
 }
 
+.navbar-dropdown-user {
+  padding: 8px 16px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.navbar-dropdown-item.logout {
+  color: #e53e3e;
+}
+
 /* Mobile Responsive */
 @media (max-width: 768px) {
   .navbar-menu-btn {
