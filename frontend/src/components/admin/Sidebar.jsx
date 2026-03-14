@@ -1,10 +1,10 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { 
-  Home, Users, UserCheck, Building2, CreditCard, 
-  MessageSquare, Calendar, Megaphone, Briefcase, 
+import {
+  Home, Users, UserCheck, Building2, CreditCard,
+  MessageSquare, Calendar, Megaphone, Briefcase,
   Wallet, Receipt, Settings, LogOut, ChevronLeft, X,
-  ClipboardList, UtensilsCrossed, FileText
+  ClipboardList, UtensilsCrossed
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import '../../styles/admin/Sidebar.css';
@@ -18,37 +18,37 @@ const Sidebar = ({ isOpen, onClose, userRole = 'admin' }) => {
     switch (userRole) {
       case 'admin':
         return [
-          { id: 'dashboard', label: 'Dashboard', icon: Home, route: '/admin/dashboard' },
-          { id: 'students', label: 'Students', icon: Users, route: '/admin/students' },
-          { id: 'wardens', label: 'Wardens', icon: UserCheck, route: '/admin/wardens' },
-          { id: 'rooms', label: 'Rooms & Beds', icon: Building2, route: '/admin/rooms' },
-          { id: 'fees', label: 'Fees', icon: CreditCard, route: '/admin/fees' },
-          { id: 'complaints', label: 'Complaints', icon: MessageSquare, route: '/admin/complaints' },
-          { id: 'attendance', label: 'Attendance', icon: Calendar, route: '/admin/attendance' },
-          { id: 'announcements', label: 'Announcements', icon: Megaphone, route: '/admin/announcements' },
-          { id: 'employees', label: 'Employees', icon: Briefcase, route: '/admin/employees' },
-          { id: 'expenses', label: 'Expenses', icon: Wallet, route: '/admin/expenses' },
-          { id: 'certificates', label: 'Certificates', icon: Receipt, route: '/admin/certificates' }
+          { id: 'dashboard',     label: 'Dashboard',     icon: Home,           route: '/admin/dashboard' },
+          { id: 'students',      label: 'Students',       icon: Users,          route: '/admin/students' },
+          { id: 'wardens',       label: 'Wardens',        icon: UserCheck,      route: '/admin/wardens' },
+          { id: 'rooms',         label: 'Rooms & Beds',   icon: Building2,      route: '/admin/rooms' },
+          { id: 'fees',          label: 'Fees',           icon: CreditCard,     route: '/admin/fees' },
+          { id: 'complaints',    label: 'Complaints',     icon: MessageSquare,  route: '/admin/complaints' },
+          { id: 'attendance',    label: 'Attendance',     icon: Calendar,       route: '/admin/attendance' },
+          { id: 'announcements', label: 'Announcements',  icon: Megaphone,      route: '/admin/announcements' },
+          { id: 'employees',     label: 'Employees',      icon: Briefcase,      route: '/admin/employees' },
+          { id: 'expenses',      label: 'Expenses',       icon: Wallet,         route: '/admin/expenses' },
+          { id: 'certificates',  label: 'Certificates',   icon: Receipt,        route: '/admin/certificates' },
         ];
       case 'warden':
         return [
-          { id: 'dashboard', label: 'Dashboard', icon: Home, route: '/warden/dashboard' },
-          { id: 'attendance', label: 'Attendance', icon: Calendar, route: '/warden/attendance' },
-          { id: 'mess', label: 'Mess Management', icon: UtensilsCrossed, route: '/warden/mess' },
-          { id: 'complaints', label: 'Complaints', icon: MessageSquare, route: '/warden/complaints' },
-          { id: 'students', label: 'Students', icon: Users, route: '/warden/students' },
-          { id: 'rooms', label: 'Rooms', icon: Building2, route: '/warden/rooms' },
-          { id: 'announcements', label: 'Announcements', icon: Megaphone, route: '/warden/announcements' }
+          { id: 'dashboard',     label: 'Dashboard',      icon: Home,           route: '/warden/dashboard' },
+          { id: 'attendance',    label: 'Attendance',     icon: Calendar,       route: '/warden/attendance' },
+          { id: 'mess',          label: 'Mess Management',icon: UtensilsCrossed,route: '/warden/mess' },
+          { id: 'complaints',    label: 'Complaints',     icon: MessageSquare,  route: '/warden/complaints' },
+          { id: 'students',      label: 'Students',       icon: Users,          route: '/warden/students' },
+          { id: 'rooms',         label: 'Rooms',          icon: Building2,      route: '/warden/rooms' },
+          { id: 'announcements', label: 'Announcements',  icon: Megaphone,      route: '/warden/announcements' },
         ];
       case 'student':
         return [
-          { id: 'dashboard', label: 'Dashboard', icon: Home, route: '/student/dashboard' },
-          { id: 'fees', label: 'Fee Payment', icon: CreditCard, route: '/student/fees' },
-          { id: 'leave', label: 'Leave Application', icon: ClipboardList, route: '/student/leave' },
-          { id: 'complaints', label: 'Complaints', icon: MessageSquare, route: '/student/complaints' },
-          { id: 'room', label: 'My Room', icon: Building2, route: '/student/room' },
-          { id: 'mess', label: 'Mess Menu', icon: UtensilsCrossed, route: '/student/mess' },
-          { id: 'announcements', label: 'Announcements', icon: Megaphone, route: '/student/announcements' }
+          { id: 'dashboard',     label: 'Dashboard',      icon: Home,           route: '/student/dashboard' },
+          { id: 'fees',          label: 'Fee Payment',    icon: CreditCard,     route: '/student/fees' },
+          { id: 'leave',         label: 'Leave Application',icon: ClipboardList,route: '/student/leave' },
+          { id: 'complaints',    label: 'Complaints',     icon: MessageSquare,  route: '/student/complaints' },
+          { id: 'room',          label: 'My Room',        icon: Building2,      route: '/student/room' },
+          { id: 'mess',          label: 'Mess Menu',      icon: UtensilsCrossed,route: '/student/mess' },
+          { id: 'announcements', label: 'Announcements',  icon: Megaphone,      route: '/student/announcements' },
         ];
       default:
         return [];
@@ -59,12 +59,52 @@ const Sidebar = ({ isOpen, onClose, userRole = 'admin' }) => {
 
   const getRoleTitle = () => {
     switch (userRole) {
-      case 'admin': return 'HMS Admin Dashboard';
-      case 'warden': return 'HMS Warden Portal';
+      case 'admin':   return 'HMS Admin Dashboard';
+      case 'warden':  return 'HMS Warden Portal';
       case 'student': return 'HMS Student Portal';
-      default: return 'HMS Dashboard';
+      default:        return 'HMS Dashboard';
     }
   };
+
+  // ── Active state logic ───────────────────────────────────────
+  // For most items: exact match.
+  // For module roots (students, rooms, wardens, fees, complaints):
+  // use startsWith so child pages keep the item highlighted.
+  const isItemActive = (item) => {
+    const path = location.pathname;
+
+    // Exact-match routes (single pages, no children)
+    const exactRoutes = [
+      '/admin/dashboard',
+      '/admin/attendance',
+      '/admin/announcements',
+      '/admin/employees',
+      '/admin/expenses',
+      '/admin/certificates',
+      '/warden/dashboard',
+      '/warden/attendance',
+      '/warden/mess',
+      '/warden/complaints',
+      '/warden/students',
+      '/warden/rooms',
+      '/warden/announcements',
+      '/student/dashboard',
+      '/student/fees',
+      '/student/leave',
+      '/student/complaints',
+      '/student/room',
+      '/student/mess',
+      '/student/announcements',
+    ];
+
+    if (exactRoutes.includes(item.route)) {
+      return path === item.route;
+    }
+
+    // Module routes: stay active for all child pages
+    return path === item.route || path.startsWith(item.route + '/');
+  };
+  // ────────────────────────────────────────────────────────────
 
   const handleNavigate = (route) => {
     navigate(route);
@@ -94,11 +134,11 @@ const Sidebar = ({ isOpen, onClose, userRole = 'admin' }) => {
         <nav className="sidebar-nav">
           {menuItems.map((item) => {
             const Icon = item.icon;
-            const isActive = location.pathname === item.route;
+            const active = isItemActive(item);
             return (
               <button
                 key={item.id}
-                className={`sidebar-item ${isActive ? 'sidebar-item-active' : ''}`}
+                className={`sidebar-item ${active ? 'sidebar-item-active' : ''}`}
                 onClick={() => handleNavigate(item.route)}
               >
                 <Icon size={20} />

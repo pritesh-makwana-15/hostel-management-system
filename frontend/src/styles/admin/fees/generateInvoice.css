@@ -1,0 +1,551 @@
+/* ── Generate Invoice ────────────────────────────────────── */
+
+.generate-invoice-page {
+  padding: 24px;
+  max-width: 1300px;
+  margin: 0 auto;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  gap: 16px;
+}
+.page-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.breadcrumb-sep {
+  color: var(--text-secondary);
+}
+.breadcrumb-active {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+.page-title {
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.btn-secondary {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 16px;
+  background: white;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-button);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-secondary:hover {
+  background: var(--background);
+  color: var(--text-primary);
+}
+
+/* Layout */
+.invoice-layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 24px;
+  align-items: start;
+}
+
+/* Session Bar */
+.session-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: var(--radius-button);
+  padding: 10px 16px;
+  margin-bottom: 16px;
+}
+.session-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #2563eb;
+  letter-spacing: 0.05em;
+}
+.session-verified {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #10b981;
+}
+
+/* Student Info Card */
+.student-info-card {
+  background: var(--card-bg);
+  border-radius: var(--radius-card);
+  padding: 20px;
+  box-shadow: var(--shadow);
+  margin-bottom: 16px;
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.student-avatar-lg {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #1f3c8820;
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.student-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 14px;
+  flex: 1;
+}
+
+.info-field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.info-field-full {
+  grid-column: 1 / -1;
+}
+
+.info-field-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.info-field-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* Form Sections */
+.form-section {
+  background: var(--card-bg);
+  border-radius: var(--radius-card);
+  padding: 22px;
+  box-shadow: var(--shadow);
+  margin-bottom: 16px;
+}
+
+.form-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+.form-section-sub {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 18px;
+}
+
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.form-group-full {
+  grid-column: 1 / -1;
+}
+
+.form-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.05em;
+}
+
+.input-with-icon {
+  position: relative;
+}
+.input-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-secondary);
+}
+
+.form-input {
+  width: 100%;
+  padding: 9px 12px 9px 32px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-button);
+  font-size: 14px;
+  color: var(--text-primary);
+  outline: none;
+  font-family: var(--font-family);
+  transition: border-color 0.2s;
+}
+.form-input.no-icon {
+  padding-left: 12px;
+}
+.form-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(31, 60, 136, 0.08);
+}
+
+.form-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-button);
+  font-size: 14px;
+  color: var(--text-primary);
+  outline: none;
+  font-family: var(--font-family);
+  resize: vertical;
+  transition: border-color 0.2s;
+}
+.form-textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(31, 60, 136, 0.08);
+}
+
+/* Calculated Total */
+.calculated-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: var(--radius-button);
+  padding: 16px 20px;
+  margin-top: 16px;
+}
+.calc-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #2563eb;
+}
+.calc-sub {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 2px;
+}
+.calc-amount {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+/* Invoice Actions */
+.invoice-actions {
+  background: var(--card-bg);
+  border-radius: var(--radius-card);
+  padding: 18px 22px;
+  box-shadow: var(--shadow);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+.actions-note {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.actions-buttons {
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.btn-cancel {
+  padding: 10px 18px;
+  background: white;
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-button);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-cancel:hover {
+  background: var(--background);
+}
+
+.btn-download {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 18px;
+  background: white;
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-button);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-download:hover {
+  background: var(--background);
+}
+
+.btn-generate {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 20px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-button);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-generate:hover {
+  background: #152d6b;
+  box-shadow: var(--shadow-hover);
+}
+
+/* Preview Panel */
+.invoice-preview-panel {
+  position: sticky;
+  top: 90px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.preview-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+.preview-sub {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.invoice-preview {
+  background: var(--card-bg);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  border-top: 4px solid var(--primary);
+}
+
+.preview-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 18px 18px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.preview-logo {
+  width: 34px;
+  height: 34px;
+  background: #eff6ff;
+  color: var(--primary);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.preview-invoice-label {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.preview-invoice-num {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.preview-date-block {
+  margin-left: auto;
+  text-align: right;
+}
+.preview-date-label {
+  display: block;
+  font-size: 10px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.preview-date-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.preview-billed {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+}
+.preview-billed-label {
+  font-size: 10px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+.preview-billed-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.preview-billed-sub {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.preview-status-badge {
+  padding: 3px 10px;
+  background: #f3f4f6;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 11px;
+  color: #6b7280;
+}
+
+.preview-line-items {
+  padding: 14px 18px;
+}
+.preview-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+  border-bottom: 1px solid #f3f4f6;
+}
+.preview-line:last-of-type {
+  border-bottom: none;
+}
+.preview-negative {
+  color: #10b981;
+}
+
+.preview-total-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  border-top: 2px solid var(--border);
+  margin-top: 4px;
+}
+.preview-total-amount {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.preview-footer-note {
+  padding: 10px 18px;
+  background: var(--background);
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  border-top: 1px solid var(--border);
+}
+
+/* Pro Tip */
+.pro-tip {
+  background: var(--card-bg);
+  border-radius: var(--radius-card);
+  padding: 16px;
+  box-shadow: var(--shadow);
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.pro-tip-icon {
+  color: #f59e0b;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.pro-tip-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+.pro-tip-text {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .invoice-layout {
+    grid-template-columns: 1fr;
+  }
+  .invoice-preview-panel {
+    position: static;
+  }
+}
+@media (max-width: 768px) {
+  .generate-invoice-page {
+    padding: 16px;
+  }
+  .student-info-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .form-grid-2 {
+    grid-template-columns: 1fr;
+  }
+  .invoice-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .actions-buttons {
+    flex-direction: column;
+  }
+  .btn-generate,
+  .btn-download,
+  .btn-cancel {
+    justify-content: center;
+  }
+}
