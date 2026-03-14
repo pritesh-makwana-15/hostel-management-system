@@ -1,0 +1,421 @@
+/* src/styles/admin/announcements/broadcastAnnouncement.css */
+
+.ba-page {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* ── Header ── */
+.ba-header {
+  margin-bottom: 24px;
+}
+.ba-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+.ba-sep {
+  color: var(--text-secondary);
+}
+.ba-breadcrumb-active {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+.ba-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 4px;
+}
+.ba-subtitle {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* ── Layout ── */
+.ba-layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 24px;
+  align-items: start;
+}
+.ba-left {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.ba-right {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: sticky;
+  top: 90px;
+}
+
+/* ── Preview Card ── */
+.ba-preview-card {
+  background: var(--card-bg);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.ba-preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.ba-preview-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ba-priority-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.ba-priority-urgent {
+  background: #dc2626;
+  color: white;
+}
+.ba-priority-important {
+  background: #d97706;
+  color: white;
+}
+.ba-priority-normal {
+  background: var(--primary);
+  color: white;
+}
+
+.ba-preview-body {
+  padding: 24px;
+}
+.ba-preview-audience {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+.ba-preview-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 16px;
+}
+.ba-preview-message {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+.ba-preview-message p {
+  margin: 0 0 8px;
+}
+.ba-preview-message p:last-child {
+  margin-bottom: 0;
+}
+
+/* ── Attachments ── */
+.ba-attachments {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+.ba-attachments-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+.ba-attachments-list {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.ba-attachment-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-button);
+  background: var(--background);
+  flex: 1;
+  min-width: 160px;
+}
+.ba-att-type {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.05em;
+}
+.ba-att-pdf .ba-att-type {
+  background: rgba(220, 38, 38, 0.1);
+  color: #dc2626;
+}
+.ba-att-img .ba-att-type {
+  background: rgba(43, 187, 173, 0.1);
+  color: var(--secondary);
+}
+.ba-att-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+.ba-att-size {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* ── Pre-broadcast Check ── */
+.ba-precheck {
+  display: flex;
+  gap: 12px;
+  padding: 14px 16px;
+  background: rgba(31, 60, 136, 0.05);
+  border: 1px solid rgba(31, 60, 136, 0.15);
+  border-radius: var(--radius-button);
+}
+.ba-precheck-icon {
+  color: var(--secondary);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.ba-precheck strong {
+  font-size: 14px;
+  color: var(--primary);
+  display: block;
+  margin-bottom: 4px;
+}
+.ba-precheck p {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ── Control Cards ── */
+.ba-control-card {
+  background: var(--card-bg);
+  border-radius: var(--radius-card);
+  padding: 20px;
+  box-shadow: var(--shadow);
+}
+.ba-control-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 16px;
+}
+
+/* ── Fields ── */
+.ba-field-group {
+  margin-bottom: 16px;
+}
+.ba-field-group:last-child {
+  margin-bottom: 0;
+}
+.ba-field-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.05em;
+  display: block;
+  margin-bottom: 6px;
+}
+.ba-select-with-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.ba-select-icon {
+  position: absolute;
+  left: 12px;
+  font-size: 14px;
+  pointer-events: none;
+}
+.ba-select {
+  width: 100%;
+  padding: 10px 12px 10px 36px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-button);
+  font-size: 14px;
+  color: var(--text-primary);
+  background: white;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--font-family);
+}
+.ba-select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(31, 60, 136, 0.1);
+}
+
+/* ── Checkboxes ── */
+.ba-checkboxes {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.ba-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.ba-checkbox-label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+/* ── Estimated Reach ── */
+.ba-reach {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  background: var(--background);
+  border-radius: var(--radius-button);
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.ba-reach-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+  flex-shrink: 0;
+}
+.ba-reach-count {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-left: auto;
+}
+
+/* ── Delivery Options ── */
+.ba-delivery-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-button);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 10px;
+  transition: all 0.2s;
+}
+.ba-delivery-option:last-of-type {
+  margin-bottom: 0;
+}
+.ba-delivery-option input[type="radio"] {
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+.ba-delivery-active {
+  border-color: var(--primary);
+  background: rgba(31, 60, 136, 0.04);
+  color: var(--text-primary);
+}
+.ba-delivery-icon {
+  margin-left: auto;
+  color: var(--primary);
+}
+.ba-date-input {
+  width: 100%;
+  padding: 10px 12px;
+  margin-top: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-button);
+  font-size: 14px;
+  color: var(--text-primary);
+  outline: none;
+  transition: all 0.2s;
+  font-family: var(--font-family);
+}
+.ba-date-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(31, 60, 136, 0.1);
+}
+
+/* ── Buttons ── */
+.ba-btn-send {
+  width: 100%;
+  padding: 12px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-button);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--font-family);
+}
+.ba-btn-send:hover {
+  background: #152d6b;
+  box-shadow: var(--shadow-hover);
+}
+.ba-btn-cancel {
+  width: 100%;
+  padding: 11px;
+  background: white;
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-button);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--font-family);
+}
+.ba-btn-cancel:hover {
+  background: var(--background);
+}
+
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+  .ba-layout {
+    grid-template-columns: 1fr;
+  }
+  .ba-right {
+    position: static;
+  }
+}
+@media (max-width: 768px) {
+  .ba-page {
+    padding: 16px;
+  }
+  .ba-attachments-list {
+    flex-direction: column;
+  }
+}
