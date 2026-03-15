@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Menu, Search, Bell, Building2, LogOut, User, Settings } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
@@ -9,6 +9,23 @@ const Navbar = ({ onMenuClick, userRole = 'admin' }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const dropdownRef = useRef(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Close dropdown on route change
+  useEffect(() => {
+    setShowDropdown(false);
+  }, [location.pathname]);
 
   const getPageTitle = () => {
     const path = location.pathname;
@@ -23,29 +40,48 @@ const Navbar = ({ onMenuClick, userRole = 'admin' }) => {
 
   const getRoleTitle = () => {
     switch (userRole) {
-      case 'admin': return 'HMS Admin Dashboard';
-      case 'warden': return 'HMS Warden Portal';
+      case 'admin':   return 'HMS Admin Dashboard';
+      case 'warden':  return 'HMS Warden Portal';
       case 'student': return 'HMS Student Portal';
-      default: return 'HMS Dashboard';
+      default:        return 'HMS Dashboard';
     }
   };
 
   const getUserInitial = () => {
     if (user?.name) return user.name.charAt(0).toUpperCase();
     switch (userRole) {
-      case 'admin': return 'A';
-      case 'warden': return 'W';
+      case 'admin':   return 'A';
+      case 'warden':  return 'W';
       case 'student': return 'S';
-      default: return 'U';
+      default:        return 'U';
     }
   };
 
-const handleLogout = () => {
-  console.log('logout clicked');
-  setShowDropdown(false);
-  logout();
-  navigate('/login');
-};
+  // Navigate to role-specific profile route
+  const getProfileRoute = () => {
+    switch (userRole) {
+      case 'admin':   return '/admin/profile';
+      case 'warden':  return '/warden/profile';
+      case 'student': return '/student/profile';
+      default:        return '/admin/profile';
+    }
+  };
+
+  const handleProfile = () => {
+    setShowDropdown(false);
+    navigate(getProfileRoute());
+  };
+
+  const handleSettings = () => {
+    setShowDropdown(false);
+    navigate(getProfileRoute()); // Settings lives inside profile for now
+  };
+
+  const handleLogout = () => {
+    setShowDropdown(false);
+    logout();
+    navigate('/login');
+  };
 
   return (
     <header className="navbar">
@@ -72,13 +108,15 @@ const handleLogout = () => {
           <Bell size={20} />
           <span className="navbar-badge">3</span>
         </button>
-        <div className="navbar-profile">
+
+        <div className="navbar-profile" ref={dropdownRef}>
           <button
             className="navbar-avatar"
-            onClick={() => setShowDropdown(!showDropdown)}
+            onClick={() => setShowDropdown((prev) => !prev)}
           >
             <span>{getUserInitial()}</span>
           </button>
+
           {showDropdown && (
             <div className="navbar-dropdown">
               {user?.name && (
@@ -87,10 +125,10 @@ const handleLogout = () => {
                   <small>{user.email}</small>
                 </div>
               )}
-              <button className="navbar-dropdown-item">
+              <button className="navbar-dropdown-item" onClick={handleProfile}>
                 <User size={16} /> Profile
               </button>
-              <button className="navbar-dropdown-item">
+              <button className="navbar-dropdown-item" onClick={handleSettings}>
                 <Settings size={16} /> Settings
               </button>
               <button className="navbar-dropdown-item logout" onClick={handleLogout}>

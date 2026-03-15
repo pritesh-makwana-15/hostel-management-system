@@ -1,0 +1,561 @@
+/* ──────────────────────────────────────────────
+   Admin Profile Page Styles
+   Uses HMS CSS variables from variables.css
+   ────────────────────────────────────────────── */
+
+.admin-profile-page {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* ── Page Header ── */
+.page-header {
+  margin-bottom: 24px;
+}
+
+.page-title {
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 6px 0 4px 0;
+}
+
+.page-subtitle {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.breadcrumb-link {
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.breadcrumb-link:hover {
+  color: var(--primary);
+}
+
+.breadcrumb-sep {
+  color: var(--text-secondary);
+}
+
+.breadcrumb-active {
+  color: var(--primary);
+  font-weight: 500;
+}
+
+/* ── Profile Hero Card ── */
+.profile-hero-card {
+  background: var(--card-bg);
+  border-radius: var(--radius-card);
+  padding: 28px 32px;
+  box-shadow: var(--shadow);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2px;
+  border-bottom: 3px solid var(--primary);
+  border-radius: var(--radius-card) var(--radius-card) 0 0;
+}
+
+.profile-hero-left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.profile-avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.profile-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary) 0%, #2d54c7 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  border: 4px solid var(--background);
+  box-shadow: 0 4px 12px rgba(31, 60, 136, 0.3);
+}
+
+.profile-online-dot {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  width: 18px;
+  height: 18px;
+  background: #10B981;
+  border: 3px solid white;
+  border-radius: 50%;
+}
+
+.profile-hero-info {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.profile-hero-name {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.profile-name-input {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text-primary);
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-button);
+  padding: 6px 12px;
+  outline: none;
+  font-family: var(--font-family);
+  box-shadow: 0 0 0 3px rgba(31, 60, 136, 0.1);
+  min-width: 260px;
+}
+
+.profile-hero-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.role-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(43, 187, 173, 0.12);
+  color: var(--secondary);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.admin-id-dot {
+  color: var(--text-secondary);
+  font-size: 16px;
+}
+
+.admin-id {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+/* Hero Actions */
+.profile-hero-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.btn-edit-profile {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: white;
+  color: var(--primary);
+  border: 1.5px solid var(--primary);
+  border-radius: var(--radius-button);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--font-family);
+}
+
+.btn-edit-profile:hover {
+  background: var(--primary);
+  color: white;
+}
+
+.btn-cancel-edit {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: white;
+  color: var(--text-secondary);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-button);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--font-family);
+}
+
+.btn-cancel-edit:hover {
+  background: var(--background);
+}
+
+.btn-save-profile {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-button);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--font-family);
+}
+
+.btn-save-profile:hover {
+  background: #162e6e;
+}
+
+/* ── Info Strip ── */
+.profile-info-strip {
+  background: var(--card-bg);
+  border-radius: 0 0 var(--radius-card) var(--radius-card);
+  box-shadow: var(--shadow);
+  display: flex;
+  align-items: center;
+  padding: 20px 32px;
+  margin-bottom: 24px;
+  border-top: 1px solid var(--border);
+}
+
+.info-strip-item {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.info-strip-icon {
+  color: var(--text-secondary);
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.info-strip-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.info-strip-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.info-strip-value {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.info-strip-input {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-button);
+  padding: 4px 8px;
+  outline: none;
+  font-family: var(--font-family);
+  box-shadow: 0 0 0 2px rgba(31, 60, 136, 0.1);
+  min-width: 160px;
+}
+
+.info-strip-divider {
+  width: 1px;
+  height: 40px;
+  background: var(--border);
+  margin: 0 24px;
+  flex-shrink: 0;
+}
+
+/* ── Lower Grid ── */
+.profile-lower-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+/* Section Cards */
+.profile-section-card {
+  background: var(--card-bg);
+  border-radius: var(--radius-card);
+  padding: 24px;
+  box-shadow: var(--shadow);
+}
+
+.section-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.section-card-icon {
+  color: var(--primary);
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.section-card-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 4px 0;
+}
+
+.section-card-subtitle {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* Account Info Table */
+.account-info-table {
+  display: flex;
+  flex-direction: column;
+}
+
+.account-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.account-info-row.no-border {
+  border-bottom: none;
+}
+
+.account-info-label {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.account-info-value {
+  font-size: 14px;
+  color: var(--text-primary);
+  font-weight: 400;
+  display: flex;
+  align-items: center;
+}
+
+.account-info-bold {
+  font-weight: 600;
+}
+
+.status-badge-active {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(16, 185, 129, 0.1);
+  color: #10B981;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Security Action Cards */
+.security-action-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  background: #F8FAFF;
+  border: 1px solid #E8EDF8;
+  border-radius: var(--radius-card);
+  padding: 18px 20px;
+  margin-bottom: 14px;
+}
+
+.security-action-card:last-child {
+  margin-bottom: 0;
+}
+
+.security-action-icon-wrap {
+  width: 44px;
+  height: 44px;
+  background: rgba(31, 60, 136, 0.1);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+.logout-icon-wrap {
+  background: rgba(239, 68, 68, 0.08);
+  color: #EF4444;
+}
+
+.security-action-info {
+  flex: 1;
+}
+
+.security-action-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 6px 0;
+}
+
+.security-action-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0 0 14px 0;
+}
+
+.btn-update-password {
+  padding: 9px 20px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-button);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--font-family);
+}
+
+.btn-update-password:hover {
+  background: #162e6e;
+}
+
+.btn-logout-devices {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 20px;
+  background: white;
+  color: var(--text-primary);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-button);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--font-family);
+}
+
+.btn-logout-devices:hover {
+  border-color: #EF4444;
+  color: #EF4444;
+  background: rgba(239, 68, 68, 0.04);
+}
+
+/* ── Tablet Responsive ── */
+@media (max-width: 1024px) {
+  .profile-lower-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-info-strip {
+    flex-wrap: wrap;
+    gap: 16px;
+    padding: 20px 24px;
+  }
+
+  .info-strip-divider {
+    display: none;
+  }
+
+  .info-strip-item {
+    min-width: calc(50% - 8px);
+  }
+}
+
+/* ── Mobile Responsive ── */
+@media (max-width: 768px) {
+  .admin-profile-page {
+    padding: 16px;
+  }
+
+  .profile-hero-card {
+    padding: 20px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+    border-radius: var(--radius-card) var(--radius-card) 0 0;
+  }
+
+  .profile-hero-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .btn-edit-profile,
+  .btn-cancel-edit,
+  .btn-save-profile {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .profile-hero-name,
+  .profile-name-input {
+    font-size: 18px;
+  }
+
+  .profile-info-strip {
+    padding: 16px;
+  }
+
+  .info-strip-item {
+    min-width: 100%;
+  }
+
+  .account-info-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+}
+
+/* ── Small Mobile ── */
+@media (max-width: 390px) {
+  .admin-profile-page {
+    padding: 12px;
+  }
+
+  .profile-hero-card {
+    padding: 16px;
+  }
+
+  .profile-avatar {
+    width: 64px;
+    height: 64px;
+  }
+
+  .profile-section-card {
+    padding: 16px;
+  }
+}
