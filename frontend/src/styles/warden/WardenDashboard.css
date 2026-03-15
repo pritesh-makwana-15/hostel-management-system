@@ -1,0 +1,507 @@
+/* ============================================================
+   WardenDashboard.css
+   Scope: All classes prefixed with .warden-
+   ============================================================ */
+
+/* ── Page wrapper ────────────────────────────────────────── */
+.warden-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 24px;
+  background: var(--background, #F4F6F9);
+  min-height: 100%;
+}
+
+/* ── Welcome Header ──────────────────────────────────────── */
+.warden-welcome {
+  margin-bottom: 4px;
+}
+
+.warden-welcome-title {
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--text-primary, #2E2E2E);
+  margin-bottom: 4px;
+}
+
+.warden-welcome-sub {
+  font-size: 14px;
+  color: var(--text-secondary, #6B7280);
+}
+
+/* ── Stats Grid ──────────────────────────────────────────── */
+.warden-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.warden-stat-card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 20px 24px;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.08);
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.warden-stat-card:hover {
+  box-shadow: 0px 6px 18px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+.warden-stat-body {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.warden-stat-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.warden-stat-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--text-secondary, #6B7280);
+}
+
+.warden-stat-value {
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--text-primary, #2E2E2E);
+  line-height: 1.1;
+}
+
+.warden-stat-desc {
+  font-size: 12px;
+  color: var(--text-secondary, #6B7280);
+  margin-top: 2px;
+}
+
+.warden-stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ── Shared Section Card ─────────────────────────────────── */
+.warden-section-card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.warden-section-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary, #2E2E2E);
+  margin: 0 0 20px 0;
+}
+
+/* ── Quick Actions ───────────────────────────────────────── */
+.warden-quick-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.warden-quick-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 28px 16px;
+  background: #fff;
+  border: 1px solid var(--border, #E5E7EB);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: box-shadow 0.2s, transform 0.2s, border-color 0.2s;
+}
+
+.warden-quick-btn:hover {
+  box-shadow: 0px 6px 18px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+  border-color: var(--primary, #1F3C88);
+}
+
+.warden-quick-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #F4F6F9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary, #1F3C88);
+}
+
+.warden-quick-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary, #2E2E2E);
+  text-align: center;
+}
+
+/* ── Middle Row ──────────────────────────────────────────── */
+.warden-middle-row {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 20px;
+  align-items: start;
+}
+
+/* ── Pending Complaints ──────────────────────────────────── */
+.warden-complaints-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.warden-complaints-header .warden-section-title {
+  margin: 0;
+}
+
+.warden-view-all-btn {
+  background: none;
+  border: none;
+  font-size: 13px;
+  font-weight: 500;
+  color: #2BBBAD;
+  cursor: pointer;
+  padding: 0;
+}
+
+.warden-view-all-btn:hover {
+  text-decoration: underline;
+}
+
+.warden-complaints-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.warden-complaint-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border, #E5E7EB);
+  gap: 12px;
+}
+
+.warden-complaint-item:last-child {
+  border-bottom: none;
+}
+
+.warden-complaint-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.warden-complaint-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+
+.warden-complaint-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary, #2E2E2E);
+}
+
+.warden-complaint-badge {
+  padding: 2px 10px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.warden-complaint-title {
+  font-size: 13px;
+  color: var(--text-secondary, #6B7280);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.warden-complaint-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.warden-complaint-time {
+  font-size: 12px;
+  color: var(--text-secondary, #6B7280);
+  white-space: nowrap;
+}
+
+.warden-complaint-view-btn {
+  padding: 5px 14px;
+  background: #fff;
+  border: 1px solid var(--border, #E5E7EB);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-primary, #2E2E2E);
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.warden-complaint-view-btn:hover {
+  border-color: var(--primary, #1F3C88);
+  color: var(--primary, #1F3C88);
+}
+
+/* ── System Alerts ───────────────────────────────────────── */
+.warden-alerts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.warden-alert-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border, #E5E7EB);
+}
+
+.warden-alert-item:last-child {
+  border-bottom: none;
+}
+
+.warden-alert-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+
+.warden-alert-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.warden-alert-message {
+  font-size: 13px;
+  color: var(--text-primary, #2E2E2E);
+  line-height: 1.5;
+}
+
+.warden-alert-time {
+  font-size: 11px;
+  color: var(--text-secondary, #6B7280);
+}
+
+/* ── Recent Activity ─────────────────────────────────────── */
+.warden-activity-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.warden-activity-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-primary, #2E2E2E);
+}
+
+.warden-activity-title-row .warden-section-title {
+  margin: 0;
+}
+
+.warden-activity-filters {
+  display: flex;
+  gap: 8px;
+}
+
+.warden-filter-btn {
+  padding: 6px 16px;
+  background: #fff;
+  border: 1px solid var(--border, #E5E7EB);
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary, #6B7280);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.warden-filter-btn:hover {
+  border-color: var(--primary, #1F3C88);
+  color: var(--primary, #1F3C88);
+}
+
+.warden-filter-active {
+  background: var(--primary, #1F3C88);
+  border-color: var(--primary, #1F3C88);
+  color: #fff !important;
+}
+
+.warden-filter-active:hover {
+  color: #fff !important;
+}
+
+/* Table */
+.warden-activity-table-wrap {
+  overflow-x: auto;
+}
+
+.warden-activity-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.warden-activity-table thead {
+  background: var(--background, #F4F6F9);
+}
+
+.warden-activity-table th {
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-secondary, #6B7280);
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+.warden-activity-table td {
+  padding: 16px;
+  border-bottom: 1px solid var(--border, #E5E7EB);
+  font-size: 14px;
+  vertical-align: middle;
+}
+
+.warden-activity-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.warden-act-type {
+  font-weight: 600;
+  color: var(--text-primary, #2E2E2E);
+  white-space: nowrap;
+}
+
+.warden-act-desc {
+  color: var(--text-secondary, #6B7280);
+}
+
+.warden-act-time {
+  font-size: 13px;
+  color: var(--text-secondary, #6B7280);
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.warden-act-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Mobile Activity Cards */
+.warden-activity-mobile {
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.warden-act-card {
+  background: var(--background, #F4F6F9);
+  border-radius: 8px;
+  padding: 14px;
+}
+
+.warden-act-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+/* ── Responsive: Tablet (≤ 1024px) ──────────────────────── */
+@media (max-width: 1024px) {
+  .warden-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .warden-middle-row {
+    grid-template-columns: 1fr;
+  }
+
+  .warden-quick-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ── Responsive: Mobile (≤ 768px) ───────────────────────── */
+@media (max-width: 768px) {
+  .warden-dashboard {
+    padding: 16px;
+    gap: 16px;
+  }
+
+  .warden-welcome-title {
+    font-size: 22px;
+  }
+
+  .warden-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .warden-stat-value {
+    font-size: 28px;
+  }
+
+  .warden-section-card {
+    padding: 16px;
+  }
+
+  .warden-quick-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .warden-activity-table-wrap {
+    display: none;
+  }
+
+  .warden-activity-mobile {
+    display: flex;
+  }
+
+  .warden-activity-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+}
