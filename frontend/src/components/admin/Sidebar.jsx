@@ -4,7 +4,7 @@ import {
   Home, Users, UserCheck, Building2, CreditCard,
   MessageSquare, Calendar, Megaphone, Briefcase,
   Wallet, Receipt, Settings, LogOut, ChevronLeft, X,
-  ClipboardList, UtensilsCrossed
+  ClipboardList, UtensilsCrossed, UserCircle
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import '../../styles/admin/Sidebar.css';
@@ -29,6 +29,7 @@ const Sidebar = ({ isOpen, onClose, userRole = 'admin' }) => {
           { id: 'employees',     label: 'Employees',      icon: Briefcase,      route: '/admin/employees' },
           { id: 'expenses',      label: 'Expenses',       icon: Wallet,         route: '/admin/expenses' },
           { id: 'certificates',  label: 'Certificates',   icon: Receipt,        route: '/admin/certificates' },
+          { id: 'profile',       label: 'Profile',        icon: UserCircle,     route: '/admin/profile' },
         ];
       case 'warden':
         return [
@@ -67,13 +68,9 @@ const Sidebar = ({ isOpen, onClose, userRole = 'admin' }) => {
   };
 
   // ── Active state logic ───────────────────────────────────────
-  // For most items: exact match.
-  // For module roots (students, rooms, wardens, fees, complaints):
-  // use startsWith so child pages keep the item highlighted.
   const isItemActive = (item) => {
     const path = location.pathname;
 
-    // Exact-match routes (single pages, no children)
     const exactRoutes = [
       '/admin/dashboard',
       '/admin/attendance',
@@ -102,6 +99,7 @@ const Sidebar = ({ isOpen, onClose, userRole = 'admin' }) => {
     }
 
     // Module routes: stay active for all child pages
+    // /admin/profile stays active for /admin/profile/change-password too
     return path === item.route || path.startsWith(item.route + '/');
   };
   // ────────────────────────────────────────────────────────────
