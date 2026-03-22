@@ -1,0 +1,418 @@
+/* src/styles/warden/student-profile.css */
+
+/* ── Page ─────────────────────────────────────────────── */
+.wsp-page {
+  padding: 28px 28px 48px;
+  background: var(--background, #F4F6F9);
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.wsp-loading {
+  padding: 60px;
+  text-align: center;
+  color: var(--text-secondary, #6B7280);
+  font-size: 15px;
+}
+
+/* ── Page Header ──────────────────────────────────────── */
+.wsp-page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.wsp-page-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.wsp-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-secondary, #6B7280);
+}
+
+.wsp-bc-sep { color: #9CA3AF; }
+
+.wsp-bc-link {
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.wsp-bc-link:hover { color: var(--primary, #1F3C88); }
+
+.wsp-bc-active {
+  color: var(--text-primary, #2E2E2E);
+  font-weight: 500;
+}
+
+.wsp-page-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-primary, #2E2E2E);
+  margin: 0;
+}
+
+.wsp-page-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.wsp-btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  background: #fff;
+  color: var(--text-primary, #2E2E2E);
+  border: 1px solid var(--border, #E5E7EB);
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.18s;
+  white-space: nowrap;
+}
+
+.wsp-btn-back:hover {
+  background: var(--background, #F4F6F9);
+  border-color: #9CA3AF;
+}
+
+.wsp-btn-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 20px;
+  background: var(--primary, #1F3C88);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s;
+  white-space: nowrap;
+}
+
+.wsp-btn-edit:hover { background: #162d6b; }
+
+/* ── Hero Card ────────────────────────────────────────── */
+.wsp-hero {
+  background: #fff;
+  border-radius: 8px;
+  padding: 28px 32px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.07);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.wsp-hero-left {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.wsp-avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.wsp-avatar {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--background, #F4F6F9);
+  display: block;
+}
+
+.wsp-status-pill {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 3px 10px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  color: #fff;
+  white-space: nowrap;
+}
+
+.wsp-hero-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wsp-hero-name {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary, #2E2E2E);
+  margin: 0;
+}
+
+.wsp-hero-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.wsp-hero-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  color: var(--text-secondary, #6B7280);
+}
+
+.wsp-hero-divider {
+  color: #D1D5DB;
+  font-size: 14px;
+}
+
+.wsp-hero-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.wsp-tag {
+  padding: 4px 12px;
+  background: var(--background, #F4F6F9);
+  border: 1px solid var(--border, #E5E7EB);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary, #2E2E2E);
+}
+
+/* ── Detail Cards Grid ────────────────────────────────── */
+.wsp-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+/* ── Section Card ─────────────────────────────────────── */
+.wsp-card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 22px 24px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.07);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.wsp-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border, #E5E7EB);
+}
+
+.wsp-card-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.wsp-card-icon { color: var(--primary, #1F3C88); }
+
+.wsp-card-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary, #2E2E2E);
+  margin: 0;
+}
+
+.wsp-card-body { display: flex; flex-direction: column; gap: 12px; }
+
+.wsp-view-history {
+  background: none;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--secondary, #2BBBAD);
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.15s;
+}
+
+.wsp-view-history:hover { color: #1f9a8e; }
+
+/* ── Details Grid ─────────────────────────────────────── */
+.wsp-details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 20px;
+}
+
+.wsp-detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.wsp-detail-full { grid-column: 1 / -1; }
+
+.wsp-detail-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.55px;
+  color: var(--text-secondary, #6B7280);
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+}
+
+.wsp-detail-value {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary, #2E2E2E);
+  line-height: 1.45;
+}
+
+/* ── Complaint Stats ──────────────────────────────────── */
+.wsp-complaint-stats {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 16px 0 8px;
+}
+
+.wsp-complaint-stat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.wsp-complaint-num {
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--text-primary, #2E2E2E);
+  line-height: 1;
+}
+
+.wsp-resolved { color: #059669; }
+.wsp-pending  { color: #D97706; }
+
+.wsp-complaint-lbl {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  color: var(--text-secondary, #6B7280);
+}
+
+.wsp-complaint-divider {
+  width: 1px;
+  height: 48px;
+  background: var(--border, #E5E7EB);
+}
+
+.wsp-latest-activity {
+  display: flex;
+  align-items: flex-start;
+  font-size: 12px;
+  color: var(--text-secondary, #6B7280);
+  margin: 0;
+  padding-top: 8px;
+  border-top: 1px solid var(--border, #E5E7EB);
+  line-height: 1.5;
+}
+
+/* ── Fee Status ───────────────────────────────────────── */
+.wsp-fee-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.wsp-fee-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary, #2E2E2E);
+}
+
+.wsp-fee-status {
+  padding: 4px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.wsp-fee-divider {
+  border: none;
+  border-top: 1px solid var(--border, #E5E7EB);
+  margin: 4px 0;
+}
+
+.wsp-fee-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 20px;
+}
+
+.wsp-fee-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.wsp-txn {
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  color: var(--text-primary, #2E2E2E);
+  font-weight: 600;
+}
+
+/* ── Responsive ───────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .wsp-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px) {
+  .wsp-page { padding: 16px 16px 40px; }
+
+  .wsp-page-header { flex-direction: column; align-items: flex-start; }
+
+  .wsp-page-actions { width: 100%; }
+  .wsp-btn-back, .wsp-btn-edit { flex: 1; justify-content: center; }
+
+  .wsp-hero { padding: 20px; }
+  .wsp-hero-left { flex-direction: column; align-items: flex-start; gap: 16px; }
+  .wsp-hero-name { font-size: 20px; }
+  .wsp-avatar { width: 72px; height: 72px; }
+
+  .wsp-card { padding: 18px; }
+  .wsp-details-grid { grid-template-columns: 1fr; }
+  .wsp-detail-full { grid-column: 1; }
+
+  .wsp-fee-meta { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 390px) {
+  .wsp-page { padding: 12px 12px 32px; }
+  .wsp-hero { padding: 16px; }
+  .wsp-card { padding: 16px; }
+}
