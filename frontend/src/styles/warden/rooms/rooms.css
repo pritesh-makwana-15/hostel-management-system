@@ -1,0 +1,377 @@
+/* ============================================================
+   rooms.css — Warden Room Management
+   ============================================================ */
+
+.warden-rooms-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px;
+  background: var(--background, #F4F6F9);
+  min-height: 100%;
+}
+
+/* ── Stats Grid ── */
+.room-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.room-stat-card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 20px 24px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.room-stat-card:hover {
+  box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+  transform: translateY(-2px);
+}
+
+.room-stat-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.room-stat-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--text-secondary, #6B7280);
+}
+
+.room-stat-value {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--text-primary, #2E2E2E);
+  line-height: 1.1;
+}
+
+.room-stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ── Filter Card ── */
+.room-filter-card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 20px 24px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.room-filter-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.room-filter-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary, #2E2E2E);
+}
+
+.room-filter-reset {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  font-size: 13px;
+  color: var(--text-secondary, #6B7280);
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.room-filter-reset:hover {
+  color: var(--primary, #1F3C88);
+}
+
+.room-filter-row {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr 1fr;
+  gap: 12px;
+}
+
+.room-filter-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--background, #F4F6F9);
+  border-radius: 6px;
+  padding: 10px 14px;
+  color: var(--text-secondary, #6B7280);
+}
+
+.room-filter-search input {
+  border: none;
+  background: none;
+  outline: none;
+  font-size: 13px;
+  color: var(--text-primary, #2E2E2E);
+  width: 100%;
+}
+
+.room-filter-select {
+  padding: 10px 14px;
+  border: 1px solid var(--border, #E5E7EB);
+  border-radius: 6px;
+  font-size: 13px;
+  color: var(--text-primary, #2E2E2E);
+  background: #fff;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 32px;
+}
+
+.room-filter-select:focus {
+  border-color: var(--primary, #1F3C88);
+}
+
+/* ── Overview Header ── */
+.rooms-overview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.rooms-overview-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary, #2E2E2E);
+}
+
+.rooms-overview-count {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-secondary, #6B7280);
+}
+
+.rooms-empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-secondary, #6B7280);
+  font-size: 15px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+/* ── Rooms Grid ── */
+.rooms-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+/* ── Room Card ── */
+.room-card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 18px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.room-card:hover {
+  box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+  transform: translateY(-2px);
+}
+
+.room-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.room-card-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.room-card-number {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary, #2E2E2E);
+}
+
+.room-card-type-badge {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  background: #EEF2FF;
+  color: var(--primary, #1F3C88);
+}
+
+.room-card-status-badge {
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.room-card-meta {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--text-secondary, #6B7280);
+}
+
+.room-card-occupancy-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.room-card-occ-label {
+  font-size: 12px;
+  color: var(--text-secondary, #6B7280);
+}
+
+.room-card-occ-pct {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary, #2E2E2E);
+}
+
+.room-card-bar-bg {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--background, #F4F6F9);
+  overflow: hidden;
+}
+
+.room-card-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s;
+}
+
+.room-card-beds-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.room-card-beds-left {
+  font-size: 12px;
+  color: var(--text-secondary, #6B7280);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ── Bed Dots ── */
+.bed-grid {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.bed-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+.bed-dot-occupied {
+  background: var(--primary, #1F3C88);
+}
+
+.bed-dot-empty {
+  background: var(--border, #E5E7EB);
+}
+
+/* ── Room Card Actions ── */
+.room-card-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.room-card-btn {
+  flex: 1;
+  padding: 8px 0;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.room-card-btn-outline {
+  background: #fff;
+  border: 1px solid var(--border, #E5E7EB);
+  color: var(--text-primary, #2E2E2E);
+}
+
+.room-card-btn-outline:hover {
+  border-color: var(--primary, #1F3C88);
+  color: var(--primary, #1F3C88);
+}
+
+.room-card-btn-primary {
+  background: var(--primary, #1F3C88);
+  color: #fff;
+}
+
+.room-card-btn-primary:hover {
+  background: #162d6b;
+}
+
+.room-card-btn-disabled {
+  background: #D1D5DB !important;
+  color: #9CA3AF !important;
+  cursor: not-allowed !important;
+}
+
+/* ── Responsive ── */
+@media (max-width: 1200px) {
+  .rooms-grid { grid-template-columns: repeat(3, 1fr); }
+  .room-stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 900px) {
+  .rooms-grid { grid-template-columns: repeat(2, 1fr); }
+  .room-filter-row { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 600px) {
+  .warden-rooms-page { padding: 16px; }
+  .rooms-grid { grid-template-columns: 1fr; }
+  .room-stats-grid { grid-template-columns: 1fr; }
+  .room-filter-row { grid-template-columns: 1fr; }
+}
