@@ -1,0 +1,560 @@
+/* ──────────────────────────────────────────────
+   Warden Profile Page Styles
+   Uses HMS CSS variables from variables.css
+   Mirrors Admin Profile design exactly.
+   ────────────────────────────────────────────── */
+
+.warden-profile-page {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* ── Page Header ── */
+.warden-profile-page .page-header {
+  margin-bottom: 24px;
+}
+
+.warden-profile-page .page-title {
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 6px 0 4px 0;
+}
+
+.warden-profile-page .page-subtitle {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.warden-profile-page .breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.warden-profile-page .breadcrumb-link {
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.warden-profile-page .breadcrumb-link:hover {
+  color: var(--primary);
+}
+
+.warden-profile-page .breadcrumb-sep {
+  color: var(--text-secondary);
+}
+
+.warden-profile-page .breadcrumb-active {
+  color: var(--primary);
+  font-weight: 500;
+}
+
+/* ── Profile Hero Card ── */
+.warden-profile-page .profile-hero-card {
+  background: var(--card-bg);
+  border-radius: var(--radius-card) var(--radius-card) 0 0;
+  padding: 28px 32px;
+  box-shadow: var(--shadow);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2px;
+  border-bottom: 3px solid var(--primary);
+}
+
+.warden-profile-page .profile-hero-left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.warden-profile-page .profile-avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.warden-profile-page .profile-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary) 0%, #2d54c7 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  border: 4px solid var(--background);
+  box-shadow: 0 4px 12px rgba(31, 60, 136, 0.3);
+}
+
+.warden-profile-page .profile-online-dot {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  width: 18px;
+  height: 18px;
+  background: #10B981;
+  border: 3px solid white;
+  border-radius: 50%;
+}
+
+.warden-profile-page .profile-hero-info {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.warden-profile-page .profile-hero-name {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.warden-profile-page .profile-name-input {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text-primary);
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-button);
+  padding: 6px 12px;
+  outline: none;
+  font-family: var(--font-family);
+  box-shadow: 0 0 0 3px rgba(31, 60, 136, 0.1);
+  min-width: 260px;
+}
+
+.warden-profile-page .profile-hero-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.warden-profile-page .role-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(43, 187, 173, 0.12);
+  color: var(--secondary);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.warden-profile-page .warden-id-dot {
+  color: var(--text-secondary);
+  font-size: 16px;
+}
+
+.warden-profile-page .warden-id {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+/* Hero Actions */
+.warden-profile-page .profile-hero-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.warden-profile-page .btn-edit-profile {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: white;
+  color: var(--primary);
+  border: 1.5px solid var(--primary);
+  border-radius: var(--radius-button);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--font-family);
+}
+
+.warden-profile-page .btn-edit-profile:hover {
+  background: var(--primary);
+  color: white;
+}
+
+.warden-profile-page .btn-cancel-edit {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: white;
+  color: var(--text-secondary);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-button);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--font-family);
+}
+
+.warden-profile-page .btn-cancel-edit:hover {
+  background: var(--background);
+}
+
+.warden-profile-page .btn-save-profile {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-button);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--font-family);
+}
+
+.warden-profile-page .btn-save-profile:hover {
+  background: #162e6e;
+}
+
+/* ── Info Strip ── */
+.warden-profile-page .profile-info-strip {
+  background: var(--card-bg);
+  border-radius: 0 0 var(--radius-card) var(--radius-card);
+  box-shadow: var(--shadow);
+  display: flex;
+  align-items: center;
+  padding: 20px 32px;
+  margin-bottom: 24px;
+  border-top: 1px solid var(--border);
+}
+
+.warden-profile-page .info-strip-item {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.warden-profile-page .info-strip-icon {
+  color: var(--text-secondary);
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.warden-profile-page .info-strip-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.warden-profile-page .info-strip-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.warden-profile-page .info-strip-value {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.warden-profile-page .info-strip-input {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-button);
+  padding: 4px 8px;
+  outline: none;
+  font-family: var(--font-family);
+  box-shadow: 0 0 0 2px rgba(31, 60, 136, 0.1);
+  min-width: 160px;
+}
+
+.warden-profile-page .info-strip-divider {
+  width: 1px;
+  height: 40px;
+  background: var(--border);
+  margin: 0 24px;
+  flex-shrink: 0;
+}
+
+/* ── Lower Grid ── */
+.warden-profile-page .profile-lower-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+/* Section Cards */
+.warden-profile-page .profile-section-card {
+  background: var(--card-bg);
+  border-radius: var(--radius-card);
+  padding: 24px;
+  box-shadow: var(--shadow);
+}
+
+.warden-profile-page .section-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.warden-profile-page .section-card-icon {
+  color: var(--primary);
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.warden-profile-page .section-card-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 4px 0;
+}
+
+.warden-profile-page .section-card-subtitle {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* Account Info Table */
+.warden-profile-page .account-info-table {
+  display: flex;
+  flex-direction: column;
+}
+
+.warden-profile-page .account-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.warden-profile-page .account-info-row.no-border {
+  border-bottom: none;
+}
+
+.warden-profile-page .account-info-label {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.warden-profile-page .account-info-value {
+  font-size: 14px;
+  color: var(--text-primary);
+  font-weight: 400;
+  display: flex;
+  align-items: center;
+}
+
+.warden-profile-page .account-info-bold {
+  font-weight: 600;
+}
+
+.warden-profile-page .status-badge-active {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(16, 185, 129, 0.1);
+  color: #10B981;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Security Action Cards */
+.warden-profile-page .security-action-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  background: #F8FAFF;
+  border: 1px solid #E8EDF8;
+  border-radius: var(--radius-card);
+  padding: 18px 20px;
+  margin-bottom: 14px;
+}
+
+.warden-profile-page .security-action-card:last-child {
+  margin-bottom: 0;
+}
+
+.warden-profile-page .security-action-icon-wrap {
+  width: 44px;
+  height: 44px;
+  background: rgba(31, 60, 136, 0.1);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+.warden-profile-page .logout-icon-wrap {
+  background: rgba(239, 68, 68, 0.08);
+  color: #EF4444;
+}
+
+.warden-profile-page .security-action-info {
+  flex: 1;
+}
+
+.warden-profile-page .security-action-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 6px 0;
+}
+
+.warden-profile-page .security-action-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0 0 14px 0;
+}
+
+.warden-profile-page .btn-update-password {
+  padding: 9px 20px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-button);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--font-family);
+}
+
+.warden-profile-page .btn-update-password:hover {
+  background: #162e6e;
+}
+
+.warden-profile-page .btn-logout-devices {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 20px;
+  background: white;
+  color: var(--text-primary);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-button);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--font-family);
+}
+
+.warden-profile-page .btn-logout-devices:hover {
+  border-color: #EF4444;
+  color: #EF4444;
+  background: rgba(239, 68, 68, 0.04);
+}
+
+/* ── Tablet Responsive ── */
+@media (max-width: 1024px) {
+  .warden-profile-page .profile-lower-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .warden-profile-page .profile-info-strip {
+    flex-wrap: wrap;
+    gap: 16px;
+    padding: 20px 24px;
+  }
+
+  .warden-profile-page .info-strip-divider {
+    display: none;
+  }
+
+  .warden-profile-page .info-strip-item {
+    min-width: calc(50% - 8px);
+  }
+}
+
+/* ── Mobile Responsive ── */
+@media (max-width: 768px) {
+  .warden-profile-page {
+    padding: 16px;
+  }
+
+  .warden-profile-page .profile-hero-card {
+    padding: 20px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+  }
+
+  .warden-profile-page .profile-hero-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .warden-profile-page .btn-edit-profile,
+  .warden-profile-page .btn-cancel-edit,
+  .warden-profile-page .btn-save-profile {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .warden-profile-page .profile-hero-name,
+  .warden-profile-page .profile-name-input {
+    font-size: 18px;
+  }
+
+  .warden-profile-page .profile-info-strip {
+    padding: 16px;
+  }
+
+  .warden-profile-page .info-strip-item {
+    min-width: 100%;
+  }
+
+  .warden-profile-page .account-info-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+}
+
+/* ── Small Mobile ── */
+@media (max-width: 390px) {
+  .warden-profile-page {
+    padding: 12px;
+  }
+
+  .warden-profile-page .profile-hero-card {
+    padding: 16px;
+  }
+
+  .warden-profile-page .profile-avatar {
+    width: 64px;
+    height: 64px;
+  }
+
+  .warden-profile-page .profile-section-card {
+    padding: 16px;
+  }
+}

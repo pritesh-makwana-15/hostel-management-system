@@ -24,22 +24,23 @@ const Sidebar = ({ isOpen, onClose, userRole = 'admin' }) => {
           { id: 'rooms',         label: 'Rooms & Beds',   icon: Building2,      route: '/admin/rooms' },
           { id: 'fees',          label: 'Fees',           icon: CreditCard,     route: '/admin/fees' },
           { id: 'complaints',    label: 'Complaints',     icon: MessageSquare,  route: '/admin/complaints' },
-          { id: 'attendance',    label: 'Attendance',     icon: Calendar,       route: '/admin/attendance' },
           { id: 'announcements', label: 'Announcements',  icon: Megaphone,      route: '/admin/announcements' },
-          { id: 'employees',     label: 'Employees',      icon: Briefcase,      route: '/admin/employees' },
-          { id: 'expenses',      label: 'Expenses',       icon: Wallet,         route: '/admin/expenses' },
-          { id: 'certificates',  label: 'Certificates',   icon: Receipt,        route: '/admin/certificates' },
           { id: 'profile',       label: 'Profile',        icon: UserCircle,     route: '/admin/profile' },
+          // { id: 'attendance',    label: 'Attendance',     icon: Calendar,       route: '/admin/attendance' },
+          // { id: 'employees',     label: 'Employees',      icon: Briefcase,      route: '/admin/employees' },
+          // { id: 'expenses',      label: 'Expenses',       icon: Wallet,         route: '/admin/expenses' },
+          // { id: 'certificates',  label: 'Certificates',   icon: Receipt,        route: '/admin/certificates' },
         ];
       case 'warden':
         return [
           { id: 'dashboard',     label: 'Dashboard',      icon: Home,           route: '/warden/dashboard' },
-          { id: 'attendance',    label: 'Attendance',     icon: Calendar,       route: '/warden/attendance' },
-          { id: 'mess',          label: 'Mess Management',icon: UtensilsCrossed,route: '/warden/mess' },
-          { id: 'complaints',    label: 'Complaints',     icon: MessageSquare,  route: '/warden/complaints' },
           { id: 'students',      label: 'Students',       icon: Users,          route: '/warden/students' },
           { id: 'rooms',         label: 'Rooms',          icon: Building2,      route: '/warden/rooms' },
+          { id: 'complaints',    label: 'Complaints',     icon: MessageSquare,  route: '/warden/complaints' },
           { id: 'announcements', label: 'Announcements',  icon: Megaphone,      route: '/warden/announcements' },
+           { id: 'profile',       label: 'Profile',        icon: UserCircle,     route: '/warden/profile' },
+          // { id: 'attendance',    label: 'Attendance',     icon: Calendar,       route: '/warden/attendance' },
+          // { id: 'mess',          label: 'Mess Management',icon: UtensilsCrossed,route: '/warden/mess' },
         ];
       case 'student':
         return [
