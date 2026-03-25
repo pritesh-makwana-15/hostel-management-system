@@ -38,19 +38,20 @@ const Sidebar = ({ isOpen, onClose, userRole = 'admin' }) => {
           { id: 'rooms',         label: 'Rooms',          icon: Building2,      route: '/warden/rooms' },
           { id: 'complaints',    label: 'Complaints',     icon: MessageSquare,  route: '/warden/complaints' },
           { id: 'announcements', label: 'Announcements',  icon: Megaphone,      route: '/warden/announcements' },
-           { id: 'profile',       label: 'Profile',        icon: UserCircle,     route: '/warden/profile' },
-          // { id: 'attendance',    label: 'Attendance',     icon: Calendar,       route: '/warden/attendance' },
-          // { id: 'mess',          label: 'Mess Management',icon: UtensilsCrossed,route: '/warden/mess' },
+          { id: 'profile',       label: 'Profile',        icon: UserCircle,     route: '/warden/profile' },
+           // { id: 'attendance',    label: 'Attendance',     icon: Calendar,       route: '/warden/attendance' },
+           // { id: 'mess',          label: 'Mess Management',icon: UtensilsCrossed,route: '/warden/mess' },
         ];
-      case 'student':
-        return [
-          { id: 'dashboard',     label: 'Dashboard',      icon: Home,           route: '/student/dashboard' },
-          { id: 'fees',          label: 'Fee Payment',    icon: CreditCard,     route: '/student/fees' },
-          { id: 'leave',         label: 'Leave Application',icon: ClipboardList,route: '/student/leave' },
-          { id: 'complaints',    label: 'Complaints',     icon: MessageSquare,  route: '/student/complaints' },
-          { id: 'room',          label: 'My Room',        icon: Building2,      route: '/student/room' },
-          { id: 'mess',          label: 'Mess Menu',      icon: UtensilsCrossed,route: '/student/mess' },
-          { id: 'announcements', label: 'Announcements',  icon: Megaphone,      route: '/student/announcements' },
+        case 'student':
+          return [
+            { id: 'dashboard',     label: 'Dashboard',      icon: Home,           route: '/student/dashboard' },
+            { id: 'room',          label: 'My Room',        icon: Building2,      route: '/student/room' },
+            { id: 'fees',          label: 'Fee Payment',    icon: CreditCard,     route: '/student/fees' },
+            { id: 'complaints',    label: 'Complaints',     icon: MessageSquare,  route: '/student/complaints' },
+            { id: 'announcements', label: 'Announcements',  icon: Megaphone,      route: '/student/announcements' },
+            { id: 'profile',       label: 'Profile',        icon: UserCircle,     route: '/student/profile' },
+          // { id: 'leave',         label: 'Leave Application',icon: ClipboardList,route: '/student/leave' },
+          // { id: 'mess',          label: 'Mess Menu',      icon: UtensilsCrossed,route: '/student/mess' },
         ];
       default:
         return [];
