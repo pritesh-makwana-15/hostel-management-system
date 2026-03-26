@@ -1,51 +1,61 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, User, Building2, Lock, Eye, EyeOff, Info } from 'lucide-react';
-import { hostelOptions, blockOptions, genderOptions } from '../../../data/wardensData';
+import { ArrowLeft, User, Lock, Eye, EyeOff } from 'lucide-react';
+import { wardenAPI } from '../../../services/api';
 import '../../../styles/admin/wardens/addWarden.css';
 
 const AddWarden = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
-    fullName: '',
-    email: '',
-    phone: '',
-    gender: '',
-    dateOfJoining: '',
-    hostel: '',
-    block: '',
-    username: '',
-    password: '',
+    name: '', email: '', phone: '', gender: '',
+    joinDate: '', address: '', password: '',
   });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    // Integrate with API later
-    navigate('/admin/wardens');
+    setLoading(true);
+    setError('');
+    try {
+      await wardenAPI.create({
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        phone: formData.phone,
+        gender: formData.gender,
+        address: formData.address,
+        joinDate: formData.joinDate || null,
+      });
+      navigate('/admin/wardens');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to create warden.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="add-warden-page">
-      {/* Page Header */}
       <div className="page-header">
         <button className="back-btn" onClick={() => navigate('/admin/wardens')}>
-          <ArrowLeft size={18} />
-          Back to Wardens
+          <ArrowLeft size={18} /> Back to Wardens
         </button>
         <div>
           <h1 className="page-title">Add New Warden</h1>
-          <p className="page-subtitle">Fill in the details to register a new warden to the management system.</p>
+          <p className="page-subtitle">Fill in the details to register a new warden.</p>
         </div>
       </div>
 
+      {error && <div className="error-banner">{error}</div>}
+
       <form className="warden-form" onSubmit={handleSave}>
-        {/* Personal Information */}
         <div className="form-card">
           <div className="form-card-header">
             <div className="form-card-icon"><User size={20} /></div>
@@ -58,151 +68,53 @@ const AddWarden = () => {
           <div className="form-section-label">Personal Information</div>
           <div className="form-grid">
             <div className="form-group">
-              <label className="form-label">Full Name</label>
-              <div className="input-wrapper">
-                <User size={16} className="input-icon" />
-                <input
-                  type="text"
-                  name="fullName"
-                  placeholder="John Doe"
-                  value={formData.fullName}
-                  onChange={handleChange}
-                  className="form-input"
-                  required
-                />
-              </div>
+              <label className="form-label">Full Name *</label>
+              <input type="text" name="name" value={formData.name}
+                onChange={handleChange} className="form-input" required />
             </div>
-
             <div className="form-group">
-              <label className="form-label">Email Address</label>
-              <div className="input-wrapper">
-                <span className="input-icon input-icon-text">✉</span>
-                <input
-                  type="email"
-                  name="email"
-                  placeholder="j.doe@hms.com"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="form-input"
-                  required
-                />
-              </div>
+              <label className="form-label">Email Address *</label>
+              <input type="email" name="email" value={formData.email}
+                onChange={handleChange} className="form-input" required />
             </div>
-
             <div className="form-group">
               <label className="form-label">Phone Number</label>
-              <input
-                type="tel"
-                name="phone"
-                placeholder="+1 (555) 000-0000"
-                value={formData.phone}
-                onChange={handleChange}
-                className="form-input"
-                required
-              />
+              <input type="tel" name="phone" value={formData.phone}
+                onChange={handleChange} className="form-input" />
             </div>
-
             <div className="form-group">
               <label className="form-label">Gender</label>
-              <select
-                name="gender"
-                value={formData.gender}
-                onChange={handleChange}
-                className="form-select"
-                required
-              >
+              <select name="gender" value={formData.gender}
+                onChange={handleChange} className="form-select">
                 <option value="">Select Gender</option>
-                {genderOptions.map((g) => (
-                  <option key={g.id} value={g.name}>{g.name}</option>
-                ))}
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
               </select>
             </div>
-
-            <div className="form-group form-group-full">
+            <div className="form-group">
               <label className="form-label">Date of Joining</label>
-              <input
-                type="date"
-                name="dateOfJoining"
-                value={formData.dateOfJoining}
-                onChange={handleChange}
-                className="form-input"
-                required
-              />
+              <input type="date" name="joinDate" value={formData.joinDate}
+                onChange={handleChange} className="form-input" />
+            </div>
+            <div className="form-group form-group-full">
+              <label className="form-label">Address</label>
+              <textarea name="address" value={formData.address}
+                onChange={handleChange} className="form-input" rows="2" />
             </div>
           </div>
 
-          {/* Hostel Assignment */}
-          <div className="form-section-label">Hostel Assignment</div>
-          <div className="form-grid">
-            <div className="form-group">
-              <label className="form-label">Assign Hostel</label>
-              <select
-                name="hostel"
-                value={formData.hostel}
-                onChange={handleChange}
-                className="form-select"
-              >
-                <option value="">Select Hostel</option>
-                {hostelOptions.map((h) => (
-                  <option key={h.id} value={h.name}>{h.name}</option>
-                ))}
-              </select>
-            </div>
-            <div className="form-group">
-              <label className="form-label">Assign Block</label>
-              <select
-                name="block"
-                value={formData.block}
-                onChange={handleChange}
-                className="form-select"
-              >
-                <option value="">Select Block</option>
-                {blockOptions.map((b) => (
-                  <option key={b.id} value={b.name}>{b.name}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="assignment-note">
-            <Info size={16} className="note-icon" />
-            <span>Wardens assigned to premium blocks require additional clearance checks for electronic amenity maintenance.</span>
-          </div>
-
-          {/* Login Credentials */}
           <div className="form-section-label">Login Credentials</div>
           <div className="form-grid">
             <div className="form-group">
-              <label className="form-label">Username</label>
-              <input
-                type="text"
-                name="username"
-                placeholder="j.doe.warden"
-                value={formData.username}
-                onChange={handleChange}
-                className="form-input"
-                required
-              />
-              <span className="input-hint">Suggested format: firstname.lastname.role</span>
-            </div>
-            <div className="form-group">
-              <label className="form-label">Password</label>
+              <label className="form-label">Password *</label>
               <div className="input-wrapper">
                 <Lock size={16} className="input-icon" />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  name="password"
-                  placeholder="••••••••••••"
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="form-input"
-                  required
-                />
-                <button
-                  type="button"
-                  className="password-toggle"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
+                <input type={showPassword ? 'text' : 'password'} name="password"
+                  value={formData.password} onChange={handleChange}
+                  className="form-input" required />
+                <button type="button" className="password-toggle"
+                  onClick={() => setShowPassword(!showPassword)}>
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
@@ -210,13 +122,11 @@ const AddWarden = () => {
           </div>
         </div>
 
-        {/* Form Actions */}
         <div className="form-actions">
-          <button type="button" className="btn-secondary" onClick={() => navigate('/admin/wardens')}>
-            Cancel
-          </button>
-          <button type="submit" className="btn-primary">
-            Save Warden
+          <button type="button" className="btn-secondary"
+            onClick={() => navigate('/admin/wardens')}>Cancel</button>
+          <button type="submit" className="btn-primary" disabled={loading}>
+            {loading ? 'Saving...' : 'Save Warden'}
           </button>
         </div>
       </form>
