@@ -34,7 +34,7 @@ git checkout your-branch-name
 Example:
 
 ```bash
-git checkout vaibhav
+git checkout pritesh
 ```
 
 If branch does not exist:
