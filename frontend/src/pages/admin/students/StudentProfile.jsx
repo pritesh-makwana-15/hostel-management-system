@@ -1,298 +1,224 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Edit, Home as HomeIcon, UserX } from 'lucide-react';
-import { getStudentById } from '../../../data/studentsData';
+import { adminStudentApi } from '../../../services/adminStudentApi';
 import '../../../styles/admin/students/student-profile.css';
 
 const StudentProfile = () => {
-const navigate = useNavigate();
-const { id } = useParams();
-const [student, setStudent] = useState(null);
-const [showDeactivateModal, setShowDeactivateModal] = useState(false);
+  const navigate = useNavigate();
+  const { id }   = useParams();
 
-useEffect(() => {
-  const studentData = getStudentById(id);
-  setStudent(studentData);
-}, [id]);
+  const [student, setStudent]                   = useState(null);
+  const [loading, setLoading]                   = useState(true);
+  const [error, setError]                       = useState('');
+  const [showDeactivateModal, setShowDeactivateModal] = useState(false);
+  const [deactivating, setDeactivating]         = useState(false);
 
-if (!student) {
-  return <div>Loading...</div>;
-}
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await adminStudentApi.getProfile(id);
+        setStudent(res.data.data);
+      } catch {
+        setError('Failed to load student profile.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProfile();
+  }, [id]);
 
-return (
-  <div className="student-profile-page">
-    {/* Header */}
-    <div className="page-header">
-      <div className="page-header-left">
-        <h1 className="page-title">Student Profile</h1>
-        <div className="breadcrumb">
-          <span>Dashboard</span>
-          <span className="breadcrumb-separator">›</span>
-          <span>Students</span>
-          <span className="breadcrumb-separator">›</span>
-          <span className="breadcrumb-active">Profile</span>
-        </div>
-      </div>
-    </div>
+  const handleDeactivate = async () => {
+    setDeactivating(true);
+    try {
+      await adminStudentApi.updateStatus(id, 'Inactive');
+      navigate('/admin/students');
+    } catch {
+      alert('Failed to deactivate student.');
+      setDeactivating(false);
+    }
+  };
 
-    {/* Profile Header Card */}
-    <div className="profile-header-card">
-      <div className="profile-header-content">
-        <div className="profile-photo-section">
-          <img 
-            src={student.photo} 
-            alt={student.fullName}
-            className="profile-photo"
-          />
-          <span className="profile-status-indicator"></span>
-        </div>
-        <div className="profile-header-info">
-          <h2 className="profile-name">{student.fullName}</h2>
-          <p className="profile-enrollment">Enrollment No: {student.enrollmentNo}</p>
-          <span 
-            className="profile-status-badge"
-            style={{
-              backgroundColor: student.status === 'Active' 
-                ? '#10B98115' 
-                : student.status === 'Inactive' 
-                  ? '#EF444415' 
-                  : '#F59E0B15',
-              color: student.status === 'Active' 
-                ? '#10B981' 
-                : student.status === 'Inactive' 
-                  ? '#EF4444' 
-                  : '#F59E0B'
-            }}
-          >
-            {student.status}
-          </span>
-        </div>
-      </div>
-      <div className="profile-header-actions">
-        <button 
-          className="profile-action-btn btn-edit"
-          onClick={() => navigate(`/admin/students/edit/${id}`)}
-        >
-          <Edit size={18} />
-          Edit
-        </button>
-        <button 
-          className="profile-action-btn btn-assign"
-          onClick={() => navigate(`/admin/students/assign/${id}`)}
-        >
-          <HomeIcon size={18} />
-          Assign Room
-        </button>
-        <button 
-          className="profile-action-btn btn-deactivate"
-          onClick={() => setShowDeactivateModal(true)}
-        >
-          <UserX size={18} />
-          Deactivate
-        </button>
-      </div>
-    </div>
+  const statusColor = (status) => {
+    if (status === 'Active')   return { bg: '#10B98115', text: '#10B981' };
+    if (status === 'Inactive') return { bg: '#EF444415', text: '#EF4444' };
+    return { bg: '#F59E0B15', text: '#F59E0B' };
+  };
 
-    {/* Profile Content Grid */}
-    <div className="profile-content-grid">
-      {/* Personal Details */}
-      <div className="profile-card">
-        <h3 className="profile-card-title">Personal Details</h3>
-        <div className="profile-details-grid">
-          <div className="detail-item">
-            <span className="detail-label">Full Name</span>
-            <span className="detail-value">{student.fullName}</span>
-          </div>
-          <div className="detail-item">
-            <span className="detail-label">Email</span>
-            <span className="detail-value">{student.email}</span>
-          </div>
-          <div className="detail-item">
-            <span className="detail-label">Phone</span>
-            <span className="detail-value">{student.phone}</span>
-          </div>
-          <div className="detail-item">
-            <span className="detail-label">Gender</span>
-            <span className="detail-value">{student.gender}</span>
-          </div>
-          <div className="detail-item">
-            <span className="detail-label">Date of Birth</span>
-            <span className="detail-value">{student.dateOfBirth}</span>
-          </div>
-          <div className="detail-item">
-            <span className="detail-label">Nationality</span>
-            <span className="detail-value">{student.nationality}</span>
+  if (loading) return <div className="loading">Loading profile...</div>;
+  if (error)   return <div className="error">{error}</div>;
+  if (!student) return null;
+
+  const sc = statusColor(student.status);
+
+  return (
+    <div className="student-profile-page">
+      {/* Header */}
+      <div className="page-header">
+        <div className="page-header-left">
+          <h1 className="page-title">Student Profile</h1>
+          <div className="breadcrumb">
+            <span>Dashboard</span><span className="breadcrumb-separator">›</span>
+            <span>Students</span><span className="breadcrumb-separator">›</span>
+            <span className="breadcrumb-active">Profile</span>
           </div>
         </div>
       </div>
 
-      {/* Academic Details */}
-      <div className="profile-card">
-        <h3 className="profile-card-title">Academic Details</h3>
-        <div className="profile-details-grid">
-          <div className="detail-item">
-            <span className="detail-label">Enrollment No</span>
-            <span className="detail-value">{student.enrollmentNo}</span>
+      {/* Profile Header Card */}
+      <div className="profile-header-card">
+        <div className="profile-header-content">
+          <div className="profile-photo-section">
+            <img
+              src={student.photoUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${student.name}`}
+              alt={student.name}
+              className="profile-photo"
+            />
           </div>
-          <div className="detail-item">
-            <span className="detail-label">Course/Department</span>
-            <span className="detail-value">{student.course}</span>
-          </div>
-          <div className="detail-item">
-            <span className="detail-label">Year/Semester</span>
-            <span className="detail-value">{student.yearSemester}</span>
-          </div>
-          <div className="detail-item">
-            <span className="detail-label">Batch</span>
-            <span className="detail-value">{student.batch}</span>
-          </div>
-          <div className="detail-item">
-            <span className="detail-label">Program</span>
-            <span className="detail-value">{student.program}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Guardian Details */}
-      <div className="profile-card">
-        <h3 className="profile-card-title">Guardian Details</h3>
-        <div className="profile-details-grid">
-          <div className="detail-item">
-            <span className="detail-label">Guardian Name</span>
-            <span className="detail-value">{student.guardianName}</span>
-          </div>
-          <div className="detail-item">
-            <span className="detail-label">Guardian Phone</span>
-            <span className="detail-value">{student.guardianPhone}</span>
-          </div>
-          <div className="detail-item">
-            <span className="detail-label">Relationship</span>
-            <span className="detail-value">{student.guardianRelation}</span>
-          </div>
-          <div className="detail-item detail-item-full">
-            <span className="detail-label">Address</span>
-            <span className="detail-value">{student.address}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Hostel Allocation */}
-      <div className="profile-card">
-        <h3 className="profile-card-title">Hostel Allocation</h3>
-        <div className="profile-details-grid">
-          <div className="detail-item">
-            <span className="detail-label">Hostel Block</span>
-            <span className="detail-value">{student.hostelBlock}</span>
-          </div>
-          <div className="detail-item">
-            <span className="detail-label">Room Type</span>
-            <span className="detail-value">{student.roomType}</span>
-          </div>
-          <div className="detail-item">
-            <span className="detail-label">Room No</span>
-            <span className="detail-value">{student.roomNo}</span>
-          </div>
-          <div className="detail-item">
-            <span className="detail-label">Bed No</span>
-            <span className="detail-value">{student.bedNo}</span>
-          </div>
-          <div className="detail-item detail-item-full">
-            <span className="detail-label">Allocated On</span>
-            <span className="detail-value">{student.allocatedOn}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Fee Summary */}
-      <div className="profile-card">
-        <h3 className="profile-card-title">Fee Summary</h3>
-        <div className="profile-details-grid">
-          <div className="detail-item">
-            <span className="detail-label">Total Fees Due</span>
-            <span className="detail-value">₹{student.totalFeesDue.toLocaleString()}
-              <span 
-                style={{
-                  marginLeft: '8px',
-                  padding: '2px 8px',
-                  borderRadius: '8px',
-                  fontSize: '11px',
-                  fontWeight: '500',
-                  backgroundColor: student.feeStatus === 'Paid' ? '#10B98115' : '#EF444415',
-                  color: student.feeStatus === 'Paid' ? '#10B981' : '#EF4444'
-                }}
-              >
-                {student.feeStatus}
-              </span>
+          <div className="profile-header-info">
+            <h2 className="profile-name">{student.name}</h2>
+            <p className="profile-enrollment">Enrollment No: {student.enrollmentNo || '—'}</p>
+            <span className="profile-status-badge"
+              style={{ backgroundColor: sc.bg, color: sc.text }}>
+              {student.status}
             </span>
           </div>
-          <div className="detail-item">
-            <span className="detail-label">Last Paid Date</span>
-            <span className="detail-value">{student.lastPaidDate}</span>
-          </div>
-          <div className="detail-item">
-            <span className="detail-label">Current Outstanding</span>
-            <span className="detail-value">₹{student.currentOutstanding.toLocaleString()}</span>
-          </div>
-          <div className="detail-item">
-            <span className="detail-label">Due Date (Upcoming)</span>
-            <span className="detail-value">{student.dueDate}</span>
-          </div>
+        </div>
+        <div className="profile-header-actions">
+          <button className="profile-action-btn btn-edit"
+            onClick={() => navigate(`/admin/students/edit/${id}`)}>
+            <Edit size={18} /> Edit
+          </button>
+          <button className="profile-action-btn btn-assign"
+            onClick={() => navigate(`/admin/students/assign/${id}`)}>
+            <HomeIcon size={18} /> Assign Room
+          </button>
+          <button className="profile-action-btn btn-deactivate"
+            onClick={() => setShowDeactivateModal(true)}>
+            <UserX size={18} /> Deactivate
+          </button>
         </div>
       </div>
 
-      {/* Complaint Summary */}
-      <div className="profile-card">
-        <h3 className="profile-card-title">Complaint Summary</h3>
-        <div className="profile-details-grid">
-          <div className="detail-item">
-            <span className="detail-label">Total Complaints</span>
-            <span className="detail-value">{student.totalComplaints}</span>
-          </div>
-          <div className="detail-item">
-            <span className="detail-label">Open Complaints</span>
-            <span className="detail-value">{student.openComplaints}</span>
-          </div>
-          <div className="detail-item">
-            <span className="detail-label">Resolved Complaints</span>
-            <span className="detail-value">{student.resolvedComplaints}</span>
-          </div>
-          <div className="detail-item">
-            <span className="detail-label">Last Complaint</span>
-            <span className="detail-value">{student.lastComplaint}</span>
+      {/* Content Grid */}
+      <div className="profile-content-grid">
+
+        {/* Personal Details */}
+        <div className="profile-card">
+          <h3 className="profile-card-title">Personal Details</h3>
+          <div className="profile-details-grid">
+            <DetailItem label="Full Name"    value={student.name} />
+            <DetailItem label="Email"        value={student.email} />
+            <DetailItem label="Phone"        value={student.phone} />
+            <DetailItem label="Gender"       value={student.gender} />
+            <DetailItem label="Date of Birth" value={student.dob} />
+            <DetailItem label="Nationality"  value={student.nationality} />
           </div>
         </div>
+
+        {/* Academic Details */}
+        <div className="profile-card">
+          <h3 className="profile-card-title">Academic Details</h3>
+          <div className="profile-details-grid">
+            <DetailItem label="Enrollment No"    value={student.enrollmentNo} />
+            <DetailItem label="Course"           value={student.course} />
+            <DetailItem label="Year / Semester"  value={student.yearSemester} />
+            <DetailItem label="Batch"            value={student.batch} />
+            <DetailItem label="Program"          value={student.program} />
+          </div>
+        </div>
+
+        {/* Guardian Details */}
+        <div className="profile-card">
+          <h3 className="profile-card-title">Guardian Details</h3>
+          <div className="profile-details-grid">
+            <DetailItem label="Guardian Name"  value={student.guardianName} />
+            <DetailItem label="Guardian Phone" value={student.guardianPhone} />
+            <DetailItem label="Relationship"   value={student.guardianRelation} />
+            <div className="detail-item detail-item-full">
+              <span className="detail-label">Address</span>
+              <span className="detail-value">{student.address || '—'}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Hostel Allocation */}
+        <div className="profile-card">
+          <h3 className="profile-card-title">Hostel Allocation</h3>
+          <div className="profile-details-grid">
+            <DetailItem label="Hostel Block"  value={student.hostelBlock} />
+            <DetailItem label="Room Type"     value={student.roomType} />
+            <DetailItem label="Room No"       value={student.roomNo} />
+            <DetailItem label="Bed No"        value={student.bedNo} />
+            <DetailItem label="Allocated On"  value={student.allocatedOn} />
+          </div>
+        </div>
+
+        {/* Fee Summary */}
+        <div className="profile-card">
+          <h3 className="profile-card-title">Fee Summary</h3>
+          <div className="profile-details-grid">
+            <div className="detail-item">
+              <span className="detail-label">Total Fees Due</span>
+              <span className="detail-value">
+                ₹{(student.totalFeesDue || 0).toLocaleString()}
+                <span style={{
+                  marginLeft: '8px', padding: '2px 8px', borderRadius: '8px',
+                  fontSize: '11px', fontWeight: '500',
+                  backgroundColor: student.feeStatus === 'Paid' ? '#10B98115' : '#EF444415',
+                  color: student.feeStatus === 'Paid' ? '#10B981' : '#EF4444',
+                }}>
+                  {student.feeStatus || 'N/A'}
+                </span>
+              </span>
+            </div>
+            <DetailItem label="Last Paid Date"     value={student.lastPaidDate} />
+            <DetailItem label="Current Outstanding" value={`₹${(student.currentOutstanding || 0).toLocaleString()}`} />
+            <DetailItem label="Due Date"           value={student.dueDate} />
+          </div>
+        </div>
+
+        {/* Complaint Summary */}
+        <div className="profile-card">
+          <h3 className="profile-card-title">Complaint Summary</h3>
+          <div className="profile-details-grid">
+            <DetailItem label="Total Complaints"    value={student.totalComplaints ?? 0} />
+            <DetailItem label="Open Complaints"     value={student.openComplaints ?? 0} />
+            <DetailItem label="Resolved Complaints" value={student.resolvedComplaints ?? 0} />
+            <DetailItem label="Last Complaint"      value={student.lastComplaint} />
+          </div>
+        </div>
+
       </div>
+
+      {/* Deactivate Modal */}
+      {showDeactivateModal && (
+        <div className="modal-overlay" onClick={() => setShowDeactivateModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h3>Confirm Deactivation</h3>
+            <p>Are you sure you want to deactivate <strong>{student.name}</strong>?
+              This will set their status to Inactive.</p>
+            <div className="modal-actions">
+              <button className="btn-secondary"
+                onClick={() => setShowDeactivateModal(false)}>Cancel</button>
+              <button className="btn-danger" disabled={deactivating}
+                onClick={handleDeactivate}>
+                {deactivating ? 'Deactivating...' : 'Confirm Deactivate'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
+  );
+};
 
-    {/* Deactivate Modal (Simple UI) */}
-    {showDeactivateModal && (
-      <div className="modal-overlay" onClick={() => setShowDeactivateModal(false)}>
-        <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-          <h3>Confirm Deactivation</h3>
-          <p>Are you sure you want to deactivate {student.fullName}? This action will set their status to inactive and may affect their hostel services.</p>
-          <div className="modal-actions">
-            <button 
-              className="btn-secondary"
-              onClick={() => setShowDeactivateModal(false)}
-            >
-              Cancel
-            </button>
-            <button 
-              className="btn-danger"
-              onClick={() => {
-                console.log('Deactivating student:', id);
-                setShowDeactivateModal(false);
-                navigate('/admin/students');
-              }}
-            >
-              Confirm Deactivate
-            </button>
-          </div>
-        </div>
-      </div>
-    )}
+// Helper component
+const DetailItem = ({ label, value }) => (
+  <div className="detail-item">
+    <span className="detail-label">{label}</span>
+    <span className="detail-value">{value || '—'}</span>
   </div>
 );
-};
 
 export default StudentProfile;
