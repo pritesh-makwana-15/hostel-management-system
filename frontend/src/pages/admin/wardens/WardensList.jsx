@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Eye, Edit, MapPin } from 'lucide-react';
-import { wardenAPI } from '../../../services/api';
+import { adminWardenApi } from '../../../services/adminWardenApi';
 import '../../../styles/admin/wardens/wardensList.css';
 
 const WardensList = () => {
@@ -18,7 +18,7 @@ const WardensList = () => {
   const fetchWardens = async () => {
     try {
       setLoading(true);
-      const res = await wardenAPI.getAll();
+      const res = await adminWardenApi.getAll();
       setWardens(res.data.data || []);
     } catch {
       setError('Failed to load wardens.');
@@ -30,7 +30,7 @@ const WardensList = () => {
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this warden?')) return;
     try {
-      await wardenAPI.delete(id);
+      await adminWardenApi.delete(id);
       setWardens(prev => prev.filter(w => w.id !== id));
     } catch {
       alert('Failed to delete warden.');
@@ -48,7 +48,7 @@ const WardensList = () => {
   const totalPages = Math.ceil(filtered.length / wardensPerPage);
 
   if (loading) return <div className="loading">Loading wardens...</div>;
-  if (error) return <div className="error">{error}</div>;
+  if (error)   return <div className="error">{error}</div>;
 
   return (
     <div className="wardens-list-page">
@@ -83,7 +83,7 @@ const WardensList = () => {
             </thead>
             <tbody>
               {current.length === 0 ? (
-                <tr><td colSpan="6" style={{textAlign:'center'}}>No wardens found.</td></tr>
+                <tr><td colSpan="6" style={{ textAlign: 'center' }}>No wardens found.</td></tr>
               ) : current.map(w => (
                 <tr key={w.id}>
                   <td>{w.id}</td>
@@ -95,8 +95,8 @@ const WardensList = () => {
                       </div>
                     </div>
                   </td>
-                  <td>{w.phone}</td>
-                  <td>{w.gender}</td>
+                  <td>{w.phone || '—'}</td>
+                  <td>{w.gender || '—'}</td>
                   <td>{w.joinDate || '—'}</td>
                   <td>
                     <div className="action-buttons">
@@ -120,16 +120,16 @@ const WardensList = () => {
         <div className="pagination-row">
           <div className="pagination">
             <button className="pagination-btn"
-              onClick={() => setCurrentPage(p => Math.max(p-1,1))}
-              disabled={currentPage===1}>‹</button>
-            {[...Array(totalPages)].map((_,i) => (
-              <button key={i+1}
-                className={`pagination-number ${currentPage===i+1?'active':''}`}
-                onClick={() => setCurrentPage(i+1)}>{i+1}</button>
+              onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
+              disabled={currentPage === 1}>‹</button>
+            {[...Array(totalPages)].map((_, i) => (
+              <button key={i + 1}
+                className={`pagination-number ${currentPage === i + 1 ? 'active' : ''}`}
+                onClick={() => setCurrentPage(i + 1)}>{i + 1}</button>
             ))}
             <button className="pagination-btn"
-              onClick={() => setCurrentPage(p => Math.min(p+1,totalPages))}
-              disabled={currentPage===totalPages}>›</button>
+              onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
+              disabled={currentPage === totalPages}>›</button>
           </div>
         </div>
       </div>

@@ -7,19 +7,17 @@ import java.time.LocalDate;
 
 @Data
 @Builder
-public class StudentResponseDTO {
+public class StudentProfileDTO {
 
     // ── Identity ──────────────────────────────────────────────
     private Long id;
     private String enrollmentNo;
     private String status;
 
-    // ── User fields ───────────────────────────────────────────
+    // ── Personal ──────────────────────────────────────────────
     private String name;
     private String email;
     private String phone;
-
-    // ── Personal ──────────────────────────────────────────────
     private String gender;
     private LocalDate dob;
     private String nationality;
@@ -37,18 +35,28 @@ public class StudentResponseDTO {
     private String guardianRelation;
     private String address;
 
-    // ── Hostel ────────────────────────────────────────────────
+    // ── Hostel Allocation ─────────────────────────────────────
     private String hostelBlock;
     private String roomType;
     private String roomNo;
     private String bedNo;
     private LocalDate allocatedOn;
-    private Long roomId;
+
+    // ── Fee Summary (aggregated) ──────────────────────────────
+    private Double totalFeesDue;
+    private Double currentOutstanding;
+    private LocalDate lastPaidDate;
+    private LocalDate dueDate;
+    private String feeStatus;
+
+    // ── Complaint Summary (aggregated) ────────────────────────
+    private Integer totalComplaints;
+    private Integer openComplaints;
+    private Integer resolvedComplaints;
+    private String lastComplaint;
 
     // ── Relations ─────────────────────────────────────────────
     private Long wardenId;
     private String wardenName;
-
-    // ── Dates ─────────────────────────────────────────────────
     private LocalDate joinDate;
 }

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, User, Lock, Eye, EyeOff } from 'lucide-react';
-import { wardenAPI } from '../../../services/api';
+// import { wardenAPI } from '../../../services/api';
+import { adminWardenApi } from '../../../services/adminWardenApi';
 import '../../../styles/admin/wardens/addWarden.css';
 
 const AddWarden = () => {

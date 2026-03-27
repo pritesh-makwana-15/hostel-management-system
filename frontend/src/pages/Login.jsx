@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { authAPI } from '../services/api';
+import { authApi } from '../services/authApi';
 import { Eye, EyeOff, Building2 } from 'lucide-react';
 import '../styles/layouts/Login.css';
 
@@ -40,7 +40,7 @@ const Login = () => {
     setErrors({});
 
     try {
-      const response = await authAPI.login({
+      const response = await authApi.login({
         email: credentials.email.toLowerCase().trim(),
         password: credentials.password,
       });
@@ -50,8 +50,8 @@ const Login = () => {
       login(token, { role, name, email });
 
       const redirectMap = {
-        ADMIN: '/admin/dashboard',
-        WARDEN: '/warden/dashboard',
+        ADMIN:   '/admin/dashboard',
+        WARDEN:  '/warden/dashboard',
         STUDENT: '/student/dashboard',
       };
 
