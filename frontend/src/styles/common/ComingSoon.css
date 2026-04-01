@@ -35,3 +35,12 @@
   color: var(--text-secondary);
   line-height: 1.6;
 }
+
+/* Loading fallback for lazy loading */
+.loading-fallback {
+  padding: 40px;
+  text-align: center;
+  font-size: 15px;
+  color: var(--text-secondary);
+  font-style: italic;
+}

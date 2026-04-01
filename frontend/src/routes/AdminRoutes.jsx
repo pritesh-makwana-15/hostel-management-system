@@ -64,7 +64,7 @@ const ManageCertificates  = lazy(() => import('../pages/admin/ManageCertificates
  * Renders protected routes inside DashboardLayout.
  */
 const AdminRoutes = () => (
-  <Suspense fallback={<div className="p-10 text-center text-gray-500 italic">Loading admin module...</div>}>
+  <Suspense fallback={<div className="loading-fallback">Loading admin module...</div>}>
     <Routes>
       <Route
         path="/*"

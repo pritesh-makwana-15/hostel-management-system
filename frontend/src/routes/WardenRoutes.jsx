@@ -36,7 +36,7 @@ const WardenChangePassword = lazy(() => import('../pages/warden/profile/WardenCh
  * Renders protected routes inside DashboardLayout.
  */
 const WardenRoutes = () => (
-  <Suspense fallback={<div className="p-10 text-center text-gray-500 italic">Loading warden module...</div>}>
+  <Suspense fallback={<div className="loading-fallback">Loading warden module...</div>}>
     <Routes>
       <Route
         path="/*"

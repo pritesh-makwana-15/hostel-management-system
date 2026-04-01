@@ -17,7 +17,7 @@ const ChangePassword  = lazy(() => import('../pages/student/profile/ChangePasswo
 // ─────────────────────────────────────────────────────────────
 
 const StudentRoutes = () => (
-  <Suspense fallback={<div className="p-10 text-center text-gray-500 italic">Loading student module...</div>}>
+  <Suspense fallback={<div className="loading-fallback">Loading student module...</div>}>
     <Routes>
       <Route
         path="/*"

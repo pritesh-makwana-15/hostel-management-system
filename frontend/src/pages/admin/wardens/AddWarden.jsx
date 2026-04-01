@@ -25,7 +25,7 @@ const AddWarden = () => {
     setLoading(true);
     setError('');
     try {
-      await wardenAPI.create({
+      await adminWardenApi.create({
         name: formData.name,
         email: formData.email,
         password: formData.password,
