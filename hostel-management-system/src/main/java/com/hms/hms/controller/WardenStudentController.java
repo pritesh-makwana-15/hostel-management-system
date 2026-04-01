@@ -1,39 +1,33 @@
 package com.hms.hms.controller;
 
 import com.hms.hms.dto.ApiResponse;
-import com.hms.hms.dto.RegisterRequest;
 import com.hms.hms.dto.StudentProfileDTO;
 import com.hms.hms.dto.StudentResponseDTO;
 import com.hms.hms.entity.Student;
+import com.hms.hms.entity.Warden;
 import com.hms.hms.service.StudentService;
+import com.hms.hms.service.WardenService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
-
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.bind.annotation.*;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/admin/students")
-public class StudentController {
+@RequestMapping("/api/warden/students")
+public class WardenStudentController {
 
     @Autowired private StudentService studentService;
+    @Autowired private WardenService wardenService;
 
-    // ── POST /api/admin/students ──────────────────────────────
-    @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<StudentResponseDTO>> create(@RequestBody RegisterRequest request) {
-        Student student = studentService.createStudent(request);
-        return ResponseEntity.ok(ApiResponse.success("Student created successfully", toDTO(student)));
-    }
-
-    // ── GET /api/admin/students ───────────────────────────────
+    // ── GET /api/warden/students ───────────────────────────────
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'WARDEN')")
+    @PreAuthorize("hasRole('WARDEN')")
     public ResponseEntity<ApiResponse<Page<StudentResponseDTO>>> getAll(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
@@ -43,66 +37,41 @@ public class StudentController {
         return ResponseEntity.ok(ApiResponse.success("Students fetched", dtoPage));
     }
 
-    // ── GET /api/admin/students/{id} ──────────────────────────
+    // ── GET /api/warden/students/{id} ──────────────────────────
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'WARDEN')")
+    @PreAuthorize("hasRole('WARDEN')")
     public ResponseEntity<ApiResponse<StudentResponseDTO>> getById(@PathVariable Long id) {
-        Student student = studentService.getById(id);
-        return ResponseEntity.ok(ApiResponse.success("Student found", toDTO(student)));
+        StudentResponseDTO student = toDTO(studentService.getById(id));
+        return ResponseEntity.ok(ApiResponse.success("Student found", student));
     }
 
-    // ── GET /api/admin/students/{id}/profile ──────────────────
+    // ── GET /api/warden/students/{id}/profile ──────────────────
     // Returns full joined data: personal + academic + hostel + fees + complaints
     @GetMapping("/{id}/profile")
-    @PreAuthorize("hasAnyRole('ADMIN', 'WARDEN')")
+    @PreAuthorize("hasRole('WARDEN')")
     public ResponseEntity<ApiResponse<StudentProfileDTO>> getProfile(@PathVariable Long id) {
         StudentProfileDTO profile = studentService.getProfile(id);
         return ResponseEntity.ok(ApiResponse.success("Profile fetched", profile));
     }
 
-    // ── PUT /api/admin/students/{id} ──────────────────────────
+    // ── PUT /api/warden/students/{id} ──────────────────────────
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('WARDEN')")
     public ResponseEntity<ApiResponse<StudentResponseDTO>> update(
-            @PathVariable Long id, @RequestBody RegisterRequest request) {
-        Student updated = studentService.updateStudent(id, request);
-        return ResponseEntity.ok(ApiResponse.success("Student updated successfully", toDTO(updated)));
+            @PathVariable Long id, @RequestBody Map<String, Object> request) {
+        Student updated = studentService.updatePartial(id, request);
+        return ResponseEntity.ok(ApiResponse.success("Student updated", toDTO(updated)));
     }
 
-    // ── PATCH /api/admin/students/{id}/status ─────────────────
+    // ── PATCH /api/warden/students/{id}/status ─────────────────
     @PatchMapping("/{id}/status")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('WARDEN')")
     public ResponseEntity<ApiResponse<StudentResponseDTO>> updateStatus(
             @PathVariable Long id, @RequestBody Map<String, String> body) {
-        Student updated = studentService.updateStatus(id, body.get("status"));
-        return ResponseEntity.ok(ApiResponse.success("Status updated", toDTO(updated)));
+        StudentResponseDTO updated = toDTO(studentService.updateStatus(id, body.get("status")));
+        return ResponseEntity.ok(ApiResponse.success("Status updated", updated));
     }
 
-    // ── POST /api/admin/students/{id}/assign-room ─────────────
-    @PostMapping("/{id}/assign-room")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<StudentResponseDTO>> assignRoom(
-            @PathVariable Long id, @RequestBody Map<String, String> body) {
-        Student updated = studentService.assignRoom(
-                id,
-                body.get("hostelBlock"),
-                body.get("roomType"),
-                body.get("roomNo"),
-                body.get("bedNo"),
-                body.get("roomId") != null ? Long.parseLong(body.get("roomId")) : null
-        );
-        return ResponseEntity.ok(ApiResponse.success("Room assigned successfully", toDTO(updated)));
-    }
-
-    // ── DELETE /api/admin/students/{id} ───────────────────────
-    @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<String>> delete(@PathVariable Long id) {
-        String result = studentService.deleteStudent(id);
-        return ResponseEntity.ok(ApiResponse.success(result, null));
-    }
-
-    // ── DTO mapper ────────────────────────────────────────────
     private StudentResponseDTO toDTO(Student s) {
         return StudentResponseDTO.builder()
                 .id(s.getId())

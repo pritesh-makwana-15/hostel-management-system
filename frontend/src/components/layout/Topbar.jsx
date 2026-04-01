@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import '../../../styles/layouts/Topbar.css';
 
 const Topbar = () => {
   const { user, logout } = useAuth();
@@ -11,28 +12,28 @@ const Topbar = () => {
   };
 
   return (
-    <header className="bg-card shadow-sm border-b border-border">
-      <div className="flex items-center justify-between px-6 py-4">
+    <header className="topbar">
+      <div className="topbar-content">
         {/* Left Section - Page Title or Breadcrumb */}
-        <div>
-          <h1 className="text-xl font-semibold text-text-primary">
+        <div className="topbar-left">
+          <h1 className="topbar-title">
             Welcome, {user?.name || 'User'}
           </h1>
-          <p className="text-sm text-text-secondary">
+          <p className="topbar-subtitle">
             Have a great day ahead!
           </p>
         </div>
 
         {/* Right Section - Actions */}
-        <div className="flex items-center gap-4">
+        <div className="topbar-right">
           {/* Notifications Icon */}
-          <button className="p-2 hover:bg-background rounded-small transition-all">
-            <span className="text-xl">🔔</span>
+          <button className="topbar-notification-btn">
+            <span className="topbar-notification-icon">🔔</span>
           </button>
 
           {/* Profile Dropdown */}
-          <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-full bg-primary text-white flex items-center justify-center font-semibold text-sm">
+          <div className="topbar-profile">
+            <div className="topbar-avatar">
               {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
             </div>
           </div>
@@ -40,7 +41,7 @@ const Topbar = () => {
           {/* Logout Button */}
           <button
             onClick={handleLogout}
-            className="px-4 py-2 bg-primary text-white rounded-small hover:bg-opacity-90 transition-all font-medium text-sm"
+            className="topbar-logout-btn"
           >
             Logout
           </button>

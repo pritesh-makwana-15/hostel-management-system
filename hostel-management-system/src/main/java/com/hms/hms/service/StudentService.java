@@ -11,9 +11,13 @@ import com.hms.hms.repository.WardenRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
+import java.util.Map;
+import java.time.LocalDate;
+import java.time.LocalDate;
 
 @Service
 public class StudentService {
@@ -81,6 +85,11 @@ public class StudentService {
     // ── Read All ──────────────────────────────────────────────
     public List<Student> getAllStudents() {
         return studentRepository.findAll();
+    }
+
+    // ── Read All Paginated ─────────────────────────────────────
+    public Page<Student> getAllStudents(Pageable pageable) {
+        return studentRepository.findAll(pageable);
     }
 
     // ── Read One ──────────────────────────────────────────────
@@ -201,6 +210,27 @@ public class StudentService {
         Student student = getById(id);
         student.setStatus(status);
         return studentRepository.save(student);
+    }
+
+    // ── Partial Update ─────────────────────────────────────────
+    @Transactional
+    public Student updatePartial(Long id, Map<String, Object> updates) {
+        Student existing = getById(id);
+        User user = existing.getUser();
+
+        if (updates.containsKey("name")) user.setName((String) updates.get("name"));
+        if (updates.containsKey("email")) user.setEmail((String) updates.get("email"));
+        if (updates.containsKey("phone")) user.setPhone((String) updates.get("phone"));
+        userRepository.save(user);
+
+        if (updates.containsKey("gender")) existing.setGender((String) updates.get("gender"));
+        if (updates.containsKey("dateOfBirth")) existing.setDob(LocalDate.parse((String) updates.get("dateOfBirth")));
+        if (updates.containsKey("yearSemester")) existing.setYearSemester((String) updates.get("yearSemester"));
+        if (updates.containsKey("guardianName")) existing.setGuardianName((String) updates.get("guardianName"));
+        if (updates.containsKey("guardianPhone")) existing.setGuardianPhone((String) updates.get("guardianPhone"));
+        if (updates.containsKey("address")) existing.setAddress((String) updates.get("address"));
+
+        return studentRepository.save(existing);
     }
 
     // ── Assign Room ───────────────────────────────────────────

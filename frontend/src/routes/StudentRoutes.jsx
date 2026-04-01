@@ -1,48 +1,48 @@
-import { Route } from 'react-router-dom';
+import React, { Suspense, lazy } from 'react';
+import { Routes, Route } from 'react-router-dom';
 import ProtectedRoute from '../components/ProtectedRoute';
 import DashboardLayout from '../layouts/DashboardLayout';
 
-// ── Student Pages ─────────────────────────────────────────────
-import StudentDashboard     from '../pages/student/dashboard/StudentDashboard';
-import FeePayment           from '../pages/student/FeePayment';
-import LeaveApplication     from '../pages/student/LeaveApplication';
-import StudentComplaints    from '../pages/student/Complaints';
-import StudentRoom          from '../pages/student/Room';
-import StudentMess          from '../pages/student/Mess';
-import StudentAnnouncements from '../pages/student/Announcements';
+// ── Lazy Load Student Pages ───────────────────────────────────
+const StudentDashboard     = lazy(() => import('../pages/student/dashboard/StudentDashboard'));
+const FeePayment           = lazy(() => import('../pages/student/FeePayment'));
+const StudentComplaints    = lazy(() => import('../pages/student/Complaints'));
+const StudentRoom          = lazy(() => import('../pages/student/Room'));
+const StudentAnnouncements = lazy(() => import('../pages/student/Announcements'));
 
-// ── Student Profile Module ────────────────────────────────────
-import StudentProfile  from '../pages/student/profile/StudentProfile';
-import EditProfile     from '../pages/student/profile/EditProfile';
-import ChangePassword  from '../pages/student/profile/ChangePassword';
+// Profile Module
+const StudentProfile  = lazy(() => import('../pages/student/profile/StudentProfile'));
+const EditProfile     = lazy(() => import('../pages/student/profile/EditProfile'));
+const ChangePassword  = lazy(() => import('../pages/student/profile/ChangePassword'));
 // ─────────────────────────────────────────────────────────────
 
-function StudentRoutes() {
-  return (
-    <Route
-      element={
-        <ProtectedRoute allowedRole="STUDENT">
-          <DashboardLayout />
-        </ProtectedRoute>
-      }
-    >
-      {/* ── Dashboard ── */}
-      <Route path="/student/dashboard"     element={<StudentDashboard />} />
+const StudentRoutes = () => (
+  <Suspense fallback={<div className="loading-fallback">Loading student module...</div>}>
+    <Routes>
+      <Route
+        path="/*"
+        element={
+          <ProtectedRoute allowedRole="STUDENT">
+            <DashboardLayout />
+          </ProtectedRoute>
+        }
+      >
+        {/* ── Dashboard ── */}
+        <Route path="dashboard"     element={<StudentDashboard />} />
 
-      {/* ── Core Modules ── */}
-      <Route path="/student/fees"          element={<FeePayment />} />
-      <Route path="/student/complaints"    element={<StudentComplaints />} />
-      <Route path="/student/room"          element={<StudentRoom />} />
-      <Route path="/student/announcements" element={<StudentAnnouncements />} />
-      {/* <Route path="/student/leave"         element={<LeaveApplication />} /> */}
-      {/* <Route path="/student/mess"          element={<StudentMess />} /> */}
+        {/* ── Core Modules ── */}
+        <Route path="fees"          element={<FeePayment />} />
+        <Route path="complaints"    element={<StudentComplaints />} />
+        <Route path="room"          element={<StudentRoom />} />
+        <Route path="announcements" element={<StudentAnnouncements />} />
 
-      {/* ── Profile Module ── */}
-      <Route path="/student/profile"                   element={<StudentProfile />} />
-      <Route path="/student/profile/edit"              element={<EditProfile />} />
-      <Route path="/student/profile/change-password"   element={<ChangePassword />} />
-    </Route>
-  );
-}
+        {/* ── Profile Module ── */}
+        <Route path="profile"                   element={<StudentProfile />} />
+        <Route path="profile/edit"              element={<EditProfile />} />
+        <Route path="profile/change-password"   element={<ChangePassword />} />
+      </Route>
+    </Routes>
+  </Suspense>
+);
 
 export default StudentRoutes;

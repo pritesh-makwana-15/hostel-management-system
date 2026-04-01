@@ -9,4 +9,5 @@ import java.util.Optional;
 @Repository
 public interface WardenRepository extends JpaRepository<Warden, Long> {
     Optional<Warden> findByUserId(Long userId);
+    Optional<Warden> findByUser_Email(String email);
 }

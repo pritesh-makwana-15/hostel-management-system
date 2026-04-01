@@ -1,6 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { adminStudentApi } from '../../../services/adminStudentApi';
+import { ChevronRight, Save, X } from 'lucide-react';
 import '../../../styles/admin/students/student-form.css';
 
 const yearSemesterOptions = [
@@ -10,51 +14,60 @@ const yearSemesterOptions = [
   '4th Year / 7th Semester', '4th Year / 8th Semester',
 ];
 
+const studentSchema = z.object({
+  name: z.string().min(3, 'Full name must be at least 3 characters'),
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+  phone: z.string().optional(),
+  gender: z.enum(['Male', 'Female', 'Other']),
+  dob: z.string().optional().nullable(),
+  nationality: z.string().default('Indian'),
+  enrollmentNo: z.string().min(1, 'Enrollment number is required'),
+  course: z.string().optional(),
+  yearSemester: z.string().optional(),
+  batch: z.string().optional(),
+  program: z.string().optional(),
+  joinDate: z.string().optional().nullable(),
+  guardianName: z.string().optional(),
+  guardianPhone: z.string().optional(),
+  guardianRelation: z.string().optional(),
+  address: z.string().optional(),
+});
+
 const AddStudent = () => {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
-  const [error, setError]     = useState('');
-  const [formData, setFormData] = useState({
-    // Auth
-    name: '', email: '', password: '', phone: '',
-    // Personal
-    gender: 'Male', dob: '', nationality: 'Indian', photoUrl: '',
-    // Academic
-    enrollmentNo: '', course: '', yearSemester: '', batch: '', program: '',
-    joinDate: '',
-    // Guardian
-    guardianName: '', guardianPhone: '', guardianRelation: '', address: '',
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
+    resolver: zodResolver(studentSchema),
+    defaultValues: { gender: 'Male', nationality: 'Indian' }
   });
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
+  const onSubmit = async (data) => {
     try {
       await adminStudentApi.create({
-        ...formData,
-        dob:      formData.dob      || null,
-        joinDate: formData.joinDate || null,
-        status:   'Active',
+        ...data,
+        status: 'Active',
       });
       navigate('/admin/students');
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to create student.');
-    } finally {
-      setLoading(false);
+      alert(err.response?.data?.message || 'Failed to create student.');
     }
   };
+
+  const Field = ({ label, name, type = 'text', children, ...props }) => (
+    <div className="form-group">
+      <label className="form-label">{label}</label>
+      {children ? children : (
+        <input type={type} {...register(name)} {...props} className="form-input" />
+      )}
+      {errors[name] && <p className="text-[11px] text-red-500 ml-1">{errors[name].message}</p>}
+    </div>
+  );
 
   return (
     <div className="student-form-page">
       <div className="page-header">
         <div className="page-header-left">
-          <h1 className="page-title">Add Student</h1>
+          <h1 className="page-title">Add New Student</h1>
           <div className="breadcrumb">
             <span>Dashboard</span><span className="breadcrumb-separator">›</span>
             <span>Students</span><span className="breadcrumb-separator">›</span>
@@ -63,132 +76,75 @@ const AddStudent = () => {
         </div>
       </div>
 
-      {error && <div className="error-banner">{error}</div>}
-
-      <form onSubmit={handleSubmit}>
-        {/* ── Personal Information ── */}
+      <form onSubmit={handleSubmit(onSubmit)}>
+        
+        {/* Section: Personal */}
         <div className="form-card">
           <h2 className="section-title">Personal Information</h2>
           <div className="form-grid">
-            <div className="form-group">
-              <label className="form-label">Full Name *</label>
-              <input type="text" name="name" value={formData.name}
-                onChange={handleChange} className="form-input" required />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Email *</label>
-              <input type="email" name="email" value={formData.email}
-                onChange={handleChange} className="form-input" required />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Password *</label>
-              <input type="password" name="password" value={formData.password}
-                onChange={handleChange} className="form-input" required />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Phone</label>
-              <input type="tel" name="phone" value={formData.phone}
-                onChange={handleChange} className="form-input" />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Gender</label>
+            <Field label="Full Name *" name="name" placeholder="John Doe" />
+            <Field label="Email Address *" name="email" type="email" placeholder="john@example.com" />
+            <Field label="Account Password *" name="password" type="password" placeholder="••••••••" />
+            <Field label="Phone Number" name="phone" placeholder="+91 00000 00000" />
+            <Field label="Gender" name="gender">
               <div className="radio-group">
                 {['Male', 'Female', 'Other'].map(g => (
                   <label key={g} className="radio-label">
-                    <input type="radio" name="gender" value={g}
-                      checked={formData.gender === g} onChange={handleChange} />
+                    <input type="radio" value={g} {...register('gender')} />
                     <span>{g}</span>
                   </label>
                 ))}
               </div>
-            </div>
-            <div className="form-group">
-              <label className="form-label">Date of Birth</label>
-              <input type="date" name="dob" value={formData.dob}
-                onChange={handleChange} className="form-input" />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Nationality</label>
-              <input type="text" name="nationality" value={formData.nationality}
-                onChange={handleChange} className="form-input" />
-            </div>
+            </Field>
+            <Field label="Date of Birth" name="dob" type="date" />
+            <Field label="Nationality" name="nationality" placeholder="e.g. Indian" />
           </div>
         </div>
 
-        {/* ── Academic Information ── */}
+        {/* Section: Academic */}
         <div className="form-card">
-          <h2 className="section-title">Academic Information</h2>
+          <h2 className="section-title">Academic Details</h2>
           <div className="form-grid">
-            <div className="form-group">
-              <label className="form-label">Enrollment Number</label>
-              <input type="text" name="enrollmentNo" value={formData.enrollmentNo}
-                onChange={handleChange} className="form-input" />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Course / Department</label>
-              <input type="text" name="course" value={formData.course}
-                onChange={handleChange} className="form-input" />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Year / Semester</label>
-              <select name="yearSemester" value={formData.yearSemester}
-                onChange={handleChange} className="form-input">
-                <option value="">Select Year/Semester</option>
-                {yearSemesterOptions.map(opt => (
-                  <option key={opt} value={opt}>{opt}</option>
-                ))}
+            <Field label="Enrollment Number *" name="enrollmentNo" placeholder="ENR123456" />
+            <Field label="Course / Department" name="course" placeholder="B.Tech Computer Science" />
+            <Field label="Year / Semester" name="yearSemester">
+              <select {...register('yearSemester')} className="form-input">
+                <option value="">Select Option</option>
+                {yearSemesterOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
               </select>
-            </div>
-            <div className="form-group">
-              <label className="form-label">Batch</label>
-              <input type="text" name="batch" value={formData.batch}
-                onChange={handleChange} className="form-input" placeholder="e.g. 2022-2026" />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Program</label>
-              <input type="text" name="program" value={formData.program}
-                onChange={handleChange} className="form-input" placeholder="e.g. Undergraduate" />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Join Date</label>
-              <input type="date" name="joinDate" value={formData.joinDate}
-                onChange={handleChange} className="form-input" />
-            </div>
+            </Field>
+            <Field label="Batch" name="batch" placeholder="2022-2026" />
+            <Field label="Program" name="program" placeholder="Undergraduate" />
+            <Field label="Join Date" name="joinDate" type="date" />
           </div>
         </div>
 
-        {/* ── Guardian Information ── */}
+        {/* Section: Guardian */}
         <div className="form-card">
-          <h2 className="section-title">Guardian Information</h2>
+          <h2 className="section-title">Guardian & Address</h2>
           <div className="form-grid">
-            <div className="form-group">
-              <label className="form-label">Guardian Name</label>
-              <input type="text" name="guardianName" value={formData.guardianName}
-                onChange={handleChange} className="form-input" />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Guardian Phone</label>
-              <input type="tel" name="guardianPhone" value={formData.guardianPhone}
-                onChange={handleChange} className="form-input" />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Relationship</label>
-              <input type="text" name="guardianRelation" value={formData.guardianRelation}
-                onChange={handleChange} className="form-input" placeholder="e.g. Father" />
-            </div>
+            <Field label="Guardian Name" name="guardianName" placeholder="Michael Doe" />
+            <Field label="Guardian Phone" name="guardianPhone" placeholder="+91 00000 00000" />
+            <Field label="Relationship" name="guardianRelation" placeholder="Father" />
             <div className="form-group form-group-full">
-              <label className="form-label">Address</label>
-              <textarea name="address" value={formData.address}
-                onChange={handleChange} className="form-textarea" rows="3" />
+              <Field label="Permanent Address" name="address">
+                <textarea {...register('address')} rows="3" className="form-textarea" placeholder="Enter full address..." />
+              </Field>
             </div>
           </div>
         </div>
 
+        {/* Actions */}
         <div className="form-actions">
-          <button type="button" className="btn-secondary"
-            onClick={() => navigate('/admin/students')}>Cancel</button>
-          <button type="submit" className="btn-primary" disabled={loading}>
-            {loading ? 'Saving...' : 'Save Student'}
+          <button type="button" onClick={() => navigate('/admin/students')} className="btn-secondary">
+            <X size={18} />
+            Cancel
+          </button>
+          <button type="submit" disabled={isSubmitting} className="btn-primary">
+            {isSubmitting ? (
+              <div className="spinner" />
+            ) : <Save size={18} />}
+            Save Student
           </button>
         </div>
       </form>

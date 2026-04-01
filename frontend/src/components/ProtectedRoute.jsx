@@ -36,47 +36,55 @@ export function UnauthorizedPage() {
   );
 }
 
+// Decode JWT payload without a library
+function decodeToken(token) {
+  try {
+    const payload = token.split('.')[1];
+    return JSON.parse(atob(payload));
+  } catch {
+    return null;
+  }
+}
+
+function isTokenExpired(token) {
+  const decoded = decodeToken(token);
+  if (!decoded || !decoded.exp) return true;
+  return decoded.exp * 1000 < Date.now();
+}
+
 // ─── ProtectedRoute Component ────────────────────────────────
 /**
  * Wraps any route that requires authentication and an optional role check.
- *
- * Props:
- *  - children     : The component/layout to render when access is granted.
- *  - allowedRole  : (optional) "ADMIN" | "WARDEN" | "STUDENT"
- *                   If omitted, only authentication is checked.
  */
 function ProtectedRoute({ children, allowedRole }) {
-  const { isAuthenticated, user, loading } = useAuth();
+  const { user, token, loading, logout } = useAuth();
 
   // 1. Wait for auth hydration from localStorage before making any decision.
   if (loading) {
     return (
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          height: '100vh',
-          fontFamily: 'sans-serif',
-          color: '#6b7280',
-        }}
-      >
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', fontFamily: 'sans-serif', color: '#6b7280' }}>
         Loading...
       </div>
     );
   }
 
-  // 2. Not authenticated → redirect to login.
-  if (!isAuthenticated) {
+  // 2. Proactive Expiration Check
+  if (token && isTokenExpired(token)) {
+    logout();
     return <Navigate to="/login" replace />;
   }
 
-  // 3. Authenticated but wrong role → show 403 page.
+  // 3. Not authenticated → redirect to login.
+  if (!token || !user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // 4. Authenticated but wrong role → show 403 page.
   if (allowedRole && user?.role !== allowedRole) {
     return <UnauthorizedPage />;
   }
 
-  // 4. All checks passed → render protected content.
+  // 5. All checks passed → render protected content.
   return children;
 }
 

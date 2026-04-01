@@ -27,24 +27,6 @@ export function AuthProvider({ children }) {
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true); // for initial hydration
 
-  // Hydrate from localStorage on app start
-  useEffect(() => {
-    const storedToken = localStorage.getItem(TOKEN_KEY);
-    const storedUser = localStorage.getItem(USER_KEY);
-
-    if (storedToken && storedUser) {
-      if (isTokenExpired(storedToken)) {
-        // Token expired — clear everything
-        localStorage.removeItem(TOKEN_KEY);
-        localStorage.removeItem(USER_KEY);
-      } else {
-        setToken(storedToken);
-        setUser(JSON.parse(storedUser));
-      }
-    }
-    setLoading(false);
-  }, []);
-
   const login = useCallback((tokenValue, userData) => {
     localStorage.setItem(TOKEN_KEY, tokenValue);
     localStorage.setItem(USER_KEY, JSON.stringify(userData));
@@ -58,6 +40,36 @@ export function AuthProvider({ children }) {
     setToken(null);
     setUser(null);
   }, []);
+
+  // 1. Initial hydration from localStorage
+  useEffect(() => {
+    const storedToken = localStorage.getItem(TOKEN_KEY);
+    const storedUser = localStorage.getItem(USER_KEY);
+
+    if (storedToken && storedUser) {
+      if (isTokenExpired(storedToken)) {
+        logout();
+      } else {
+        setToken(storedToken);
+        setUser(JSON.parse(storedUser));
+      }
+    }
+    setLoading(false);
+  }, [logout]);
+
+  // 2. Check token expiration periodically
+  useEffect(() => {
+    if (!token) return;
+
+    const checkExpiration = () => {
+      if (isTokenExpired(token)) {
+        logout();
+      }
+    };
+
+    const interval = setInterval(checkExpiration, 60 * 1000);
+    return () => clearInterval(interval);
+  }, [token, logout]);
 
   const value = {
     user,

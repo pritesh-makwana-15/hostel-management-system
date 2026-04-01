@@ -1,15 +1,15 @@
 // src/pages/warden/EditStudent.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import {
-  User, Mail, Phone, Calendar, Hash, BookOpen,
-  Clock, UserCheck, MapPin,
-} from 'lucide-react';
-import {
-  getWardenStudentById,
-  yearSemesterOptions,
-} from '../../../data/wardenStudentsData';
+import { wardenStudentApi } from '../../../services/wardenStudentApi';
 import '../../../styles/warden/student/student-form.css';
+
+const yearSemesterOptions = [
+  '1st Year / 1st Semester', '1st Year / 2nd Semester',
+  '2nd Year / 3rd Semester', '2nd Year / 4th Semester',
+  '3rd Year / 5th Semester', '3rd Year / 6th Semester',
+  '4th Year / 7th Semester', '4th Year / 8th Semester',
+];
 
 const EditStudent = () => {
   const { id }   = useParams();
@@ -18,28 +18,43 @@ const EditStudent = () => {
 
   const [form, setForm] = useState(null);
   const [photoPreview, setPhotoPreview] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    const s = getWardenStudentById(id);
-    if (s) {
-      setForm({
-        fullName:       s.fullName,
-        email:          s.email,
-        phone:          s.phone,
-        gender:         s.gender,
-        dateOfBirth:    s.dateOfBirth,
-        enrollmentNo:   s.enrollmentNo,
-        courseDept:     `${s.course} / ${s.department}`,
-        yearSemester:   s.currentSemester,
-        guardianName:   s.guardianName,
-        guardianPhone:  s.guardianPhone,
-        address:        s.address,
-      });
-      setPhotoPreview(s.photo);
-    }
+    const fetchStudent = async () => {
+      try {
+        const response = await wardenStudentApi.getById(id);
+        const s = response.data.data;
+        if (s) {
+          setForm({
+            name:         s.name,
+            email:        s.email,
+            phone:        s.phone,
+            gender:       s.gender,
+            dateOfBirth:  s.dob,
+            enrollmentNo: s.enrollmentNo,
+            courseDept:   `${s.course} / ${s.program}`,
+            yearSemester: s.yearSemester,
+            guardianName: s.guardianName,
+            guardianPhone:s.guardianPhone,
+            address:      s.address,
+          });
+          setPhotoPreview(s.photoUrl);
+        }
+      } catch (err) {
+        setError(err.response?.data?.message || 'Failed to load student');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStudent();
   }, [id]);
 
-  if (!form) return <div className="wsf-loading">Loading student data…</div>;
+  if (loading) return <div className="wsf-loading">Loading student data…</div>;
+  if (error) return <div className="wsf-error">{error}</div>;
+  if (!form) return <div className="wsf-loading">Student not found</div>;
 
   const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
 
@@ -48,118 +63,144 @@ const EditStudent = () => {
     if (file) setPhotoPreview(URL.createObjectURL(file));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Updated student:', form);
-    navigate('/warden/students');
+    setSubmitting(true);
+    try {
+      await wardenStudentApi.update(id, form);
+      navigate('/warden/students');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to update student');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
-    <div className="wsf-page">
+    <div className="student-form-page">
 
       {/* ── Breadcrumb + Title ───────────────────────────── */}
-      <div className="wsf-header">
-        <div className="wsf-breadcrumb">
-          <span>Dashboard</span>
-          <span className="wsf-bc-sep">›</span>
-          <span
-            className="wsf-bc-link"
-            onClick={() => navigate('/warden/students')}
-          >
-            Students
-          </span>
-          <span className="wsf-bc-sep">›</span>
-          <span className="wsf-bc-active">Edit Student</span>
+      <div className="page-header">
+        <div className="page-header-left">
+          <h1 className="page-title">Edit Student</h1>
+          <div className="breadcrumb">
+            <span>Dashboard</span><span className="breadcrumb-separator">›</span>
+            <span>Students</span><span className="breadcrumb-separator">›</span>
+            <span className="breadcrumb-active">Edit</span>
+          </div>
         </div>
-        <h1 className="wsf-title">Edit Student</h1>
       </div>
 
-      <form className="wsf-form" onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit}>
 
-        {/* ── Section 1: Personal Information ─────────────── */}
-        <div className="wsf-section">
-          <h2 className="wsf-section-title">Personal Information</h2>
-          <div className="wsf-section-divider" />
+        {/* ── Photo Upload Section ── */}
+        <div className="photo-upload-section">
+          <label className="photo-label">Profile Photo</label>
+          <div className="photo-upload-container">
+            {photoPreview ? (
+              <div className="photo-preview">
+                <img src={photoPreview} alt="Profile" />
+                <button
+                  type="button"
+                  className="remove-photo-btn"
+                  onClick={() => setPhotoPreview('')}
+                >
+                  ×
+                </button>
+              </div>
+            ) : (
+              <div className="photo-placeholder">
+                <div className="placeholder-icon">📷</div>
+              </div>
+            )}
+            <button
+              type="button"
+              className="upload-btn"
+              onClick={() => fileRef.current?.click()}
+            >
+              📎 Upload Photo
+            </button>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              style={{ display: 'none' }}
+              onChange={handlePhoto}
+            />
+          </div>
+        </div>
 
-          <div className="wsf-grid-2">
+        {/* ── Personal Information ── */}
+        <div className="form-card">
+          <h2 className="section-title">Personal Information</h2>
+          <div className="form-grid">
 
             {/* Full Name */}
-            <div className="wsf-field">
-              <label className="wsf-label">Full Name</label>
-              <div className="wsf-input-wrap">
-                <User size={16} className="wsf-input-icon" />
-                <input
-                  type="text"
-                  className="wsf-input"
-                  value={form.fullName}
-                  onChange={set('fullName')}
-                  placeholder="Enter full name"
-                />
-              </div>
+            <div className="form-group">
+              <label className="form-label">Full Name *</label>
+              <input
+                type="text"
+                className="form-input"
+                value={form.name}
+                onChange={set('name')}
+                placeholder="Enter full name"
+                required
+              />
             </div>
 
             {/* Email */}
-            <div className="wsf-field">
-              <label className="wsf-label">Email Address</label>
-              <div className="wsf-input-wrap">
-                <Mail size={16} className="wsf-input-icon" />
-                <input
-                  type="email"
-                  className="wsf-input"
-                  value={form.email}
-                  onChange={set('email')}
-                  placeholder="Enter email address"
-                />
-              </div>
+            <div className="form-group">
+              <label className="form-label">Email Address *</label>
+              <input
+                type="email"
+                className="form-input"
+                value={form.email}
+                onChange={set('email')}
+                placeholder="Enter email address"
+                required
+              />
             </div>
 
             {/* Phone */}
-            <div className="wsf-field">
-              <label className="wsf-label">Phone Number</label>
-              <div className="wsf-input-wrap">
-                <Phone size={16} className="wsf-input-icon" />
-                <input
-                  type="tel"
-                  className="wsf-input"
-                  value={form.phone}
-                  onChange={set('phone')}
-                  placeholder="+91 XXXXX XXXXX"
-                />
-              </div>
+            <div className="form-group">
+              <label className="form-label">Phone Number</label>
+              <input
+                type="tel"
+                className="form-input"
+                value={form.phone}
+                onChange={set('phone')}
+                placeholder="+91 XXXXX XXXXX"
+              />
             </div>
 
             {/* Gender */}
-            <div className="wsf-field">
-              <label className="wsf-label">Gender</label>
-              <div className="wsf-radio-group">
+            <div className="form-group">
+              <label className="form-label">Gender</label>
+              <div className="radio-group">
                 {['Male', 'Female', 'Other'].map((g) => (
-                  <label key={g} className="wsf-radio-label">
+                  <label key={g} className="radio-label">
                     <input
                       type="radio"
                       name="gender"
                       value={g}
                       checked={form.gender === g}
                       onChange={set('gender')}
-                      className="wsf-radio"
                     />
-                    {g}
+                    <span>{g}</span>
                   </label>
                 ))}
               </div>
             </div>
 
             {/* Date of Birth */}
-            <div className="wsf-field">
-              <label className="wsf-label">Date of Birth</label>
-              <div className="wsf-input-wrap">
-                <Calendar size={16} className="wsf-input-icon" />
-                <input
-                  type="date"
-                  className="wsf-input"
-                  value={form.dateOfBirth}
-                  onChange={set('dateOfBirth')}
-                />
-              </div>
+            <div className="form-group">
+              <label className="form-label">Date of Birth</label>
+              <input
+                type="date"
+                className="form-input"
+                value={form.dateOfBirth}
+                onChange={set('dateOfBirth')}
+              />
             </div>
 
             {/* Profile Photo */}
@@ -196,57 +237,46 @@ const EditStudent = () => {
           </div>
         </div>
 
-        {/* ── Section 2: Academic Information ─────────────── */}
-        <div className="wsf-section">
-          <h2 className="wsf-section-title">Academic Information</h2>
-          <div className="wsf-section-divider" />
-
-          <div className="wsf-grid-2">
+        {/* ── Academic Information ── */}
+        <div className="form-card">
+          <h2 className="section-title">Academic Information</h2>
+          <div className="form-grid">
 
             {/* Enrollment No — disabled */}
-            <div className="wsf-field">
-              <label className="wsf-label">Enrollment Number</label>
-              <div className="wsf-input-wrap">
-                <Hash size={16} className="wsf-input-icon" />
-                <input
-                  type="text"
-                  className="wsf-input wsf-input-disabled"
-                  value={form.enrollmentNo}
-                  disabled
-                />
-              </div>
+            <div className="form-group">
+              <label className="form-label">Enrollment Number</label>
+              <input
+                type="text"
+                className="form-input"
+                value={form.enrollmentNo}
+                disabled
+              />
             </div>
 
             {/* Course / Department — disabled */}
-            <div className="wsf-field">
-              <label className="wsf-label">Course / Department</label>
-              <div className="wsf-input-wrap">
-                <BookOpen size={16} className="wsf-input-icon" />
-                <input
-                  type="text"
-                  className="wsf-input wsf-input-disabled"
-                  value={form.courseDept}
-                  disabled
-                />
-              </div>
+            <div className="form-group">
+              <label className="form-label">Course / Department</label>
+              <input
+                type="text"
+                className="form-input"
+                value={form.courseDept}
+                disabled
+              />
             </div>
 
             {/* Year / Semester */}
-            <div className="wsf-field wsf-field-full">
-              <label className="wsf-label">Year / Semester</label>
-              <div className="wsf-input-wrap">
-                <Clock size={16} className="wsf-input-icon" />
-                <select
-                  className="wsf-select"
-                  value={form.yearSemester}
-                  onChange={set('yearSemester')}
-                >
-                  {yearSemesterOptions.map((opt) => (
-                    <option key={opt} value={opt}>{opt}</option>
-                  ))}
-                </select>
-              </div>
-              <p className="wsf-field-note">
+            <div className="form-group-full">
+              <label className="form-label">Year / Semester</label>
+              <select
+                className="form-input"
+                value={form.yearSemester}
+                onChange={set('yearSemester')}
+              >
+                {yearSemesterOptions.map((opt) => (
+                  <option key={opt} value={opt}>{opt}</option>
+                ))}
+              </select>
+              <p style={{ fontSize: '12px', color: 'var(--text-secondary)', fontStyle: 'italic', margin: '4px 0 0' }}>
                 Note: Academic fields are system-managed and cannot be edited.
               </p>
             </div>
@@ -254,56 +284,45 @@ const EditStudent = () => {
           </div>
         </div>
 
-        {/* ── Section 3: Guardian Information ─────────────── */}
-        <div className="wsf-section">
-          <h2 className="wsf-section-title">Guardian Information</h2>
-          <div className="wsf-section-divider" />
-
-          <div className="wsf-grid-2">
+        {/* ── Guardian Information ── */}
+        <div className="form-card">
+          <h2 className="section-title">Guardian Information</h2>
+          <div className="form-grid">
 
             {/* Guardian Name */}
-            <div className="wsf-field">
-              <label className="wsf-label">Guardian Name</label>
-              <div className="wsf-input-wrap">
-                <UserCheck size={16} className="wsf-input-icon" />
-                <input
-                  type="text"
-                  className="wsf-input"
-                  value={form.guardianName}
-                  onChange={set('guardianName')}
-                  placeholder="Enter guardian name"
-                />
-              </div>
+            <div className="form-group">
+              <label className="form-label">Guardian Name</label>
+              <input
+                type="text"
+                className="form-input"
+                value={form.guardianName}
+                onChange={set('guardianName')}
+                placeholder="Enter guardian name"
+              />
             </div>
 
             {/* Guardian Phone */}
-            <div className="wsf-field">
-              <label className="wsf-label">Guardian Phone Number</label>
-              <div className="wsf-input-wrap">
-                <Phone size={16} className="wsf-input-icon" />
-                <input
-                  type="tel"
-                  className="wsf-input"
-                  value={form.guardianPhone}
-                  onChange={set('guardianPhone')}
-                  placeholder="+91 XXXXX XXXXX"
-                />
-              </div>
+            <div className="form-group">
+              <label className="form-label">Guardian Phone Number</label>
+              <input
+                type="tel"
+                className="form-input"
+                value={form.guardianPhone}
+                onChange={set('guardianPhone')}
+                placeholder="+91 XXXXX XXXXX"
+              />
             </div>
 
             {/* Permanent Address */}
-            <div className="wsf-field wsf-field-full">
-              <label className="wsf-label">Permanent Address</label>
-              <div className="wsf-input-wrap wsf-textarea-wrap">
-                <MapPin size={16} className="wsf-input-icon wsf-textarea-icon" />
-                <textarea
-                  className="wsf-textarea"
-                  rows={4}
-                  value={form.address}
-                  onChange={set('address')}
-                  placeholder="Enter permanent address"
-                />
-              </div>
+            <div className="form-group-full">
+              <label className="form-label">Permanent Address</label>
+              <textarea
+                className="form-textarea"
+                rows={4}
+                value={form.address}
+                onChange={set('address')}
+                placeholder="Enter permanent address"
+              />
             </div>
 
           </div>
@@ -312,20 +331,24 @@ const EditStudent = () => {
         {/* ── Section divider ──────────────────────────────── */}
         <div className="wsf-section-divider" />
 
-        {/* ── Form Actions ─────────────────────────────────── */}
-        <div className="wsf-form-actions">
+        {/* ── Form Actions ── */}
+        <div className="form-actions">
           <button
             type="button"
-            className="wsf-btn-cancel"
+            className="btn-secondary"
             onClick={() => navigate('/warden/students')}
           >
             Cancel
           </button>
-          <button type="submit" className="wsf-btn-submit">
-            Update Student
+
+          <button
+            type="submit"
+            className="btn-primary"
+            disabled={submitting}
+          >
+            {submitting ? 'Updating...' : 'Update Student'}
           </button>
         </div>
-
       </form>
     </div>
   );
