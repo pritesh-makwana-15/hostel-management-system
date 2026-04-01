@@ -1,31 +1,62 @@
-// src/pages/warden/StudentsList.jsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Plus, Eye, Pencil, MoreVertical, Download } from 'lucide-react';
-import {
-  wardenStudentsData,
-  getStatusColor,
-} from '../../../data/wardenStudentsData';
-import '../../../styles/warden/student/students-list.css';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Search, Plus, Eye, Pencil, MoreVertical, Download, X, ChevronRight, Filter } from 'lucide-react';
+import { wardenStudentApi } from '../../../services/wardenStudentApi';
+
+const wardenStudentStatusOptions = [
+  { id: 'active',   name: 'Active',   color: '#059669', bg: 'bg-green-100', text: 'text-green-700' },
+  { id: 'inactive', name: 'Inactive', color: '#DC2626', bg: 'bg-red-100',   text: 'text-red-700' },
+  { id: 'on-leave', name: 'On Leave', color: '#D97706', bg: 'bg-amber-100', text: 'text-amber-700' },
+];
 
 const STUDENTS_PER_PAGE = 5;
 
 const StudentsList = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm]   = useState('');
   const [blockFloor, setBlockFloor]   = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [openMenu, setOpenMenu]       = useState(null);
 
+  // ── React Query: Fetch ────────────────────────────────────
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['warden-students'],
+    queryFn: async () => {
+      const res = await wardenStudentApi.getAll();
+      const students = res.data.data;
+      return Array.isArray(students) ? students : (students?.content || []);
+    },
+  });
+
+  // ── React Query: Mutation ────────────────────────────────
+  const statusMutation = useMutation({
+    mutationFn: ({ id, status }) => wardenStudentApi.updateStatus(id, status),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['warden-students']);
+      setOpenMenu(null);
+    },
+  });
+
+  if (isLoading) return <div className="p-10 text-center text-gray-500">Loading students...</div>;
+  if (error) return <div className="p-10 text-center text-red-500">Failed to load students.</div>;
+
+  const students = data || [];
+
   /* ── Filter ──────────────────────────────────────────── */
-  const filtered = wardenStudentsData.filter((s) => {
+  const filtered = students.filter((s) => {
+    const name = s.name || '';
+    const enroll = s.enrollmentNo || '';
+    const block = s.hostelBlock || '';
+    const floor = s.floor || '';
     const matchSearch =
-      s.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.enrollmentNo.toLowerCase().includes(searchTerm.toLowerCase());
+      name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      enroll.toLowerCase().includes(searchTerm.toLowerCase());
     const matchBlock =
       !blockFloor ||
-      s.hostelBlock.toLowerCase().includes(blockFloor.toLowerCase()) ||
-      s.floor.toLowerCase().includes(blockFloor.toLowerCase());
+      block.toLowerCase().includes(blockFloor.toLowerCase()) ||
+      floor.toLowerCase().includes(blockFloor.toLowerCase());
     return matchSearch && matchBlock;
   });
 
@@ -35,268 +66,152 @@ const StudentsList = () => {
   const start        = (safePage - 1) * STUDENTS_PER_PAGE;
   const pageStudents = filtered.slice(start, start + STUDENTS_PER_PAGE);
 
-  const handleApply = () => setCurrentPage(1);
   const handleReset = () => { setSearchTerm(''); setBlockFloor(''); setCurrentPage(1); };
 
-  /* ── Pagination button helpers ────────────────────────── */
-  const buildPages = () => {
-    const pages = [];
-    if (totalPages <= 5) {
-      for (let i = 1; i <= totalPages; i++) pages.push(i);
-    } else {
-      pages.push(1, 2, 3, '...', totalPages);
-    }
-    return pages;
-  };
-
-  /* ── Export CSV (simple) ──────────────────────────────── */
   const handleExport = () => {
     const header = 'Student ID,Full Name,Enrollment No,Phone,Room,Bed,Status';
-    const rows = wardenStudentsData.map(
-      (s) => `${s.id},${s.fullName},${s.enrollmentNo},${s.phone},${s.roomNo},${s.bedNo},${s.status}`
-    );
+    const rows = students.map(s => `${s.id},${s.name},${s.enrollmentNo},${s.phone},${s.roomNo},${s.bedNo},${s.status}`);
     const blob = new Blob([[header, ...rows].join('\n')], { type: 'text/csv' });
     const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
-    a.href = url; a.download = 'students.csv'; a.click();
+    const a = document.createElement('a'); a.href = url; a.download = 'students.csv'; a.click();
     URL.revokeObjectURL(url);
   };
 
   return (
-    <div className="wsl-page" onClick={() => setOpenMenu(null)}>
-
-      {/* ── Page Header ─────────────────────────────────── */}
-      <div className="wsl-header">
-        <div className="wsl-header-left">
-          <div className="wsl-breadcrumb">
+    <div className="p-6 max-w-7xl mx-auto space-y-6" onClick={() => setOpenMenu(null)}>
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2 text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">
             <span>Dashboard</span>
-            <span className="wsl-bc-sep">›</span>
-            <span className="wsl-bc-active">Students</span>
+            <ChevronRight size={12} />
+            <span className="text-blue-600">Student Records</span>
           </div>
-          <h1 className="wsl-title">Students</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Student Directory</h1>
         </div>
-        <div className="wsl-header-right">
-          <span className="wsl-total-badge">
-            Total Students: {wardenStudentsData.length.toLocaleString()}
-          </span>
-          <button
-            className="wsl-btn-primary"
-            onClick={() => navigate('/warden/students/add')}
-          >
-            <Plus size={18} />
-            Add New Student
-          </button>
+        <div className="bg-blue-50 px-4 py-2 rounded-xl border border-blue-100 flex items-center gap-3">
+          <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+          <span className="text-sm font-bold text-blue-700">{students.length} Total Students</span>
         </div>
       </div>
 
-      {/* ── Filter Card ─────────────────────────────────── */}
-      <div className="wsl-filter-card">
-        <div className="wsl-filter-grid">
-          <div className="wsl-filter-group">
-            <label className="wsl-filter-label">QUICK SEARCH</label>
-            <div className="wsl-search-wrap">
-              <Search size={16} className="wsl-search-icon" />
-              <input
-                type="text"
-                placeholder="Search by name or enrollment no."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="wsl-search-input"
-              />
+      {/* Filters */}
+      <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Search Students</label>
+            <div className="relative">
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input type="text" placeholder="Name or Enrollment..." value={searchTerm} onChange={e => {setSearchTerm(e.target.value); setCurrentPage(1);}} className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500 outline-none transition-all" />
             </div>
           </div>
-          <div className="wsl-filter-group">
-            <label className="wsl-filter-label">BLOCK / FLOOR</label>
-            <input
-              type="text"
-              placeholder="e.g. Block A, 2nd Floor"
-              value={blockFloor}
-              onChange={(e) => setBlockFloor(e.target.value)}
-              className="wsl-filter-input"
-            />
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Block / Floor</label>
+            <div className="relative">
+              <Filter size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input type="text" placeholder="e.g. Block A" value={blockFloor} onChange={e => {setBlockFloor(e.target.value); setCurrentPage(1);}} className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500 outline-none transition-all" />
+            </div>
           </div>
-          <div className="wsl-filter-actions">
-            <button className="wsl-btn-primary" onClick={handleApply}>
-              Apply Filters
-            </button>
-            <button className="wsl-btn-secondary" onClick={handleReset}>
-              Reset
-            </button>
+          <div className="flex items-end gap-2">
+            <button onClick={handleReset} className="flex-1 px-4 py-2.5 text-sm font-bold text-gray-500 hover:text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all">Reset</button>
+            <button onClick={handleExport} className="flex-1 px-4 py-2.5 text-sm font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl transition-all flex items-center justify-center gap-2"><Download size={16} /> Export</button>
           </div>
         </div>
       </div>
 
-      {/* ── Table Card ──────────────────────────────────── */}
-      <div className="wsl-table-card">
-        <div className="wsl-table-header">
-          <h2 className="wsl-table-title">Student Records</h2>
-          <button className="wsl-export-btn" onClick={handleExport}>
-            <Download size={16} />
-            Export CSV
-          </button>
-        </div>
-
-        <div className="wsl-table-wrap">
-          <table className="wsl-table">
+      {/* Table */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
             <thead>
-              <tr>
-                <th>STUDENT ID</th>
-                <th>PHOTO</th>
-                <th>FULL NAME</th>
-                <th>ENROLLMENT NO</th>
-                <th>PHONE</th>
-                <th>ROOM</th>
-                <th>BED</th>
-                <th>STATUS</th>
-                <th>ACTIONS</th>
+              <tr className="bg-gray-50/50">
+                <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">ID</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Student</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Enrollment</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest hidden lg:table-cell">Phone</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Room</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center">Actions</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-gray-100">
               {pageStudents.length === 0 ? (
-                <tr>
-                  <td colSpan={9} className="wsl-empty">No students found.</td>
-                </tr>
-              ) : (
-                pageStudents.map((s) => {
-                  const color = getStatusColor(s.status);
-                  return (
-                    <tr key={s.id}>
-                      <td className="wsl-td-id">{s.id}</td>
-                      <td>
-                        <img src={s.photo} alt={s.fullName} className="wsl-photo" />
-                      </td>
-                      <td className="wsl-td-name">{s.fullName}</td>
-                      <td>{s.enrollmentNo}</td>
-                      <td>{s.phone}</td>
-                      <td>{s.roomNo}</td>
-                      <td>{s.bedNo}</td>
-                      <td>
-                        <span
-                          className="wsl-status-badge"
-                          style={{ color, background: `${color}18` }}
-                        >
-                          {s.status.toUpperCase()}
-                        </span>
-                      </td>
-                      <td>
-                        <div className="wsl-actions" onClick={(e) => e.stopPropagation()}>
-                          <button
-                            className="wsl-action-btn"
-                            title="View Profile"
-                            onClick={() => navigate(`/warden/students/profile/${s.id}`)}
-                          >
-                            <Eye size={16} />
-                          </button>
-                          <button
-                            className="wsl-action-btn"
-                            title="Edit Student"
-                            onClick={() => navigate(`/warden/students/edit/${s.id}`)}
-                          >
-                            <Pencil size={16} />
-                          </button>
-                          <div className="wsl-more-wrap">
-                            <button
-                              className="wsl-action-btn"
-                              title="More"
-                              onClick={() =>
-                                setOpenMenu(openMenu === s.id ? null : s.id)
-                              }
-                            >
-                              <MoreVertical size={16} />
-                            </button>
-                            {openMenu === s.id && (
-                              <div className="wsl-dropdown">
-                                <button className="wsl-dropdown-item">Change Status</button>
-                                <button className="wsl-dropdown-item wsl-dropdown-danger">
-                                  Deactivate
+                <tr><td colSpan={7} className="px-6 py-12 text-center text-gray-400 italic text-sm">No student records found.</td></tr>
+              ) : pageStudents.map(s => {
+                const statusOpt = wardenStudentStatusOptions.find(o => o.name === s.status) || wardenStudentStatusOptions[0];
+                return (
+                  <tr key={s.id} className="hover:bg-gray-50/50 transition-colors">
+                    <td className="px-6 py-4 text-xs font-bold text-gray-400">#{s.id}</td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <img src={s.photoUrl} alt={s.name} className="w-10 h-10 rounded-full object-cover ring-2 ring-white shadow-sm" />
+                        <span className="text-sm font-bold text-gray-800">{s.name}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-600 font-medium">{s.enrollmentNo}</td>
+                    <td className="px-6 py-4 text-sm text-gray-500 hidden lg:table-cell">{s.phone}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600"><span className="font-bold">{s.roomNo}</span> – {s.bedNo}</td>
+                    <td className="px-6 py-4">
+                      <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${statusOpt.bg} ${statusOpt.text}`}>{s.status}</span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center justify-center gap-2" onClick={e => e.stopPropagation()}>
+                        <button onClick={() => navigate(`/warden/students/profile/${s.id}`)} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"><Eye size={16} /></button>
+                        <button onClick={() => navigate(`/warden/students/edit/${s.id}`)} className="p-2 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-all"><Pencil size={16} /></button>
+                        <div className="relative">
+                          <button onClick={() => setOpenMenu(openMenu === s.id ? null : s.id)} className="p-2 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all"><MoreVertical size={16} /></button>
+                          {openMenu === s.id && (
+                            <div className="absolute right-0 bottom-full mb-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-10 animate-in zoom-in-95 duration-200">
+                              <div className="px-4 py-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">Change Status</div>
+                              {wardenStudentStatusOptions.map(opt => (
+                                <button key={opt.id} onClick={() => statusMutation.mutate({id: s.id, status: opt.name})} className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
+                                  <div className="w-2 h-2 rounded-full" style={{backgroundColor: opt.color}} /> {opt.name}
                                 </button>
-                              </div>
-                            )}
-                          </div>
+                              ))}
+                            </div>
+                          )}
                         </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
 
-        {/* ── Pagination ──────────────────────────────────── */}
-        <div className="wsl-pagination">
-          <span className="wsl-pagination-info">
-            Showing <strong>{start + 1}–{Math.min(start + STUDENTS_PER_PAGE, filtered.length)}</strong> of{' '}
-            <strong>{filtered.length}</strong> students
-          </span>
-          <div className="wsl-pagination-controls">
-            <button
-              className="wsl-page-btn"
-              disabled={safePage === 1}
-              onClick={() => setCurrentPage((p) => p - 1)}
-            >
-              ‹ Previous
-            </button>
-            {buildPages().map((p, i) =>
-              p === '...' ? (
-                <span key={`dot-${i}`} className="wsl-page-dots">...</span>
-              ) : (
-                <button
-                  key={p}
-                  className={`wsl-page-num ${safePage === p ? 'wsl-page-active' : ''}`}
-                  onClick={() => setCurrentPage(p)}
-                >
-                  {p}
-                </button>
-              )
-            )}
-            <button
-              className="wsl-page-btn"
-              disabled={safePage === totalPages}
-              onClick={() => setCurrentPage((p) => p + 1)}
-            >
-              Next ›
-            </button>
+        {/* Pagination */}
+        <div className="px-6 py-4 bg-gray-50/30 flex items-center justify-between border-t border-gray-100">
+          <p className="text-xs text-gray-500 italic">Showing {pageStudents.length} of {filtered.length} students</p>
+          <div className="flex gap-1">
+            <button disabled={safePage === 1} onClick={() => setCurrentPage(p => p - 1)} className="px-3 py-1.5 text-xs font-bold text-gray-500 bg-white border border-gray-200 rounded-lg disabled:opacity-40 hover:bg-gray-50 transition-all">Prev</button>
+            <button disabled={safePage === totalPages} onClick={() => setCurrentPage(p => p + 1)} className="px-3 py-1.5 text-xs font-bold text-gray-500 bg-white border border-gray-200 rounded-lg disabled:opacity-40 hover:bg-gray-50 transition-all">Next</button>
           </div>
         </div>
       </div>
 
-      {/* ── Mobile Cards ──────────────────────────────────── */}
-      <div className="wsl-mobile-list">
-        {pageStudents.map((s) => {
-          const color = getStatusColor(s.status);
-          return (
-            <div key={s.id} className="wsl-mobile-card">
-              <div className="wsl-mobile-top">
-                <img src={s.photo} alt={s.fullName} className="wsl-mobile-photo" />
-                <div className="wsl-mobile-info">
-                  <p className="wsl-mobile-name">{s.fullName}</p>
-                  <p className="wsl-mobile-enroll">{s.enrollmentNo}</p>
-                </div>
-                <span
-                  className="wsl-status-badge"
-                  style={{ color, background: `${color}18` }}
-                >
-                  {s.status.toUpperCase()}
-                </span>
-              </div>
-              <div className="wsl-mobile-details">
-                <div className="wsl-mobile-row"><span>Phone:</span><span>{s.phone}</span></div>
-                <div className="wsl-mobile-row"><span>Room:</span><span>{s.roomNo} – {s.bedNo}</span></div>
-              </div>
-              <div className="wsl-mobile-btns">
-                <button className="wsl-mobile-btn" onClick={() => navigate(`/warden/students/profile/${s.id}`)}>
-                  <Eye size={15} /> View
-                </button>
-                <button className="wsl-mobile-btn" onClick={() => navigate(`/warden/students/edit/${s.id}`)}>
-                  <Pencil size={15} /> Edit
-                </button>
+      {/* Mobile view */}
+      <div className="grid grid-cols-1 gap-4 md:hidden">
+        {pageStudents.map(s => (
+          <div key={s.id} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 space-y-4">
+            <div className="flex items-center gap-4">
+              <img src={s.photoUrl} alt={s.name} className="w-14 h-14 rounded-2xl object-cover" />
+              <div>
+                <h3 className="font-bold text-gray-900">{s.name}</h3>
+                <p className="text-xs text-gray-500">{s.enrollmentNo}</p>
               </div>
             </div>
-          );
-        })}
+            <div className="grid grid-cols-2 gap-4 text-[11px]">
+              <div><p className="text-gray-400 font-bold uppercase tracking-widest mb-0.5">Room</p><p className="text-gray-700 font-medium">{s.roomNo} - {s.bedNo}</p></div>
+              <div><p className="text-gray-400 font-bold uppercase tracking-widest mb-0.5">Status</p><p className="text-blue-600 font-bold">{s.status}</p></div>
+            </div>
+            <div className="flex gap-2 pt-2">
+              <button onClick={() => navigate(`/warden/students/profile/${s.id}`)} className="flex-1 py-2 text-xs font-bold text-blue-600 bg-blue-50 rounded-xl">View</button>
+              <button onClick={() => navigate(`/warden/students/edit/${s.id}`)} className="flex-1 py-2 text-xs font-bold text-amber-600 bg-amber-50 rounded-xl">Edit</button>
+            </div>
+          </div>
+        ))}
       </div>
-
     </div>
   );
 };

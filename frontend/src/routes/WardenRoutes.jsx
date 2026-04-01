@@ -1,63 +1,79 @@
 // src/routes/WardenRoutes.jsx
-import React from 'react';
-import { Route } from 'react-router-dom';
+import React, { Suspense, lazy } from 'react';
+import { Routes, Route } from 'react-router-dom';
+import ProtectedRoute from '../components/ProtectedRoute';
 import DashboardLayout from '../layouts/DashboardLayout';
 
-// Existing warden pages
-import WardenDashboard from '../pages/warden/WardenDashboard';
+// ── Lazy Load Warden Pages ─────────────────────────────────────
+const WardenDashboard = lazy(() => import('../pages/warden/WardenDashboard'));
 
-// ── Warden Student Management ──────────────────────────
-import StudentsList   from '../pages/warden/student/StudentsList';
-import EditStudent    from '../pages/warden/student/EditStudent';
-import StudentProfile from '../pages/warden/student/StudentProfile';
+// Warden Student Management
+const StudentsList   = lazy(() => import('../pages/warden/student/StudentsList'));
+const EditStudent    = lazy(() => import('../pages/warden/student/EditStudent'));
+const StudentProfile = lazy(() => import('../pages/warden/student/StudentProfile'));
 
-// ── Warden Room Management ──────────────────────────────
-import WardenRooms  from '../pages/warden/rooms/WardenRooms';
-import RoomDetails  from '../pages/warden/rooms/RoomDetails';
-import AssignRoom   from '../pages/warden/rooms/AssignRoom';
+// Warden Room Management
+const WardenRooms  = lazy(() => import('../pages/warden/rooms/WardenRooms'));
+const RoomDetails  = lazy(() => import('../pages/warden/rooms/RoomDetails'));
+const AssignRoom   = lazy(() => import('../pages/warden/rooms/AssignRoom'));
 
-// ── Warden Complaint Management ─────────────────────────
-import WardenComplaints from '../pages/warden/complaints/WardenComplaints';
-import ComplaintDetails from '../pages/warden/complaints/ComplaintDetails';
+// Warden Complaint Management
+const WardenComplaints = lazy(() => import('../pages/warden/complaints/WardenComplaints'));
+const ComplaintDetails = lazy(() => import('../pages/warden/complaints/ComplaintDetails'));
 
-// ── Warden Announcement Management ─────────────────────
-import WardenAnnouncements from '../pages/warden/announcements/WardenAnnouncements';
-import CreateAnnouncement  from '../pages/warden/announcements/CreateAnnouncement';
-import AnnouncementDetails from '../pages/warden/announcements/AnnouncementDetails';
+// Warden Announcement Management
+const WardenAnnouncements = lazy(() => import('../pages/warden/announcements/WardenAnnouncements'));
+const CreateAnnouncement  = lazy(() => import('../pages/warden/announcements/CreateAnnouncement'));
+const AnnouncementDetails = lazy(() => import('../pages/warden/announcements/AnnouncementDetails'));
 
-// ── Warden Profile Management ─────────────────────────
-import WardenProfile        from '../pages/warden/profile/WardenProfile';
-import WardenChangePassword from '../pages/warden/profile/WardenChangePassword';
- 
+// Warden Profile Management
+const WardenProfile        = lazy(() => import('../pages/warden/profile/WardenProfile'));
+const WardenChangePassword = lazy(() => import('../pages/warden/profile/WardenChangePassword'));
 
+/**
+ * WardenRoutes
+ * All /warden/* paths are protected by role="WARDEN".
+ * Renders protected routes inside DashboardLayout.
+ */
 const WardenRoutes = () => (
-  <Route path="/warden" element={<DashboardLayout />}>
-    {/* Dashboard */}
-    <Route path="dashboard" element={<WardenDashboard />} />
+  <Suspense fallback={<div className="p-10 text-center text-gray-500 italic">Loading warden module...</div>}>
+    <Routes>
+      <Route
+        path="/*"
+        element={
+          <ProtectedRoute allowedRole="WARDEN">
+            <DashboardLayout />
+          </ProtectedRoute>
+        }
+      >
+        {/* Dashboard */}
+        <Route path="dashboard" element={<WardenDashboard />} />
 
-    {/* ── Student Management ── */}
-    <Route path="students"              element={<StudentsList />} />
-    <Route path="students/edit/:id"     element={<EditStudent />} />
-    <Route path="students/profile/:id"  element={<StudentProfile />} />
+        {/* ── Student Management ── */}
+        <Route path="students"              element={<StudentsList />} />
+        <Route path="students/edit/:id"     element={<EditStudent />} />
+        <Route path="students/profile/:id"  element={<StudentProfile />} />
 
-    {/* ── Room Management ── */}
-    <Route path="rooms"                 element={<WardenRooms />} />
-    <Route path="rooms/view/:id"        element={<RoomDetails />} />
-    <Route path="rooms/assign/:id"      element={<AssignRoom />} />
+        {/* ── Room Management ── */}
+        <Route path="rooms"                 element={<WardenRooms />} />
+        <Route path="rooms/view/:id"        element={<RoomDetails />} />
+        <Route path="rooms/assign/:id"      element={<AssignRoom />} />
 
-    {/* ── Complaint Management ── */}
-    <Route path="complaints"            element={<WardenComplaints />} />
-    <Route path="complaints/view/:id"   element={<ComplaintDetails />} />
+        {/* ── Complaint Management ── */}
+        <Route path="complaints"            element={<WardenComplaints />} />
+        <Route path="complaints/view/:id"   element={<ComplaintDetails />} />
 
-    {/* ── Announcement Management ── */}
-    <Route path="announcements"              element={<WardenAnnouncements />} />
-    <Route path="announcements/create"       element={<CreateAnnouncement />} />
-    <Route path="announcements/view/:id"     element={<AnnouncementDetails />} />
+        {/* ── Announcement Management ── */}
+        <Route path="announcements"              element={<WardenAnnouncements />} />
+        <Route path="announcements/create"       element={<CreateAnnouncement />} />
+        <Route path="announcements/view/:id"     element={<AnnouncementDetails />} />
 
-    
-    <Route path="profile"         element={<WardenProfile />} />
-    <Route path="change-password" element={<WardenChangePassword />} />
-  </Route>
+        {/* ── Profile Management ── */}
+        <Route path="profile"         element={<WardenProfile />} />
+        <Route path="change-password" element={<WardenChangePassword />} />
+      </Route>
+    </Routes>
+  </Suspense>
 );
 
 export default WardenRoutes;

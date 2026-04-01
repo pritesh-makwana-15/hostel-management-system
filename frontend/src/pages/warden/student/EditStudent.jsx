@@ -5,11 +5,15 @@ import {
   User, Mail, Phone, Calendar, Hash, BookOpen,
   Clock, UserCheck, MapPin,
 } from 'lucide-react';
-import {
-  getWardenStudentById,
-  yearSemesterOptions,
-} from '../../../data/wardenStudentsData';
+import { wardenStudentApi } from '../../../services/wardenStudentApi';
 import '../../../styles/warden/student/student-form.css';
+
+const yearSemesterOptions = [
+  '1st Year / 1st Semester', '1st Year / 2nd Semester',
+  '2nd Year / 3rd Semester', '2nd Year / 4th Semester',
+  '3rd Year / 5th Semester', '3rd Year / 6th Semester',
+  '4th Year / 7th Semester', '4th Year / 8th Semester',
+];
 
 const EditStudent = () => {
   const { id }   = useParams();
@@ -18,28 +22,43 @@ const EditStudent = () => {
 
   const [form, setForm] = useState(null);
   const [photoPreview, setPhotoPreview] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    const s = getWardenStudentById(id);
-    if (s) {
-      setForm({
-        fullName:       s.fullName,
-        email:          s.email,
-        phone:          s.phone,
-        gender:         s.gender,
-        dateOfBirth:    s.dateOfBirth,
-        enrollmentNo:   s.enrollmentNo,
-        courseDept:     `${s.course} / ${s.department}`,
-        yearSemester:   s.currentSemester,
-        guardianName:   s.guardianName,
-        guardianPhone:  s.guardianPhone,
-        address:        s.address,
-      });
-      setPhotoPreview(s.photo);
-    }
+    const fetchStudent = async () => {
+      try {
+        const response = await wardenStudentApi.getById(id);
+        const s = response.data.data;
+        if (s) {
+          setForm({
+            name:         s.name,
+            email:        s.email,
+            phone:        s.phone,
+            gender:       s.gender,
+            dateOfBirth:  s.dob,
+            enrollmentNo: s.enrollmentNo,
+            courseDept:   `${s.course} / ${s.program}`,
+            yearSemester: s.yearSemester,
+            guardianName: s.guardianName,
+            guardianPhone:s.guardianPhone,
+            address:      s.address,
+          });
+          setPhotoPreview(s.photoUrl);
+        }
+      } catch (err) {
+        setError(err.response?.data?.message || 'Failed to load student');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStudent();
   }, [id]);
 
-  if (!form) return <div className="wsf-loading">Loading student data…</div>;
+  if (loading) return <div className="wsf-loading">Loading student data…</div>;
+  if (error) return <div className="wsf-error">{error}</div>;
+  if (!form) return <div className="wsf-loading">Student not found</div>;
 
   const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
 
@@ -48,10 +67,17 @@ const EditStudent = () => {
     if (file) setPhotoPreview(URL.createObjectURL(file));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Updated student:', form);
-    navigate('/warden/students');
+    setSubmitting(true);
+    try {
+      await wardenStudentApi.update(id, form);
+      navigate('/warden/students');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to update student');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -91,8 +117,8 @@ const EditStudent = () => {
                 <input
                   type="text"
                   className="wsf-input"
-                  value={form.fullName}
-                  onChange={set('fullName')}
+                  value={form.name}
+                  onChange={set('name')}
                   placeholder="Enter full name"
                 />
               </div>
@@ -321,8 +347,8 @@ const EditStudent = () => {
           >
             Cancel
           </button>
-          <button type="submit" className="wsf-btn-submit">
-            Update Student
+          <button type="submit" className="wsf-btn-submit" disabled={submitting}>
+            {submitting ? 'Updating...' : 'Update Student'}
           </button>
         </div>
 

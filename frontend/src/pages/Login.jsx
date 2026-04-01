@@ -45,7 +45,7 @@ const Login = () => {
         password: credentials.password,
       });
 
-      const { token, role, name, email } = response.data;
+      const { token, role, name, email } = response.data.data;
 
       login(token, { role, name, email });
 

@@ -63,6 +63,10 @@ public class WardenService {
         return wardenRepository.findById(id).orElse(null);
     }
 
+    public Warden getByEmail(String email) {
+        return wardenRepository.findByUser_Email(email).orElse(null);
+    }
+
     @Transactional
     public Warden updateWarden(Long id, RegisterRequest request) {
         Warden existing = wardenRepository.findById(id)

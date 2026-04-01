@@ -1,4 +1,4 @@
-import { Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import AuthLayout from '../layouts/AuthLayout';
 
@@ -58,23 +58,21 @@ function LoginRoute() {
  * All public-facing pages (no auth required).
  * Wrapped in AuthLayout for consistent public page styling.
  */
-function PublicRoutes() {
-  return (
-    <>
-      {/* Home + Login under AuthLayout */}
-      <Route element={<AuthLayout />}>
-        <Route path="/"                   element={<Home />} />
-        <Route path="/login"              element={<LoginRoute />} />
-      </Route>
+const PublicRoutes = () => (
+  <Routes>
+    {/* Home + Login under AuthLayout */}
+    <Route element={<AuthLayout />}>
+      <Route path="/"                   element={<Home />} />
+      <Route path="/login"              element={<LoginRoute />} />
+    </Route>
 
-      {/* Visitor section under AuthLayout */}
-      <Route element={<AuthLayout />}>
-        <Route path="/visitor"            element={<VisitorHome />} />
-        <Route path="/visitor/facilities" element={<Facilities />} />
-        <Route path="/visitor/inquiry"    element={<Inquiry />} />
-      </Route>
-    </>
-  );
-}
+    {/* Visitor section under AuthLayout */}
+    <Route element={<AuthLayout />}>
+      <Route path="/visitor"            element={<VisitorHome />} />
+      <Route path="/visitor/facilities" element={<Facilities />} />
+      <Route path="/visitor/inquiry"    element={<Inquiry />} />
+    </Route>
+  </Routes>
+);
 
 export default PublicRoutes;

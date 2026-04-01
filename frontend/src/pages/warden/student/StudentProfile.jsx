@@ -7,8 +7,17 @@ import {
   IdCard, Building2, Mail, Phone,
   CalendarDays, Globe, Droplets,
 } from 'lucide-react';
-import { getWardenStudentById, getStatusColor } from '../../../data/wardenStudentsData';
+import { wardenStudentApi } from '../../../services/wardenStudentApi';
 import '../../../styles/warden/student/student-profile.css';
+
+const getStatusColor = (status) => {
+  const colors = {
+    'Active': '#059669',
+    'Inactive': '#DC2626',
+    'On Leave': '#D97706'
+  };
+  return colors[status] || '#6B7280';
+};
 
 const DetailItem = ({ label, value }) => (
   <div className="wsp-detail-item">
@@ -34,12 +43,26 @@ const StudentProfile = () => {
   const { id }   = useParams();
   const navigate = useNavigate();
   const [student, setStudent] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    setStudent(getWardenStudentById(id));
+    const fetchProfile = async () => {
+      try {
+        const response = await wardenStudentApi.getProfile(id);
+        setStudent(response.data.data);
+      } catch (err) {
+        setError(err.response?.data?.message || 'Failed to load profile');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProfile();
   }, [id]);
 
-  if (!student) return <div className="wsp-loading">Loading profile…</div>;
+  if (loading) return <div className="wsp-loading">Loading profile…</div>;
+  if (error) return <div className="wsp-error">{error}</div>;
+  if (!student) return <div className="wsp-loading">Profile not found</div>;
 
   const statusColor = getStatusColor(student.status);
 
@@ -85,7 +108,7 @@ const StudentProfile = () => {
       <div className="wsp-hero">
         <div className="wsp-hero-left">
           <div className="wsp-avatar-wrap">
-            <img src={student.photo} alt={student.fullName} className="wsp-avatar" />
+            <img src={student.photoUrl} alt={student.name} className="wsp-avatar" />
             <span
               className="wsp-status-pill"
               style={{ background: statusColor }}
@@ -94,7 +117,7 @@ const StudentProfile = () => {
             </span>
           </div>
           <div className="wsp-hero-info">
-            <h2 className="wsp-hero-name">{student.fullName}</h2>
+            <h2 className="wsp-hero-name">{student.name}</h2>
             <div className="wsp-hero-meta">
               <span className="wsp-hero-meta-item">
                 <IdCard size={14} />
@@ -107,7 +130,7 @@ const StudentProfile = () => {
               </span>
             </div>
             <div className="wsp-hero-tags">
-              <span className="wsp-tag">{student.courseShort}</span>
+              <span className="wsp-tag">{student.course}</span>
               <span className="wsp-tag">Batch {student.batch}</span>
             </div>
           </div>
@@ -124,20 +147,18 @@ const StudentProfile = () => {
             <DetailItem label="ROOM TYPE"        value={student.roomType} />
             <DetailItem label="ROOM NUMBER"      value={student.roomNo} />
             <DetailItem label="BED NUMBER"       value={student.bedNo} />
-            <DetailItem label="FLOOR"            value={student.floor} />
-            <DetailItem label="ALLOCATED SINCE"  value={student.allocatedSince} />
+            <DetailItem label="ALLOCATED ON"     value={student.allocatedOn ? new Date(student.allocatedOn).toLocaleDateString() : '—'} />
           </div>
         </SectionCard>
 
         {/* Academic Details */}
         <SectionCard icon={GraduationCap} title="Academic Details">
           <div className="wsp-details-grid">
-            <DetailItem label="COURSE / PROGRAM"    value={student.course} />
-            <DetailItem label="DEPARTMENT"          value={student.department} />
-            <DetailItem label="CURRENT SEMESTER"    value={student.currentSemester} />
-            <DetailItem label="ACADEMIC BATCH"      value={student.batch} />
-            <DetailItem label="ENROLLMENT NUMBER"   value={student.enrollmentNo} />
-            <DetailItem label="ACADEMIC STANDING"   value={student.academicStanding} />
+            <DetailItem label="COURSE"             value={student.course} />
+            <DetailItem label="PROGRAM"            value={student.program} />
+            <DetailItem label="CURRENT SEMESTER"   value={student.yearSemester} />
+            <DetailItem label="ACADEMIC BATCH"     value={student.batch} />
+            <DetailItem label="ENROLLMENT NUMBER"  value={student.enrollmentNo} />
           </div>
         </SectionCard>
 
@@ -164,9 +185,9 @@ const StudentProfile = () => {
                 DATE OF BIRTH
               </span>
               <span className="wsp-detail-value">
-                {new Date(student.dateOfBirth).toLocaleDateString('en-US', {
+                {student.dob ? new Date(student.dob).toLocaleDateString('en-US', {
                   month: 'long', day: 'numeric', year: 'numeric',
-                })}
+                }) : '—'}
               </span>
             </div>
             <DetailItem label="GENDER"      value={student.gender} />
@@ -176,13 +197,6 @@ const StudentProfile = () => {
                 NATIONALITY
               </span>
               <span className="wsp-detail-value">{student.nationality}</span>
-            </div>
-            <div className="wsp-detail-item">
-              <span className="wsp-detail-label">
-                <Droplets size={12} style={{ marginRight: 4 }} />
-                BLOOD GROUP
-              </span>
-              <span className="wsp-detail-value">{student.bloodGroup}</span>
             </div>
           </div>
         </SectionCard>
@@ -210,49 +224,49 @@ const StudentProfile = () => {
         <SectionCard icon={MessageSquare} title="Complaint History" action="View History">
           <div className="wsp-complaint-stats">
             <div className="wsp-complaint-stat">
-              <span className="wsp-complaint-num">{student.totalComplaints}</span>
+              <span className="wsp-complaint-num">{student.totalComplaints || 0}</span>
               <span className="wsp-complaint-lbl">TOTAL</span>
             </div>
             <div className="wsp-complaint-divider" />
             <div className="wsp-complaint-stat">
-              <span className="wsp-complaint-num wsp-resolved">{student.resolvedComplaints}</span>
+              <span className="wsp-complaint-num wsp-resolved">{student.resolvedComplaints || 0}</span>
               <span className="wsp-complaint-lbl">RESOLVED</span>
             </div>
             <div className="wsp-complaint-divider" />
             <div className="wsp-complaint-stat">
-              <span className="wsp-complaint-num wsp-pending">{student.pendingComplaints}</span>
+              <span className="wsp-complaint-num wsp-pending">{student.openComplaints || 0}</span>
               <span className="wsp-complaint-lbl">PENDING</span>
             </div>
           </div>
           <p className="wsp-latest-activity">
             <Shield size={13} style={{ marginRight: 6, flexShrink: 0 }} />
-            Latest Activity: {student.latestActivity}
+            {student.lastComplaint || 'No recent activity'}
           </p>
         </SectionCard>
 
         {/* Fee Status */}
         <SectionCard icon={Shield} title="Fee Status">
           <div className="wsp-fee-row">
-            <span className="wsp-fee-label">{student.feeLabel}</span>
+            <span className="wsp-fee-label">Current Outstanding</span>
             <span
               className="wsp-fee-status"
               style={{
-                color: student.feeStatus === 'Paid' ? '#059669' : '#DC2626',
-                background: student.feeStatus === 'Paid' ? '#D1FAE5' : '#FEE2E2',
+                color: (student.currentOutstanding || 0) === 0 ? '#059669' : '#DC2626',
+                background: (student.currentOutstanding || 0) === 0 ? '#D1FAE5' : '#FEE2E2',
               }}
             >
-              {student.feeStatus}
+              ₹{student.currentOutstanding || 0}
             </span>
           </div>
           <div className="wsp-fee-divider" />
           <div className="wsp-fee-meta">
             <div className="wsp-fee-meta-item">
-              <span className="wsp-detail-label">LAST TRANSACTION ID</span>
-              <span className="wsp-detail-value wsp-txn">{student.lastTransactionId}</span>
+              <span className="wsp-detail-label">TOTAL FEES DUE</span>
+              <span className="wsp-detail-value">₹{student.totalFeesDue || 0}</span>
             </div>
             <div className="wsp-fee-meta-item">
-              <span className="wsp-detail-label">RECEIPT DATE</span>
-              <span className="wsp-detail-value">{student.receiptDate}</span>
+              <span className="wsp-detail-label">STATUS</span>
+              <span className="wsp-detail-value">{student.feeStatus || 'N/A'}</span>
             </div>
           </div>
         </SectionCard>
