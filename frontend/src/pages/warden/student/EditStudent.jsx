@@ -340,14 +340,15 @@ const EditStudent = () => {
           >
             Cancel
           </button>
-          <button type="submit" className="btn-primary" disabled={submitting}>
-            {submitting ? 'Updating...' : 'Update Student'}
-          </button>
-        </div>
-            {submitting ? 'Updating...' : 'Update Student'}
-          </button>
-        </div>
 
+          <button
+            type="submit"
+            className="btn-primary"
+            disabled={submitting}
+          >
+            {submitting ? 'Updating...' : 'Update Student'}
+          </button>
+        </div>
       </form>
     </div>
   );
