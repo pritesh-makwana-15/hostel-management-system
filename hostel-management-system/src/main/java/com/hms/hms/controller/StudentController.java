@@ -4,6 +4,7 @@ import com.hms.hms.dto.ApiResponse;
 import com.hms.hms.dto.RegisterRequest;
 import com.hms.hms.dto.StudentProfileDTO;
 import com.hms.hms.dto.StudentResponseDTO;
+import com.hms.hms.dto.AssignRoomRequest;
 import com.hms.hms.entity.Student;
 import com.hms.hms.service.StudentService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -82,15 +83,8 @@ public class StudentController {
     @PostMapping("/{id}/assign-room")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<StudentResponseDTO>> assignRoom(
-            @PathVariable Long id, @RequestBody Map<String, String> body) {
-        Student updated = studentService.assignRoom(
-                id,
-                body.get("hostelBlock"),
-                body.get("roomType"),
-                body.get("roomNo"),
-                body.get("bedNo"),
-                body.get("roomId") != null ? Long.parseLong(body.get("roomId")) : null
-        );
+            @PathVariable Long id, @RequestBody AssignRoomRequest request) {
+        Student updated = studentService.assignRoom(id, request);
         return ResponseEntity.ok(ApiResponse.success("Room assigned successfully", toDTO(updated)));
     }
 
@@ -133,7 +127,7 @@ public class StudentController {
                 .roomNo(s.getRoomNo())
                 .bedNo(s.getBedNo())
                 .allocatedOn(s.getAllocatedOn())
-                .roomId(s.getRoomId())
+                .roomId(s.getRoom() != null ? s.getRoom().getId() : null)
                 // Relations
                 .wardenId(s.getWarden() != null ? s.getWarden().getId() : null)
                 .wardenName(s.getWarden() != null ? s.getWarden().getName() : null)

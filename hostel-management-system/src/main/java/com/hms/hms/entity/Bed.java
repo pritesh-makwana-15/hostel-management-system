@@ -26,4 +26,8 @@ public class Bed {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "room_id", nullable = false)
     private Room room;
+
+    @OneToOne
+    @JoinColumn(name = "student_id")
+    private Student student;
 }

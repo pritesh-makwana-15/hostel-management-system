@@ -275,13 +275,13 @@ const RoomsList = () => {
                           >
                             <Edit size={18} />
                           </button>
-                          <button
+                          {/* <button
                             className="action-btn"
                             onClick={() => navigate(`/admin/rooms/${room.id}/beds`)}
                             title="Manage Beds"
                           >
                             <Settings size={18} />
-                          </button>
+                          </button> */}
                         </div>
                       </td>
                     </tr>

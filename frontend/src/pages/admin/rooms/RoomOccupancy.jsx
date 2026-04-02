@@ -1,11 +1,28 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bed, Settings } from 'lucide-react';
-import { roomsData, getOccupancyColor, getOccupancyPercentage } from '../../../data/roomsData';
+import { getOccupancyColor, getOccupancyPercentage } from '../../../data/roomsData';
+import { adminRoomApi } from '../../../services/adminRoomApi';
 import '../../../styles/admin/rooms/roomOccupancy.css';
 
 const RoomOccupancy = () => {
   const navigate = useNavigate();
+  const [rooms, setRooms] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchRooms = async () => {
+      try {
+        const response = await adminRoomApi.getAll();
+        setRooms(response.data.data);
+      } catch (error) {
+        console.error('Error fetching rooms:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchRooms();
+  }, []);
 
   const handleViewBeds = (roomId) => {
     navigate(`/admin/rooms/${roomId}/beds`);
@@ -14,6 +31,10 @@ const RoomOccupancy = () => {
   const handleManageRoom = (roomId) => {
     navigate(`/admin/rooms/${roomId}/edit`);
   };
+
+  if (loading) {
+    return <div className="room-occupancy-page">Loading...</div>;
+  }
 
   return (
     <div className="room-occupancy-page">
@@ -33,7 +54,7 @@ const RoomOccupancy = () => {
 
       {/* Occupancy Cards Grid */}
       <div className="occupancy-grid">
-        {roomsData.map((room) => {
+        {rooms.map((room) => {
           const percentage = getOccupancyPercentage(room.occupiedBeds, room.totalBeds);
           const color = getOccupancyColor(room.occupiedBeds, room.totalBeds);
           
@@ -41,7 +62,7 @@ const RoomOccupancy = () => {
             <div key={room.id} className="occupancy-card">
               <div className="occupancy-card-header">
                 <div className="room-info">
-                  <h3 className="room-title">Room {room.roomNumber} - {room.blockHostel}</h3>
+                  <h3 className="room-title">Room {room.roomNumber} - {room.hostelBlock}</h3>
                   <span className={`room-type-badge ${room.roomType === 'AC' ? 'badge-ac' : 'badge-non-ac'}`}>
                     {room.roomType}
                   </span>

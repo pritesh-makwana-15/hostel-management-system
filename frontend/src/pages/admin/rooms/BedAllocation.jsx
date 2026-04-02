@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Bed, X, ArrowLeft } from 'lucide-react';
-import { getRoomById, bedStatusOptions } from '../../../data/roomsData';
+import { bedStatusOptions } from '../../../data/roomsData';
+import { adminRoomApi } from '../../../services/adminRoomApi';
 import '../../../styles/admin/rooms/bedAllocation.css';
 
 const BedAllocation = () => {
@@ -10,23 +11,22 @@ const BedAllocation = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedBed, setSelectedBed] = useState(null);
   const [bedStatus, setBedStatus] = useState('');
+  const [roomData, setRoomData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Get room data
-  const roomData = getRoomById(roomId) || {
-    id: 'R001',
-    blockHostel: 'Aurora',
-    roomNumber: 'A101',
-    roomType: 'AC',
-    totalBeds: 4,
-    occupiedBeds: 2,
-    availableBeds: 2,
-    beds: [
-      { id: 'B1', status: 'Occupied', studentName: 'Rohan Sharma', enrollment: 'S202301' },
-      { id: 'B2', status: 'Available', studentName: null, enrollment: null },
-      { id: 'B3', status: 'Occupied', studentName: 'Priya Singh', enrollment: 'S202305' },
-      { id: 'B4', status: 'Maintenance', studentName: null, enrollment: null }
-    ]
-  };
+  useEffect(() => {
+    const fetchRoom = async () => {
+      try {
+        const response = await adminRoomApi.getById(roomId);
+        setRoomData(response.data.data);
+      } catch (error) {
+        console.error('Error fetching room:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchRoom();
+  }, [roomId]);
 
   const handleBedClick = (bed) => {
     setSelectedBed(bed);
@@ -49,6 +49,14 @@ const BedAllocation = () => {
   const handleBackToRooms = () => {
     navigate('/admin/rooms');
   };
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!roomData) {
+    return <div>Room not found</div>;
+  }
 
   return (
     <div className="bed-allocation-page">
@@ -83,7 +91,7 @@ const BedAllocation = () => {
         <div className="room-info-details">
           <div className="info-item">
             <span className="info-label">Block / Hostel</span>
-            <span className="info-value">{roomData.blockHostel}</span>
+            <span className="info-value">{roomData.hostelBlock}</span>
           </div>
           <div className="info-item">
             <span className="info-label">Total Beds</span>
@@ -116,7 +124,7 @@ const BedAllocation = () => {
               <div className="bed-icon">
                 <Bed size={32} />
               </div>
-              <div className="bed-id">{bed.id}</div>
+              <div className="bed-id">{bed.bedNumber}</div>
               <div className="bed-status-badge">
                 {bed.status === 'Occupied' && (
                   <span className="occupied-badge">Occupied</span>
@@ -128,12 +136,6 @@ const BedAllocation = () => {
                   <span className="maintenance-badge">Maintenance</span>
                 )}
               </div>
-              {bed.status === 'Occupied' && (
-                <div className="bed-student-info">
-                  <div className="bed-student-name">{bed.studentName}</div>
-                  <div className="bed-student-enrollment">{bed.enrollment}</div>
-                </div>
-              )}
             </div>
           ))}
         </div>
@@ -145,7 +147,7 @@ const BedAllocation = () => {
           <div className="modal-overlay" onClick={handleCloseModal}></div>
           <div className="modal">
             <div className="modal-header">
-              <h3>Manage Bed {selectedBed?.id}</h3>
+              <h3>Manage Bed {selectedBed?.bedNumber}</h3>
               <button className="modal-close" onClick={handleCloseModal}>
                 <X size={20} />
               </button>

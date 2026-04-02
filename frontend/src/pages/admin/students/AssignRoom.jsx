@@ -2,19 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Bed } from 'lucide-react';
 import { adminStudentApi } from '../../../services/adminStudentApi';
-import { adminRoomApi }    from '../../../services/adminRoomApi';
+import { adminRoomApi } from '../../../services/adminRoomApi';
 import '../../../styles/admin/students/student-form.css';
-
-// Fallback static blocks & types if room API not yet implemented
-const HOSTEL_BLOCKS = ['Block A', 'Block B', 'Block C', 'Block D'];
-const ROOM_TYPES    = ['AC', 'Non-AC'];
 
 const AssignRoom = () => {
   const navigate    = useNavigate();
   const { id }      = useParams();
 
   const [student, setStudent]               = useState(null);
-  const [rooms, setRooms]                   = useState([]);
+  const [allRooms, setAllRooms]             = useState([]);
+  const [hostelBlocks, setHostelBlocks]     = useState([]);
   const [selectedBlock, setSelectedBlock]   = useState('');
   const [selectedType, setSelectedType]     = useState('');
   const [selectedRoom, setSelectedRoom]     = useState(null);
@@ -31,17 +28,28 @@ const AssignRoom = () => {
       .finally(() => setLoading(false));
   }, [id]);
 
-  // Load available rooms when filter changes
+  // Load all rooms and extract blocks
   useEffect(() => {
-    adminRoomApi.getAvailable(selectedBlock, selectedType)
-      .then(res => setRooms(res.data.data || []))
+    adminRoomApi.getAll()
+      .then(res => {
+        const rooms = res.data.data || [];
+        setAllRooms(rooms);
+        const blocks = [...new Set(rooms.map(r => r.hostelBlock))];
+        setHostelBlocks(blocks);
+      })
       .catch(() => {
-        // If room API not implemented yet, show empty
-        setRooms([]);
+        // If API not ready, use fallback
+        setHostelBlocks(['Block A', 'Block B', 'Block C', 'Block D']);
+        setAllRooms([]);
       });
-    setSelectedRoom(null);
-    setSelectedBed('');
-  }, [selectedBlock, selectedType]);
+  }, []);
+
+  // Filter rooms based on selected block and type
+  const filteredRooms = allRooms.filter(room => {
+    const matchesBlock = !selectedBlock || room.hostelBlock === selectedBlock;
+    const matchesType = !selectedType || room.roomType === selectedType;
+    return matchesBlock && matchesType;
+  });
 
   const handleAssign = async () => {
     if (!selectedRoom || !selectedBed) {
@@ -51,14 +59,11 @@ const AssignRoom = () => {
     setSaving(true);
     try {
       await adminStudentApi.assignRoom(id, {
-        hostelBlock: selectedRoom.block || selectedBlock,
-        roomType:    selectedRoom.type  || selectedType,
-        roomNo:      selectedRoom.roomNo,
-        bedNo:       selectedBed,
-        roomId:      String(selectedRoom.id),
+        roomId: selectedRoom.id,
+        bedNo: selectedBed,
       });
       navigate('/admin/students');
-    } catch {
+    } catch (err) {
       setError('Failed to assign room. Please try again.');
     } finally {
       setSaving(false);
@@ -115,7 +120,7 @@ const AssignRoom = () => {
             <select value={selectedBlock} onChange={e => setSelectedBlock(e.target.value)}
               className="form-input">
               <option value="">All Blocks</option>
-              {HOSTEL_BLOCKS.map(b => <option key={b} value={b}>{b}</option>)}
+              {hostelBlocks.map(b => <option key={b} value={b}>{b}</option>)}
             </select>
           </div>
           <div className="form-group">
@@ -123,22 +128,21 @@ const AssignRoom = () => {
             <select value={selectedType} onChange={e => setSelectedType(e.target.value)}
               className="form-input">
               <option value="">All Types</option>
-              {ROOM_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+              <option value="AC">AC</option>
+              <option value="Non-AC">Non-AC</option>
             </select>
           </div>
           <div className="form-group form-group-full">
             <label className="form-label">Room Number</label>
-            <select value={selectedRoom?.id || ''}
-              onChange={e => {
-                const room = rooms.find(r => String(r.id) === e.target.value);
-                setSelectedRoom(room || null);
-                setSelectedBed('');
-              }}
-              className="form-input">
+            <select value={selectedRoom?.id || ''} onChange={e => {
+              const room = filteredRooms.find(r => r.id === parseInt(e.target.value));
+              setSelectedRoom(room || null);
+              setSelectedBed('');
+            }} className="form-input">
               <option value="">Select Room</option>
-              {rooms.map(r => (
+              {filteredRooms.map(r => (
                 <option key={r.id} value={r.id}>
-                  {r.roomNo} ({r.type || r.roomType}) — {r.block || r.hostelBlock}
+                  {r.roomNumber} ({r.roomType}) — {r.hostelBlock}
                 </option>
               ))}
             </select>
@@ -152,29 +156,28 @@ const AssignRoom = () => {
               <label className="form-label">Available Beds</label>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '16px' }}>
-              {selectedRoom.beds.map(bed => {
-                const isSelected  = selectedBed === bed.bedNo;
-                const isOccupied  = bed.status === 'Occupied';
+              {selectedRoom.beds.filter(bed => bed.status === 'Available').map(bed => {
+                const isSelected  = selectedBed === bed.bedNumber;
                 return (
-                  <div key={bed.bedNo}
-                    onClick={() => !isOccupied && setSelectedBed(bed.bedNo)}
+                  <div key={bed.bedNumber}
+                    onClick={() => setSelectedBed(bed.bedNumber)}
                     style={{
                       padding: '28px 20px', borderRadius: '8px', textAlign: 'center',
                       border: isSelected ? '2px solid var(--primary)' : '1px solid var(--border)',
-                      background: isOccupied ? 'var(--background)' : isSelected ? 'var(--primary)' : 'white',
-                      cursor: isOccupied ? 'not-allowed' : 'pointer',
+                      background: isSelected ? 'var(--primary)' : 'white',
+                      cursor: 'pointer',
                       transition: 'all 0.2s',
                     }}>
                     <Bed size={36} style={{
                       marginBottom: '8px',
-                      color: isSelected ? 'white' : isOccupied ? 'var(--text-secondary)' : 'var(--text-primary)',
+                      color: isSelected ? 'white' : 'var(--text-primary)',
                     }} />
                     <div style={{
                       fontSize: '16px', fontWeight: '600',
-                      color: isSelected ? 'white' : isOccupied ? 'var(--text-secondary)' : 'var(--text-primary)',
-                    }}>{bed.bedNo}</div>
+                      color: isSelected ? 'white' : 'var(--text-primary)',
+                    }}>{bed.bedNumber}</div>
                     <div style={{ fontSize: '11px', marginTop: '4px',
-                      color: isSelected ? 'white' : isOccupied ? '#9CA3AF' : 'var(--primary)',
+                      color: isSelected ? 'white' : 'var(--primary)',
                     }}>{bed.status}</div>
                   </div>
                 );
@@ -183,12 +186,33 @@ const AssignRoom = () => {
           </>
         )}
 
-        {rooms.length === 0 && (
+        {filteredRooms.length === 0 && selectedBlock && (
           <p style={{ color: 'var(--text-secondary)', marginTop: '16px', fontSize: '14px' }}>
             No available rooms found. Try changing filters or add rooms first.
           </p>
         )}
       </div>
+
+      {/* Summary */}
+      {selectedRoom && selectedBed && (
+        <div className="form-card">
+          <h2 className="section-title">Assignment Summary</h2>
+          <div className="form-grid">
+            <div className="form-group">
+              <label className="form-label">Block</label>
+              <div className="form-input" style={{ background: 'var(--background)' }}>{selectedRoom.hostelBlock}</div>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Room Number</label>
+              <div className="form-input" style={{ background: 'var(--background)' }}>{selectedRoom.roomNumber}</div>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Bed Number</label>
+              <div className="form-input" style={{ background: 'var(--background)' }}>{selectedBed}</div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="form-actions">
         <button type="button" className="btn-secondary"
