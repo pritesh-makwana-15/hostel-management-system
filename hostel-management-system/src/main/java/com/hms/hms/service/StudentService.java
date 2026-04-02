@@ -5,9 +5,13 @@ import com.hms.hms.dto.StudentProfileDTO;
 import com.hms.hms.entity.Student;
 import com.hms.hms.entity.User;
 import com.hms.hms.entity.Warden;
+import com.hms.hms.entity.Room;
+import com.hms.hms.entity.Bed;
 import com.hms.hms.repository.StudentRepository;
 import com.hms.hms.repository.UserRepository;
 import com.hms.hms.repository.WardenRepository;
+import com.hms.hms.repository.RoomRepository;
+import com.hms.hms.repository.BedRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -25,6 +29,8 @@ public class StudentService {
     @Autowired private UserRepository userRepository;
     @Autowired private StudentRepository studentRepository;
     @Autowired private WardenRepository wardenRepository;
+    @Autowired private RoomRepository roomRepository;
+    @Autowired private BedRepository bedRepository;
     @Autowired private PasswordEncoder passwordEncoder;
 
     // ── Create ────────────────────────────────────────────────
@@ -235,14 +241,54 @@ public class StudentService {
 
     // ── Assign Room ───────────────────────────────────────────
     @Transactional
-    public Student assignRoom(Long id, String hostelBlock, String roomType,
-                              String roomNo, String bedNo, Long roomId) {
-        Student student = getById(id);
-        student.setHostelBlock(hostelBlock);
-        student.setRoomType(roomType);
-        student.setRoomNo(roomNo);
-        student.setBedNo(bedNo);
-        student.setRoomId(roomId);
+    public Student assignRoom(Long studentId, com.hms.hms.dto.AssignRoomRequest request) {
+        // Fetch entities
+        Student student = getById(studentId);
+        com.hms.hms.entity.Room room = roomRepository.findById(request.getRoomId())
+                .orElseThrow(() -> new RuntimeException("Room not found"));
+        com.hms.hms.entity.Bed bed = bedRepository.findByRoomIdAndBedNumber(request.getRoomId(), request.getBedNo());
+        if (bed == null) {
+            throw new RuntimeException("Bed not found in room");
+        }
+
+        // Validate bed is available
+        if (!"Available".equals(bed.getStatus())) {
+            throw new RuntimeException("Bed is not available");
+        }
+
+        // Check if room is full
+        long occupiedBeds = room.getBeds().stream().filter(b -> "Occupied".equals(b.getStatus())).count();
+        if (occupiedBeds >= room.getTotalBeds()) {
+            throw new RuntimeException("Room is full");
+        }
+
+        // If student already has a room, free the old bed
+        if (student.getBed() != null) {
+            com.hms.hms.entity.Bed oldBed = student.getBed();
+            oldBed.setStatus("Available");
+            oldBed.setStudent(null);
+            bedRepository.save(oldBed);
+
+            // Decrease old room occupied beds
+            if (student.getRoom() != null && !student.getRoom().equals(room)) {
+                // Note: Since occupiedBeds is calculated, no need to decrement manually
+            }
+        }
+
+        // Assign new bed
+        bed.setStatus("Occupied");
+        bed.setStudent(student);
+        bedRepository.save(bed);
+
+        // Update student
+        student.setRoom(room);
+        student.setBed(bed);
+        student.setHostelBlock(room.getHostelBlock());
+        student.setRoomType(room.getRoomType());
+        student.setRoomNo(room.getRoomNumber());
+        student.setBedNo(bed.getBedNumber());
+        student.setAllocatedOn(java.time.LocalDate.now());
+
         return studentRepository.save(student);
     }
 

@@ -88,8 +88,13 @@ public class Student {
     @Column(name = "allocated_on")
     private LocalDate allocatedOn;
 
-    @Column(name = "room_id")
-    private Long roomId;
+    @ManyToOne
+    @JoinColumn(name = "room_id")
+    private Room room;
+
+    @ManyToOne
+    @JoinColumn(name = "bed_id")
+    private Bed bed;
 
     // ── Status & Dates ────────────────────────────────────────
     @Column(length = 20)
