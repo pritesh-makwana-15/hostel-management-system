@@ -1,93 +1,155 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Bed } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { Bed, ArrowLeft } from 'lucide-react';
 import { hostelBlocks } from '../../../data/roomsData';
+import { adminRoomApi } from '../../../services/adminRoomApi';
 import '../../../styles/admin/rooms/addRoom.css';
+import '../../../styles/admin/rooms/editRoom.css';
 
-const AddRoom = () => {
+const EditRoom = () => {
   const navigate = useNavigate();
+  const { roomId } = useParams();
+
+  const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true);
+  const [error, setError] = useState('');
+  const [existingBeds, setExistingBeds] = useState([]);
+
   const [formData, setFormData] = useState({
     hostelBlock: '',
     roomNumber: '',
     roomType: 'Non-AC',
     floor: '',
     description: '',
-    totalBeds: 4
+    totalBeds: 4,
   });
+
+  // Fetch existing room data on mount
+  useEffect(() => {
+    const fetchRoom = async () => {
+      try {
+        const res = await adminRoomApi.getById(roomId);
+        const room = res.data.data;
+        setFormData({
+          hostelBlock: room.hostelBlock || '',
+          roomNumber: room.roomNumber || '',
+          roomType: room.roomType || 'Non-AC',
+          floor: room.floor || '',
+          description: room.description || '',
+          totalBeds: room.totalBeds || 4,
+        });
+        setExistingBeds(room.beds || []);
+      } catch (err) {
+        setError('Failed to load room data.');
+      } finally {
+        setFetching(false);
+      }
+    };
+    fetchRoom();
+  }, [roomId]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    setError('');
   };
 
-  const handleReset = () => {
-    setFormData({
-      hostelBlock: '',
-      roomNumber: '',
-      roomType: 'Non-AC',
-      floor: '',
-      description: '',
-      totalBeds: 4
-    });
-  };
+  const handleCancel = () => navigate('/admin/rooms');
 
-  const handleCancel = () => {
-    navigate('/admin/rooms');
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Here you would normally send data to backend
-    console.log('Form submitted:', formData);
-    alert('Room added successfully!');
-    navigate('/admin/rooms');
+    setLoading(true);
+    setError('');
+
+    try {
+      const payload = {
+        ...formData,
+        totalBeds: parseInt(formData.totalBeds, 10),
+      };
+      await adminRoomApi.update(roomId, payload);
+      navigate('/admin/rooms');
+    } catch (err) {
+      const msg =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        'Failed to update room. Please try again.';
+      setError(msg);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Generate bed preview based on total beds
-  const generateBedPreview = () => {
-    const beds = [];
-    for (let i = 1; i <= formData.totalBeds; i++) {
-      beds.push({
+  // Build bed preview: keep existing bed statuses, add new ones, trim removed ones
+  const buildBedPreview = () => {
+    const total = Number(formData.totalBeds);
+    const preview = [];
+    for (let i = 1; i <= total; i++) {
+      const existing = existingBeds.find((b) => b.bedNumber === `B${i}`);
+      preview.push({
         id: `B${i}`,
-        status: 'Available'
+        status: existing ? existing.status : 'Available',
       });
     }
-    return beds;
+    return preview;
   };
 
-  const bedPreview = generateBedPreview();
+  const bedPreview = buildBedPreview();
+
+  const getBedClass = (status) => {
+    if (status === 'Occupied') return 'bed-card-occupied';
+    if (status === 'Maintenance') return 'bed-card-maintenance';
+    return 'bed-card-available';
+  };
+
+  if (fetching) {
+    return (
+      <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-secondary)' }}>
+        Loading room data...
+      </div>
+    );
+  }
 
   return (
-    <div className="add-room-page">
+    <div className="add-room-page edit-room-page">
       {/* Header */}
       <div className="page-header">
         <div className="page-header-left">
-          <h1 className="page-title">Add Room</h1>
+          <h1 className="page-title">Edit Room</h1>
           <div className="breadcrumb">
             <span>Dashboard</span>
             <span className="breadcrumb-separator">›</span>
             <span>Rooms</span>
             <span className="breadcrumb-separator">›</span>
-            <span className="breadcrumb-active">Add</span>
+            <span className="breadcrumb-active">Edit</span>
           </div>
         </div>
+        <button className="btn-secondary" onClick={handleCancel}>
+          <ArrowLeft size={18} />
+          Back to Rooms
+        </button>
       </div>
 
+      {/* Error Banner */}
+      {error && (
+        <div style={{
+          background: '#FEE2E2', color: '#B91C1C', border: '1px solid #FCA5A5',
+          borderRadius: '8px', padding: '12px 16px', marginBottom: '16px', fontSize: '14px'
+        }}>
+          {error}
+        </div>
+      )}
+
       <form onSubmit={handleSubmit}>
-        {/* Room Details Card */}
         <div className="form-card">
           <div className="form-card-header">
-            <h3>Room Details</h3>
-            <p>Enter the information to add a new room to the hostel.</p>
+            <h3>Edit Room Details</h3>
+            <p>Update room information. Reducing beds will remove available beds only.</p>
           </div>
 
-          {/* Room Information Section */}
+          {/* Room Information */}
           <div className="form-section">
             <h4 className="section-title">Room Information</h4>
-            
+
             <div className="form-grid">
               <div className="form-group">
                 <label>Hostel / Block <span className="required">*</span></label>
@@ -99,7 +161,7 @@ const AddRoom = () => {
                   required
                 >
                   <option value="">Select a hostel</option>
-                  {hostelBlocks.map(block => (
+                  {hostelBlocks.map((block) => (
                     <option key={block.id} value={block.name}>{block.name}</option>
                   ))}
                 </select>
@@ -112,7 +174,7 @@ const AddRoom = () => {
                   name="roomNumber"
                   value={formData.roomNumber}
                   onChange={handleInputChange}
-                  placeholder="101"
+                  placeholder="e.g. 101"
                   className="form-input"
                   required
                 />
@@ -124,23 +186,13 @@ const AddRoom = () => {
                 <label>Room Type <span className="required">*</span></label>
                 <div className="radio-group">
                   <label className="radio-label">
-                    <input
-                      type="radio"
-                      name="roomType"
-                      value="AC"
-                      checked={formData.roomType === 'AC'}
-                      onChange={handleInputChange}
-                    />
+                    <input type="radio" name="roomType" value="AC"
+                      checked={formData.roomType === 'AC'} onChange={handleInputChange} />
                     <span>AC</span>
                   </label>
                   <label className="radio-label">
-                    <input
-                      type="radio"
-                      name="roomType"
-                      value="Non-AC"
-                      checked={formData.roomType === 'Non-AC'}
-                      onChange={handleInputChange}
-                    />
+                    <input type="radio" name="roomType" value="Non-AC"
+                      checked={formData.roomType === 'Non-AC'} onChange={handleInputChange} />
                     <span>Non-AC</span>
                   </label>
                 </div>
@@ -153,7 +205,7 @@ const AddRoom = () => {
                   name="floor"
                   value={formData.floor}
                   onChange={handleInputChange}
-                  placeholder="1st"
+                  placeholder="e.g. 1st"
                   className="form-input"
                 />
               </div>
@@ -172,10 +224,9 @@ const AddRoom = () => {
             </div>
           </div>
 
-          {/* Bed Configuration Section */}
+          {/* Bed Configuration */}
           <div className="form-section">
             <h4 className="section-title">Bed Configuration</h4>
-            
             <div className="form-group">
               <label>Total Beds <span className="required">*</span></label>
               <input
@@ -192,19 +243,16 @@ const AddRoom = () => {
             </div>
           </div>
 
-          {/* Bed Preview Section */}
+          {/* Bed Preview */}
           <div className="form-section">
             <h4 className="section-title">Bed Preview</h4>
             <p className="section-description">
-              Visual representation of beds in the room. All newly added beds are marked 'Available'.
+              Existing bed statuses are preserved. New beds are marked 'Available'.
             </p>
-            
             <div className="bed-preview-grid">
               {bedPreview.map((bed) => (
-                <div key={bed.id} className="bed-card bed-card-available">
-                  <div className="bed-icon">
-                    <Bed size={24} />
-                  </div>
+                <div key={bed.id} className={`bed-card ${getBedClass(bed.status)}`}>
+                  <div className="bed-icon"><Bed size={24} /></div>
                   <div className="bed-id">{bed.id}</div>
                   <div className="bed-status">{bed.status}</div>
                 </div>
@@ -213,27 +261,13 @@ const AddRoom = () => {
           </div>
         </div>
 
-        {/* Form Actions */}
+        {/* Actions */}
         <div className="form-actions">
-          <button
-            type="button"
-            className="btn-secondary"
-            onClick={handleReset}
-          >
-            Reset
-          </button>
-          <button
-            type="button"
-            className="btn-secondary"
-            onClick={handleCancel}
-          >
+          <button type="button" className="btn-secondary" onClick={handleCancel} disabled={loading}>
             Cancel
           </button>
-          <button
-            type="submit"
-            className="btn-primary"
-          >
-            Save Room
+          <button type="submit" className="btn-primary" disabled={loading}>
+            {loading ? 'Updating...' : 'Update Room'}
           </button>
         </div>
       </form>
@@ -241,4 +275,4 @@ const AddRoom = () => {
   );
 };
 
-export default AddRoom;
+export default EditRoom;
