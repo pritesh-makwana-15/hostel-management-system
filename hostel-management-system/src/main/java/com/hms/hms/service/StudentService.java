@@ -54,9 +54,15 @@ public class StudentService {
             warden = wardenRepository.findById(req.getWardenId()).orElse(null);
         }
 
+        Room room = null;
+        if (req.getRoomId() != null) {
+            room = roomRepository.findById(req.getRoomId()).orElse(null);
+        }
+
         Student student = Student.builder()
                 .user(user)
                 .warden(warden)
+                .room(room)
                 // Academic
                 .enrollmentNo(req.getEnrollmentNo())
                 .course(req.getCourse())
@@ -79,7 +85,6 @@ public class StudentService {
                 .roomNo(req.getRoomNo())
                 .bedNo(req.getBedNo())
                 .allocatedOn(req.getAllocatedOn())
-                .roomId(req.getRoomId())
                 // Status
                 .status(req.getStatus() != null ? req.getStatus() : "Active")
                 .joinDate(req.getJoinDate())
@@ -180,6 +185,10 @@ public class StudentService {
             wardenRepository.findById(req.getWardenId()).ifPresent(existing::setWarden);
         }
 
+        if (req.getRoomId() != null) {
+            roomRepository.findById(req.getRoomId()).ifPresent(existing::setRoom);
+        }
+
         // Academic
         existing.setEnrollmentNo(req.getEnrollmentNo());
         existing.setCourse(req.getCourse());
@@ -202,7 +211,6 @@ public class StudentService {
         existing.setRoomNo(req.getRoomNo());
         existing.setBedNo(req.getBedNo());
         existing.setAllocatedOn(req.getAllocatedOn());
-        existing.setRoomId(req.getRoomId());
         // Status
         if (req.getStatus() != null) existing.setStatus(req.getStatus());
         if (req.getJoinDate() != null) existing.setJoinDate(req.getJoinDate());

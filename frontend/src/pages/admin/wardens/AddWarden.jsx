@@ -95,8 +95,9 @@ const AddWarden = () => {
             </div>
             <div className="form-group">
               <label className="form-label">Date of Joining</label>
-              <input type="date" name="joinDate" value={formData.joinDate}
-                onChange={handleChange} className="form-input" />
+              <input type="text" name="joinDate" value={formData.joinDate}
+                onChange={handleChange} className="form-input" 
+                placeholder="DD-MM-YYYY or DD-MM-YYYYYY" />
             </div>
             <div className="form-group form-group-full">
               <label className="form-label">Address</label>

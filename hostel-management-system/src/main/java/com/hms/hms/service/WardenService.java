@@ -19,7 +19,7 @@ public class WardenService {
 
     @Autowired private UserRepository userRepository;
     @Autowired private WardenRepository wardenRepository;
-    @Autowired private AdminRepository AdminRepository;
+    @Autowired private AdminRepository adminRepository;
     @Autowired private PasswordEncoder passwordEncoder;
 
     @Transactional
@@ -41,7 +41,7 @@ public class WardenService {
         // 2. Resolve admin (optional)
         Admin admin = null;
         if (request.getAdminId() != null) {
-            admin = AdminRepository.findById(request.getAdminId()).orElse(null);
+            admin = adminRepository.findById(request.getAdminId()).orElse(null);
         }
 
         // 3. Save warden profile
@@ -81,7 +81,7 @@ public class WardenService {
         userRepository.save(user);
 
         if (request.getAdminId() != null) {
-            AdminRepository.findById(request.getAdminId()).ifPresent(existing::setAdmin);
+            adminRepository.findById(request.getAdminId()).ifPresent(existing::setAdmin);
         }
         existing.setGender(request.getGender());
         existing.setAddress(request.getAddress());
