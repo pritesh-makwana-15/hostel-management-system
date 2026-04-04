@@ -162,8 +162,9 @@ const EditStudent = () => {
 
             <div className="form-group">
               <label className="form-label">Date of Birth</label>
-              <input type="date" name="dob" value={formData.dob}
-                onChange={handleChange} className="form-input" />
+              <input type="text" name="dob" value={formData.dob}
+                onChange={handleChange} className="form-input" 
+                placeholder="DD-MM-YYYY or DD-MM-YYYYYY" />
             </div>
 
             <div className="form-group">
@@ -238,8 +239,9 @@ const EditStudent = () => {
 
             <div className="form-group">
               <label className="form-label">Join Date</label>
-              <input type="date" name="joinDate" value={formData.joinDate}
-                onChange={handleChange} className="form-input" />
+              <input type="text" name="joinDate" value={formData.joinDate}
+                onChange={handleChange} className="form-input" 
+                placeholder="DD-MM-YYYY or DD-MM-YYYYYY" />
             </div>
 
           </div>

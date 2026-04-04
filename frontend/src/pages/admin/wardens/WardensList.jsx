@@ -19,9 +19,13 @@ const WardensList = () => {
     try {
       setLoading(true);
       const res = await adminWardenApi.getAll();
-      setWardens(res.data.data || []);
-    } catch {
-      setError('Failed to load wardens.');
+      console.log('WardensList: API response:', res);
+      const wardensData = res.data.data || [];
+      console.log('WardensList: Wardens data:', wardensData);
+      setWardens(wardensData);
+    } catch (error) {
+      console.error('WardensList: Error loading wardens:', error);
+      setError('Failed to load wardens: ' + (error.response?.data?.message || error.message));
     } finally {
       setLoading(false);
     }

@@ -10,6 +10,8 @@ const EditWarden = () => {
   const navigate = useNavigate();
   const { id }   = useParams();
 
+  console.log('EditWarden: Component mounted, ID from params:', id);
+
   const [loading, setLoading]       = useState(true);
   const [saving, setSaving]         = useState(false);
   const [error, setError]           = useState('');
@@ -20,9 +22,12 @@ const EditWarden = () => {
   });
 
   useEffect(() => {
+    console.log('EditWarden: Loading warden with ID:', id);
     adminWardenApi.getById(id)
       .then(res => {
+        console.log('EditWarden: API response:', res);
         const w = res.data.data;
+        console.log('EditWarden: Warden data:', w);
         setFormData({
           name:     w.name     || '',
           email:    w.email    || '',
@@ -33,7 +38,10 @@ const EditWarden = () => {
           password: '',
         });
       })
-      .catch(() => setError('Failed to load warden data.'))
+      .catch(error => {
+        console.error('EditWarden: Error loading warden:', error);
+        setError('Failed to load warden data: ' + (error.response?.data?.message || error.message));
+      })
       .finally(() => setLoading(false));
   }, [id]);
 
@@ -103,8 +111,9 @@ const EditWarden = () => {
             </div>
             <div className="form-group">
               <label className="form-label">Date of Joining</label>
-              <input type="date" name="joinDate" value={formData.joinDate}
-                onChange={handleChange} className="form-input" />
+              <input type="text" name="joinDate" value={formData.joinDate}
+                onChange={handleChange} className="form-input" 
+                placeholder="DD-MM-YYYY or DD-MM-YYYYYY" />
             </div>
             <div className="form-group form-group-full">
               <label className="form-label">Address</label>
