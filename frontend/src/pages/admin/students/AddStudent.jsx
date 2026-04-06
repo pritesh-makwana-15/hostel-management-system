@@ -43,8 +43,46 @@ const AddStudent = () => {
 
   const onSubmit = async (data) => {
     try {
+      // Convert date format from DD-MM-YYYY to YYYY-MM-DD for backend
+      const dataToSend = { ...data };
+      if (dataToSend.dob) {
+        // Handle DD-MM-YYYY format only
+        const dateParts = dataToSend.dob.split('-');
+        if (dateParts.length === 3) {
+          const day = dateParts[0].padStart(2, '0');
+          const month = dateParts[1].padStart(2, '0');
+          const year = dateParts[2];
+          
+          // Validate year is 4 digits
+          if (year.length === 4) {
+            dataToSend.dob = `${year}-${month}-${day}`;
+          } else {
+            alert('Please enter date of birth in DD-MM-YYYY format (4-digit year)');
+            return;
+          }
+        }
+      }
+      
+      if (dataToSend.joinDate) {
+        // Handle DD-MM-YYYY format only
+        const dateParts = dataToSend.joinDate.split('-');
+        if (dateParts.length === 3) {
+          const day = dateParts[0].padStart(2, '0');
+          const month = dateParts[1].padStart(2, '0');
+          const year = dateParts[2];
+          
+          // Validate year is 4 digits
+          if (year.length === 4) {
+            dataToSend.joinDate = `${year}-${month}-${day}`;
+          } else {
+            alert('Please enter join date in DD-MM-YYYY format (4-digit year)');
+            return;
+          }
+        }
+      }
+      
       await adminStudentApi.create({
-        ...data,
+        ...dataToSend,
         status: 'Active',
       });
       navigate('/admin/students');

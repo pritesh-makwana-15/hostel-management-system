@@ -63,13 +63,6 @@ const RoomCard = ({ room }) => {
         >
           View Room
         </button>
-        <button
-          className={`room-card-btn room-card-btn-primary ${isFull ? 'room-card-btn-disabled' : ''}`}
-          disabled={isFull}
-          onClick={() => !isFull && navigate(`/warden/rooms/assign/${room.id}`)}
-        >
-          Assign Student
-        </button>
       </div>
     </div>
   );

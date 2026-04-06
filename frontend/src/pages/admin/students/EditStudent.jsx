@@ -77,25 +77,65 @@ const EditStudent = () => {
     setSaving(true);
     setError('');
     try {
+      // Convert date format from DD-MM-YYYY to YYYY-MM-DD for backend
+      const dataToSend = { ...formData };
+      if (dataToSend.dob) {
+        // Handle DD-MM-YYYY format only
+        const dateParts = dataToSend.dob.split('-');
+        if (dateParts.length === 3) {
+          const day = dateParts[0].padStart(2, '0');
+          const month = dateParts[1].padStart(2, '0');
+          const year = dateParts[2];
+          
+          // Validate year is 4 digits
+          if (year.length === 4) {
+            dataToSend.dob = `${year}-${month}-${day}`;
+          } else {
+            setError('Please enter date of birth in DD-MM-YYYY format (4-digit year)');
+            setSaving(false);
+            return;
+          }
+        }
+      }
+      
+      if (dataToSend.joinDate) {
+        // Handle DD-MM-YYYY format only
+        const dateParts = dataToSend.joinDate.split('-');
+        if (dateParts.length === 3) {
+          const day = dateParts[0].padStart(2, '0');
+          const month = dateParts[1].padStart(2, '0');
+          const year = dateParts[2];
+          
+          // Validate year is 4 digits
+          if (year.length === 4) {
+            dataToSend.joinDate = `${year}-${month}-${day}`;
+          } else {
+            setError('Please enter join date in DD-MM-YYYY format (4-digit year)');
+            setSaving(false);
+            return;
+          }
+        }
+      }
+      
       await adminStudentApi.update(id, {
-        name:             formData.name,
-        email:            formData.email,
-        phone:            formData.phone,
-        gender:           formData.gender,
-        dob:              formData.dob      || null,
-        nationality:      formData.nationality,
-        photoUrl:         formData.photoUrl || null,
-        enrollmentNo:     formData.enrollmentNo,
-        course:           formData.course,
-        yearSemester:     formData.yearSemester,
-        batch:            formData.batch,
-        program:          formData.program,
-        joinDate:         formData.joinDate || null,
-        guardianName:     formData.guardianName,
-        guardianPhone:    formData.guardianPhone,
-        guardianRelation: formData.guardianRelation,
-        address:          formData.address,
-        status:           formData.status,
+        name:             dataToSend.name,
+        email:            dataToSend.email,
+        phone:            dataToSend.phone,
+        gender:           dataToSend.gender,
+        dob:              dataToSend.dob      || null,
+        nationality:      dataToSend.nationality,
+        photoUrl:         dataToSend.photoUrl || null,
+        enrollmentNo:     dataToSend.enrollmentNo,
+        course:           dataToSend.course,
+        yearSemester:     dataToSend.yearSemester,
+        batch:            dataToSend.batch,
+        program:          dataToSend.program,
+        joinDate:         dataToSend.joinDate || null,
+        guardianName:     dataToSend.guardianName,
+        guardianPhone:    dataToSend.guardianPhone,
+        guardianRelation: dataToSend.guardianRelation,
+        address:          dataToSend.address,
+        status:           dataToSend.status,
       });
       navigate('/admin/students');
     } catch (err) {

@@ -1,13 +1,44 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getRoomById } from '../../../data/roomsData';
+import { wardenRoomsApi } from '../../../services/wardenRoomsApi';
 import { ArrowLeft, MapPin, Layers, BedDouble, Info, CheckCircle2, Users } from 'lucide-react';
 import '../../../styles/warden/rooms/roomDetails.css';
 
 const RoomDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const room = getRoomById(id);
+  const [room, setRoom] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        setLoading(true);
+        const res = await wardenRoomsApi.getById(id);
+        if (mounted) setRoom(res.data?.data || null);
+      } catch (e) {
+        if (mounted) setError(e.response?.data?.message || e.message || 'Failed to load room');
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [id]);
+
+  if (loading) return <div className="loading">Loading room...</div>;
+
+  if (error) {
+    return (
+      <div className="rd-not-found">
+        <p>{error}</p>
+        <button onClick={() => navigate('/warden/rooms')}>← Back to List</button>
+      </div>
+    );
+  }
 
   if (!room) {
     return (
@@ -29,9 +60,6 @@ const RoomDetails = () => {
         <div className="rd-header-actions">
           <button className="rd-btn-outline" onClick={() => navigate('/warden/rooms')}>
             <ArrowLeft size={16} /> Back to List
-          </button>
-          <button className="rd-btn-primary" onClick={() => navigate(`/warden/rooms/assign/${room.id}`)}>
-            <Users size={16} /> Assign Student
           </button>
         </div>
       </div>
@@ -106,9 +134,9 @@ const RoomDetails = () => {
                     <p className="rd-bed-available-sub">Ready for student assignment</p>
                     <button
                       className="rd-bed-assign-btn"
-                      onClick={() => navigate(`/warden/rooms/assign/${room.id}`)}
+                      onClick={() => navigate(`/warden/rooms/view/${room.id}`)}
                     >
-                      <Users size={14} /> Assign Student
+                      <Users size={14} /> View Room
                     </button>
                   </>
                 )}

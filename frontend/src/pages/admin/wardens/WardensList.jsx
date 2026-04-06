@@ -105,13 +105,13 @@ const WardensList = () => {
                   <td>
                     <div className="action-buttons">
                       <button className="action-btn" title="View"
-                        onClick={() => navigate(`/admin/wardens/${w.id}/edit`)}>
+                        onClick={() => navigate(`/admin/wardens/edit/${w.id}`)}>
                         <Eye size={17} /></button>
                       <button className="action-btn" title="Edit"
-                        onClick={() => navigate(`/admin/wardens/${w.id}/edit`)}>
+                        onClick={() => navigate(`/admin/wardens/edit/${w.id}`)}>
                         <Edit size={17} /></button>
                       <button className="action-btn" title="Assign"
-                        onClick={() => navigate(`/admin/wardens/${w.id}/assign`)}>
+                        onClick={() => navigate(`/admin/wardens/assign/${w.id}`)}>
                         <MapPin size={17} /></button>
                     </div>
                   </td>
