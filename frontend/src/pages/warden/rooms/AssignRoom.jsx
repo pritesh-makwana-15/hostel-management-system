@@ -1,19 +1,58 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getRoomById } from '../../../data/roomsData';
 import StudentSelect from '../../../components/warden/rooms/StudentSelect';
 import BedGrid from '../../../components/warden/rooms/BedGrid';
+import { wardenRoomsApi } from '../../../services/wardenRoomsApi';
 import { ArrowLeft, Building2, Info } from 'lucide-react';
 import '../../../styles/warden/rooms/assignRoom.css';
 
 const AssignRoom = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const room = getRoomById(id);
+  const [room, setRoom] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [selectedBed, setSelectedBed] = useState(null);
   const [assigned, setAssigned] = useState(false);
+  const [assigning, setAssigning] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        setLoading(true);
+        const res = await wardenRoomsApi.getById(id);
+        if (mounted) setRoom(res.data?.data || null);
+      } catch (e) {
+        if (mounted) setError(e.response?.data?.message || e.message || 'Failed to load room');
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [id]);
+
+  const pct = useMemo(() => {
+    if (!room?.totalBeds) return 0;
+    return Math.round(((room.occupiedBeds || 0) / room.totalBeds) * 100);
+  }, [room]);
+
+  const canAssign = selectedStudent && selectedBed;
+
+  if (loading) return <div className="loading">Loading assignment...</div>;
+
+  if (error) {
+    return (
+      <div className="ar-not-found">
+        <p>{error}</p>
+        <button onClick={() => navigate('/warden/rooms')}>← Back</button>
+      </div>
+    );
+  }
 
   if (!room) {
     return (
@@ -24,15 +63,24 @@ const AssignRoom = () => {
     );
   }
 
-  const pct = Math.round((room.occupiedBeds / room.totalBeds) * 100);
-  const canAssign = selectedStudent && selectedBed;
-
-  const handleAssign = () => {
+  const handleAssign = async () => {
     if (!canAssign) return;
-    setAssigned(true);
-    setTimeout(() => {
-      navigate(`/warden/rooms/view/${room.id}`);
-    }, 1500);
+    setAssigning(true);
+    setError('');
+    try {
+      await wardenRoomsApi.assign(room.id, {
+        studentId: selectedStudent.id,
+        bedNo: selectedBed,
+      });
+      setAssigned(true);
+      setTimeout(() => {
+        navigate(`/warden/rooms/view/${room.id}`);
+      }, 800);
+    } catch (e) {
+      setError(e.response?.data?.message || e.message || 'Failed to assign bed');
+    } finally {
+      setAssigning(false);
+    }
   };
 
   return (
@@ -108,9 +156,9 @@ const AssignRoom = () => {
               <button
                 className={`ar-assign-btn ${canAssign ? '' : 'ar-assign-btn-disabled'}`}
                 onClick={handleAssign}
-                disabled={!canAssign}
+                disabled={!canAssign || assigning}
               >
-                {assigned ? '✅ Assigned!' : '👤 Assign Bed'}
+                {assigned ? '✅ Assigned!' : assigning ? 'Assigning...' : '👤 Assign Bed'}
               </button>
             </div>
           </div>

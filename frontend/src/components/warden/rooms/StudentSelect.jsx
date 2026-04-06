@@ -1,22 +1,55 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Search } from 'lucide-react';
-
-const mockStudents = [
-  { id: 'S001', name: 'Rahul Singh', enrollment: 'ENR-2024-089', avatar: 'RS' },
-  { id: 'S002', name: 'Amit Sharma', enrollment: 'ENR-2024-112', avatar: 'AS' },
-  { id: 'S003', name: 'Priya Nair', enrollment: 'ENR-2024-078', avatar: 'PN' },
-  { id: 'S004', name: 'Deepak Verma', enrollment: 'ENR-2024-045', avatar: 'DV' },
-  { id: 'S005', name: 'Sneha Patel', enrollment: 'ENR-2024-133', avatar: 'SP' },
-];
+import { wardenStudentsApi } from '../../../services/wardenStudentsApi';
 
 const StudentSelect = ({ selectedStudent, onSelect }) => {
   const [search, setSearch] = useState('');
+  const [students, setStudents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const filtered = mockStudents.filter(
-    (s) =>
-      s.name.toLowerCase().includes(search.toLowerCase()) ||
-      s.enrollment.toLowerCase().includes(search.toLowerCase())
-  );
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        setLoading(true);
+        // Pull a large page so the UX stays the same as the mock list
+        const res = await wardenStudentsApi.getAll({ page: 0, size: 1000 });
+        const page = res.data?.data;
+        const rows = page?.content || [];
+        const mapped = rows.map((s) => {
+          const name = s.name || '';
+          const initials = name
+            .split(' ')
+            .filter(Boolean)
+            .slice(0, 2)
+            .map((p) => p[0]?.toUpperCase())
+            .join('');
+          return {
+            id: s.id,
+            name,
+            enrollment: s.enrollmentNo || '',
+            avatar: initials || 'ST',
+          };
+        });
+        if (mounted) setStudents(mapped);
+      } catch (e) {
+        if (mounted) setError(e.response?.data?.message || e.message || 'Failed to load students');
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase();
+    return students.filter(
+      (s) => s.name.toLowerCase().includes(q) || s.enrollment.toLowerCase().includes(q)
+    );
+  }, [search, students]);
 
   return (
     <div className="student-select-wrap">
@@ -33,6 +66,8 @@ const StudentSelect = ({ selectedStudent, onSelect }) => {
       <div className="student-select-label">CANDIDATE STUDENTS</div>
 
       <div className="student-select-list">
+        {loading && <div className="loading">Loading students...</div>}
+        {!loading && error && <div className="error">{error}</div>}
         {filtered.map((student) => (
           <div
             key={student.id}
