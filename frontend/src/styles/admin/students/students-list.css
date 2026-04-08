@@ -425,7 +425,7 @@
     align-items: flex-start;
     gap: 12px;
   }
-
+  
   .sl-btn-primary { width: 100%; justify-content: center; }
 
   .sl-filters-grid { grid-template-columns: 1fr; }

@@ -79,7 +79,7 @@ public class StudentService {
                 .roomNo(req.getRoomNo())
                 .bedNo(req.getBedNo())
                 .allocatedOn(req.getAllocatedOn())
-                .roomId(req.getRoomId())
+//                .roomId(req.getRoomId())
                 // Status
                 .status(req.getStatus() != null ? req.getStatus() : "Active")
                 .joinDate(req.getJoinDate())
@@ -202,7 +202,7 @@ public class StudentService {
         existing.setRoomNo(req.getRoomNo());
         existing.setBedNo(req.getBedNo());
         existing.setAllocatedOn(req.getAllocatedOn());
-        existing.setRoomId(req.getRoomId());
+//        existing.setRoomId(req.getRoomId());
         // Status
         if (req.getStatus() != null) existing.setStatus(req.getStatus());
         if (req.getJoinDate() != null) existing.setJoinDate(req.getJoinDate());
