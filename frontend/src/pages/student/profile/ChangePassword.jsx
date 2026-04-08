@@ -4,9 +4,10 @@ import {
   Lock, Eye, EyeOff, CheckCircle, X,
   AlertCircle, ChevronRight, Shield, Info
 } from 'lucide-react';
+import { studentApi } from '../../../services/studentApi';
 import '../../../styles/student/profile/changePassword.css';
 
-// ── Password requirement checker ──────────────────────────
+// Password requirement checker
 const getRequirements = (password, confirmPassword) => [
   { id: 'length',    label: 'At least 8 characters long',            met: password.length >= 8 },
   { id: 'uppercase', label: 'Contains an uppercase letter',          met: /[A-Z]/.test(password) },
@@ -15,7 +16,6 @@ const getRequirements = (password, confirmPassword) => [
   { id: 'match',     label: 'Passwords must match',                  met: password.length > 0 && password === confirmPassword },
 ];
 
-// ── Main Component ────────────────────────────────────────
 const ChangePassword = () => {
   const navigate = useNavigate();
 
@@ -32,6 +32,7 @@ const ChangePassword = () => {
   });
 
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   const requirements = getRequirements(formData.newPassword, formData.confirmPassword);
@@ -47,7 +48,7 @@ const ChangePassword = () => {
     setShow((prev) => ({ ...prev, [field]: !prev[field] }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.currentPassword) {
       setError('Please enter your current password.');
@@ -57,14 +58,29 @@ const ChangePassword = () => {
       setError('Please meet all password requirements before submitting.');
       return;
     }
-    setSubmitted(true);
-    setTimeout(() => navigate('/student/profile'), 2000);
+    
+    try {
+      setLoading(true);
+      setError('');
+      
+      await studentApi.changePassword({
+        currentPassword: formData.currentPassword,
+        newPassword: formData.newPassword
+      });
+      
+      setSubmitted(true);
+      setTimeout(() => navigate('/student/profile'), 2000);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to change password. Please check your current password and try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="cp-page">
 
-      {/* ── Page Header ── */}
+      {/* Page Header */}
       <div className="cp-page-header">
         <div>
           <div className="cp-breadcrumb">
@@ -78,19 +94,19 @@ const ChangePassword = () => {
           <p className="cp-page-subtitle">Ensure your account is secure by using a strong, unique password.</p>
         </div>
         <button className="cp-btn-back" onClick={() => navigate('/student/profile')}>
-          ← Back to Profile
+          Back to Profile
         </button>
       </div>
 
-      {/* ── Success State ── */}
+      {/* Success State */}
       {submitted && (
         <div className="cp-success-banner">
           <CheckCircle size={18} />
-          <span>Password updated successfully! Redirecting to your profile…</span>
+          <span>Password updated successfully! Redirecting to your profile...</span>
         </div>
       )}
 
-      {/* ── Main Form Card ── */}
+      {/* Main Form Card */}
       <div className="cp-center-wrap">
         <div className="cp-card">
 
@@ -225,15 +241,15 @@ const ChangePassword = () => {
               <button
                 type="submit"
                 className={`cp-btn-submit ${allMet && formData.currentPassword ? '' : 'cp-btn-submit--disabled'}`}
-                disabled={submitted}
+                disabled={submitted || loading}
               >
-                {submitted ? <><CheckCircle size={15} /> Updated!</> : 'Update Password'}
+                {loading ? 'Updating...' : submitted ? <><CheckCircle size={15} /> Updated!</> : 'Update Password'}
               </button>
             </div>
           </form>
         </div>
 
-        {/* ── Below Card: Last Changed + Links ── */}
+        {/* Footer Note */}
         <div className="cp-footer-note">
           <Shield size={28} className="cp-footer-shield" />
           <p className="cp-footer-text">

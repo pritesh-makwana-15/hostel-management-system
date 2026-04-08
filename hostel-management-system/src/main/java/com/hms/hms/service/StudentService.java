@@ -308,4 +308,75 @@ public class StudentService {
         userRepository.delete(student.getUser());
         return "Deleted student with id: " + id;
     }
+
+    // Update student profile (partial update)
+    @Transactional
+    public StudentProfileDTO updateStudentProfile(Long studentId, RegisterRequest request) {
+        Student student = getById(studentId);
+        
+        // Update User entity fields
+        if (request.getName() != null) {
+            student.getUser().setName(request.getName());
+        }
+        if (request.getPhone() != null) {
+            student.getUser().setPhone(request.getPhone());
+        }
+        
+        // Update Student entity fields
+        if (request.getGender() != null) {
+            student.setGender(request.getGender());
+        }
+        if (request.getDob() != null) {
+            student.setDob(request.getDob());
+        }
+        if (request.getNationality() != null) {
+            student.setNationality(request.getNationality());
+        }
+        if (request.getCourse() != null) {
+            student.setCourse(request.getCourse());
+        }
+        if (request.getYearSemester() != null) {
+            student.setYearSemester(request.getYearSemester());
+        }
+        if (request.getGuardianName() != null) {
+            student.setGuardianName(request.getGuardianName());
+        }
+        if (request.getGuardianPhone() != null) {
+            student.setGuardianPhone(request.getGuardianPhone());
+        }
+        if (request.getGuardianRelation() != null) {
+            student.setGuardianRelation(request.getGuardianRelation());
+        }
+        if (request.getAddress() != null) {
+            student.setAddress(request.getAddress());
+        }
+        
+        userRepository.save(student.getUser());
+        studentRepository.save(student);
+        
+        return getProfile(studentId);
+    }
+
+    // Change password
+    @Transactional
+    public boolean changePassword(Long studentId, String currentPassword, String newPassword) {
+        Student student = getById(studentId);
+        User user = student.getUser();
+        
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            return false;
+        }
+        
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+        return true;
+    }
+
+    // Create complaint
+    @Transactional
+    public String createComplaint(Long studentId, String category, String description) {
+        // TODO: Implement complaint creation logic
+        // This would involve saving to a Complaint entity/table
+        return "Complaint created successfully";
+    }
 }

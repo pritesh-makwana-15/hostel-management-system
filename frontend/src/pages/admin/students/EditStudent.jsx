@@ -77,45 +77,8 @@ const EditStudent = () => {
     setSaving(true);
     setError('');
     try {
-      // Convert date format from DD-MM-YYYY to YYYY-MM-DD for backend
+      // HTML5 date inputs already provide YYYY-MM-DD format, no conversion needed
       const dataToSend = { ...formData };
-      if (dataToSend.dob) {
-        // Handle DD-MM-YYYY format only
-        const dateParts = dataToSend.dob.split('-');
-        if (dateParts.length === 3) {
-          const day = dateParts[0].padStart(2, '0');
-          const month = dateParts[1].padStart(2, '0');
-          const year = dateParts[2];
-          
-          // Validate year is 4 digits
-          if (year.length === 4) {
-            dataToSend.dob = `${year}-${month}-${day}`;
-          } else {
-            setError('Please enter date of birth in DD-MM-YYYY format (4-digit year)');
-            setSaving(false);
-            return;
-          }
-        }
-      }
-      
-      if (dataToSend.joinDate) {
-        // Handle DD-MM-YYYY format only
-        const dateParts = dataToSend.joinDate.split('-');
-        if (dateParts.length === 3) {
-          const day = dateParts[0].padStart(2, '0');
-          const month = dateParts[1].padStart(2, '0');
-          const year = dateParts[2];
-          
-          // Validate year is 4 digits
-          if (year.length === 4) {
-            dataToSend.joinDate = `${year}-${month}-${day}`;
-          } else {
-            setError('Please enter join date in DD-MM-YYYY format (4-digit year)');
-            setSaving(false);
-            return;
-          }
-        }
-      }
       
       await adminStudentApi.update(id, {
         name:             dataToSend.name,
@@ -202,9 +165,8 @@ const EditStudent = () => {
 
             <div className="form-group">
               <label className="form-label">Date of Birth</label>
-              <input type="text" name="dob" value={formData.dob}
-                onChange={handleChange} className="form-input" 
-                placeholder="DD-MM-YYYY or DD-MM-YYYYYY" />
+              <input type="date" name="dob" value={formData.dob}
+                onChange={handleChange} className="form-input" />
             </div>
 
             <div className="form-group">
@@ -279,9 +241,8 @@ const EditStudent = () => {
 
             <div className="form-group">
               <label className="form-label">Join Date</label>
-              <input type="text" name="joinDate" value={formData.joinDate}
-                onChange={handleChange} className="form-input" 
-                placeholder="DD-MM-YYYY or DD-MM-YYYYYY" />
+              <input type="date" name="joinDate" value={formData.joinDate}
+                onChange={handleChange} className="form-input" />
             </div>
 
           </div>

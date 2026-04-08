@@ -1,51 +1,52 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ChevronRight, User, Mail, Phone, Calendar, Globe,
   BookOpen, Building2, Users, MapPin, Shield,
   Lock, HelpCircle, Save, X, Upload, CheckCircle
 } from 'lucide-react';
+import { studentApi } from '../../../services/studentApi';
 import '../../../styles/student/profile/editProfile.css';
 
-// ── Initial Form Data ─────────────────────────────────────
+// Initial empty data structure
 const initialData = {
   // Account & Personal
-  fullName:     'Aryan Sharma',
-  email:        'aryan.sharma@student.com',
-  phone:        '+91 9898123456',
-  dob:          '2006-02-17',
-  gender:       'Male',
-  nationality:  'Indian',
+  fullName:     '',
+  email:        '',
+  phone:        '',
+  dob:          '',
+  gender:       '',
+  nationality:  '',
 
   // Identity
-  studentId:    'STU-2024-HMS-012',   // readonly
-  enrollmentId: 'EN-2024-X99',        // readonly
-  nationalId:   'ID-4422991100',
+  studentId:    '',   // readonly
+  enrollmentId: '',   // readonly
+  nationalId:   '',
 
   // Academic
-  course:    'B.C.A – Bachelor of Computer Applications',
-  semester:  '4th Semester',
-  advisor:   'Dr. Sarah Connor',
+  course:    '',
+  semester:  '',
+  advisor:   '',
 
   // Hostel (mostly readonly)
-  block:      'Block B',
-  floor:      '1st Floor',
-  roomNo:     'B-101',
-  bedId:      'Bed 01 (Lower)',
-  checkIn:    '2025-06-01',
+  block:      '',
+  floor:      '',
+  roomNo:     '',
+  bedId:      '',
+  checkIn:    '',
 
   // Address
-  address: '12, Shree Nagar, Rajkot, Gujarat – 360001',
+  address: '',
 
   // Guardian
-  guardianName:     'Mr. Ramesh Sharma',
-  guardianRelation: 'Father',
-  guardianPhone:    '+91 9876543210',
+  guardianName:     '',
+  guardianRelation: '',
+  guardianPhone:    '',
 
   // Emergency
-  emergencyName:    'Mrs. Sunita Sharma',
-  emergencyPhone:   '+91 9876501234',
-  emergencyAddress: '12, Shree Nagar, Rajkot, Gujarat – 360001',
+  emergencyName:    '',
+  emergencyPhone:   '',
+  emergencyAddress: '',
 };
 
 // ── Reusable FormInput ────────────────────────────────────
@@ -70,13 +71,68 @@ const FormInput = ({ label, name, type = 'text', value, onChange, required = fal
 // ── Main Component ────────────────────────────────────────
 const EditProfile = () => {
   const navigate = useNavigate();
-  const [formData, setFormData]   = useState(initialData);
+  const [formData, setFormData] = useState(initialData);
   const [photoPreview, setPhotoPreview] = useState(null);
   const [saved, setSaved] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  // Load student data from API
+  useEffect(() => {
+    const loadStudentData = async () => {
+      try {
+        setLoading(true);
+        const res = await studentApi.getProfile();
+        const student = res.data.data;
+        
+        console.log('Student data from API:', student); // Debug log
+        
+        // Map API data to form fields - using correct field names from StudentProfileDTO
+        setFormData({
+          fullName:     student.name || '',
+          email:        student.email || '',
+          phone:        student.phone || '',
+          dob:          student.dob || '',
+          gender:       student.gender || '',
+          nationality:  student.nationality || '',
+          studentId:    student.id || '', // Using 'id' instead of 'studentId'
+          enrollmentId: student.enrollmentNo || '', // Using 'enrollmentNo' instead of 'enrollmentId'
+          nationalId:   '', // This field doesn't exist in DTO - will be empty
+          course:       student.course || '',
+          semester:     student.yearSemester || '',
+          advisor:      '', // This field doesn't exist in DTO - will be empty
+          block:        student.hostelBlock || '',
+          floor:        '', // This field doesn't exist in DTO - will be empty
+          roomNo:       student.roomNo || '',
+          bedId:        student.bedNo || '',
+          checkIn:      student.allocatedOn || '',
+          address:      student.address || '',
+          guardianName:     student.guardianName || '',
+          guardianRelation: student.guardianRelation || '',
+          guardianPhone:    student.guardianPhone || '',
+          emergencyName:    '', // This field doesn't exist in DTO - will be empty
+          emergencyPhone:   '', // This field doesn't exist in DTO - will be empty
+          emergencyAddress: '', // This field doesn't exist in DTO - will be empty
+        });
+        
+        if (student.photoUrl) {
+          setPhotoPreview(student.photoUrl);
+        }
+      } catch (err) {
+        console.error('Error loading student data:', err);
+        setError('Failed to load student data: ' + (err.response?.data?.message || err.message));
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadStudentData();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    setError('');
   };
 
   const handlePhotoChange = (e) => {
@@ -88,19 +144,69 @@ const EditProfile = () => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setSaved(true);
-    setTimeout(() => {
-      setSaved(false);
-      navigate('/student/profile');
-    }, 1500);
+    
+    try {
+      setLoading(true);
+      setError('');
+      
+      // Prepare data for API (only updatable fields)
+      const updateData = {
+        name: formData.fullName,
+        phone: formData.phone,
+        gender: formData.gender,
+        dob: formData.dob,
+        nationality: formData.nationality,
+        course: formData.course,
+        yearSemester: formData.semester,
+        guardianName: formData.guardianName,
+        guardianRelation: formData.guardianRelation,
+        guardianPhone: formData.guardianPhone,
+        address: formData.address,
+      };
+      
+      await studentApi.updateProfile(updateData);
+      
+      setSaved(true);
+      setTimeout(() => {
+        setSaved(false);
+        // Don't redirect - keep user on edit page
+      }, 3000); // Show success message longer
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to update profile');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="ep-page">
 
-      {/* ── Page Header ── */}
+      {/* Loading State */}
+      {loading && (
+        <div className="ep-loading-overlay">
+          <div className="ep-loading-spinner">Loading student data...</div>
+        </div>
+      )}
+
+      {/* Error State */}
+      {error && (
+        <div className="ep-error-banner">
+          <AlertCircle size={18} />
+          <span>{error}</span>
+        </div>
+      )}
+
+      {/* Success State */}
+      {saved && (
+        <div className="ep-success-banner">
+          <CheckCircle size={18} />
+          <span>Student information updated successfully in database!</span>
+        </div>
+      )}
+
+      {/* Page Header */}
       <div className="ep-page-header">
         <div>
           <div className="ep-breadcrumb">
@@ -117,8 +223,8 @@ const EditProfile = () => {
           <button type="button" className="ep-btn-discard" onClick={() => navigate('/student/profile')}>
             <X size={15} /> Discard
           </button>
-          <button type="button" className={`ep-btn-save ${saved ? 'ep-btn-save--done' : ''}`} onClick={handleSubmit}>
-            {saved ? <><CheckCircle size={15} /> Saved!</> : <><Save size={15} /> Save Profile Update</>}
+          <button type="button" className={`ep-btn-save ${saved ? 'ep-btn-save--done' : ''}`} onClick={handleSubmit} disabled={loading}>
+            {loading ? 'Saving...' : saved ? <><CheckCircle size={15} /> Saved!</> : <><Save size={15} /> Save Profile Update</>}
           </button>
         </div>
       </div>

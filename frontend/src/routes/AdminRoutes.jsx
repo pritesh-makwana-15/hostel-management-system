@@ -49,7 +49,7 @@ const NotificationHistory     = lazy(() => import('../pages/admin/announcements/
 
 // Profile
 const AdminProfile        = lazy(() => import('../pages/admin/profile/AdminProfile'));
-const ChangePassword      = lazy(() => import('../pages/admin/profile/ChangePassword'));
+const AdminChangePassword = lazy(() => import('../pages/admin/profile/AdminChangePassword'));
 
 // Misc Admin Pages
 const ManageAttendance    = lazy(() => import('../pages/admin/ManageAttendance'));
@@ -120,7 +120,7 @@ const AdminRoutes = () => (
 
         {/* Profile */}
         <Route path="profile"                  element={<AdminProfile />} />
-        <Route path="change-password"          element={<ChangePassword />} />
+        <Route path="profile/change-password"  element={<AdminChangePassword />} />
 
         {/* Misc */}
         <Route path="attendance"               element={<ManageAttendance />} />
