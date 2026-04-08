@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   User, Mail, Phone, Shield, Calendar,
@@ -7,102 +7,83 @@ import {
   MapPin, Users, CreditCard, MessageSquare,
   ChevronRight, AlertCircle, CheckCircle2, Loader2
 } from 'lucide-react';
+import { studentApi } from '../../../services/studentApi';
 import '../../../styles/student/profile/studentProfile.css';
 
-// ── Dummy Data ────────────────────────────────────────────────
-const studentData = {
-  name: 'Aryan Sharma',
-  studentId: 'STU-2024-HMS-012',
-  email: 'aryan.sharma@student.com',
-  phone: '+91 9898123456',
-  role: 'Hostel Student',
-  status: 'Active',
-  course: 'B.C.A – Bachelor of Computer Applications',
-  semester: '4th Semester (Sophomore)',
-  enrollmentId: 'EN-2024-X99',
-  cgpa: '3.82 / 4.00',
-  advisor: 'Dr. Sarah Connor',
-  expectedGraduation: 'May 2026',
-  block: 'Block B',
-  floor: '1st Floor',
-  roomNo: 'B-101',
-  bedId: 'Bed 01 (Lower)',
-  checkInDate: 'June 01, 2025',
-  contractType: 'Annual Membership',
-  dob: 'February 17, 2006',
-  gender: 'Male',
-  nationality: 'Indian',
-  nationalId: 'ID-4422991100',
-  guardianName: 'Mr. Ramesh Sharma',
-  guardianRelation: 'Father',
-  guardianPhone: '+91 9876543210',
-  emergencyContact: 'Mrs. Sunita Sharma',
-  emergencyPhone: '+91 9876501234',
-  homeAddress: '12, Shree Nagar, Rajkot, Gujarat – 360001',
-  joinDate: 'June 01, 2025',
-  lastLogin: '25 Mar 2026, 09:30 AM',
-  accountStatus: 'Active',
-  activeSessions: 1,
-};
-
-const paymentHistory = [
-  { id: 1, description: 'Room Rent – Oct 2024',       date: 'Oct 01, 2024', amount: '₹15,000', status: 'Paid' },
-  { id: 2, description: 'Mess & Utility – Oct 2024',  date: 'Oct 05, 2024', amount: '₹3,500',  status: 'Paid' },
-  { id: 3, description: 'Laundry Deposit',             date: 'Sep 15, 2024', amount: '₹500',    status: 'Paid' },
-  { id: 4, description: 'Hostel Maintenance Fee',      date: 'Nov 01, 2024', amount: '₹1,200',  status: 'Pending' },
-];
-
-const complaintLogs = [
-  { id: '#TKT-2024-081', category: 'Plumbing',   date: 'Sep 12, 2024', status: 'Resolved' },
-  { id: '#TKT-2024-094', category: 'Electrical', date: 'Sep 28, 2024', status: 'Resolved' },
-  { id: '#TKT-2024-102', category: 'Internet',   date: 'Oct 10, 2024', status: 'Pending'  },
-];
-
-// ── Status Badge Component ────────────────────────────────────
-const StatusBadge = ({ status }) => {
-  const config = {
-    Paid:       { color: '#10B981', bg: 'rgba(16,185,129,0.1)'  },
-    Pending:    { color: '#F59E0B', bg: 'rgba(245,158,11,0.1)'  },
-    Resolved:   { color: '#2BBBAD', bg: 'rgba(43,187,173,0.1)' },
-    Active:     { color: '#10B981', bg: 'rgba(16,185,129,0.1)'  },
-    'In Progress': { color: '#1F3C88', bg: 'rgba(31,60,136,0.1)' },
-  };
-  const cfg = config[status] || { color: '#6B7280', bg: '#F4F6F9' };
-  return (
-    <span className="sp-status-badge" style={{ color: cfg.color, backgroundColor: cfg.bg }}>
-      {status === 'Paid'     && <CheckCircle2 size={10} />}
-      {status === 'Pending'  && <AlertCircle  size={10} />}
-      {status === 'Resolved' && <CheckCircle2 size={10} />}
-      {status === 'Active'   && <CheckCircle  size={10} />}
-      {status}
-    </span>
-  );
-};
-
-// ── Info Row Component ────────────────────────────────────────
-const InfoRow = ({ label, value, last = false }) => (
-  <div className={`sp-info-row ${last ? 'sp-info-row--last' : ''}`}>
-    <span className="sp-info-label">{label}</span>
-    <span className="sp-info-value">{value}</span>
-  </div>
-);
-
-// ── Main Component ────────────────────────────────────────────
 const StudentProfile = () => {
   const navigate = useNavigate();
+  const [student, setStudent] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData]   = useState({ name: studentData.name, phone: studentData.phone });
-  const [savedData, setSavedData] = useState({ name: studentData.name, phone: studentData.phone });
+  const [formData, setFormData] = useState({ name: '', phone: '' });
+  const [savedData, setSavedData] = useState({ name: '', phone: '' });
 
-  const handleSave = () => {
-    setSavedData({ ...formData });
-    setIsEditing(false);
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        setLoading(true);
+        const res = await studentApi.getProfile();
+        setStudent(res.data.data);
+        setFormData({ name: res.data.data.name, phone: res.data.data.phone });
+        setSavedData({ name: res.data.data.name, phone: res.data.data.phone });
+      } catch (err) {
+        setError('Failed to load profile data.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProfile();
+  }, []);
+
+  const handleSave = async () => {
+    try {
+      await studentApi.updateProfile(formData);
+      setSavedData({ ...formData });
+      setIsEditing(false);
+      setStudent(prev => ({ ...prev, ...formData }));
+    } catch (err) {
+      setError('Failed to update profile.');
+    }
   };
 
   const handleCancel = () => {
     setFormData({ ...savedData });
     setIsEditing(false);
   };
+
+  // ── Status Badge Component ────────────────────────────────────
+  const StatusBadge = ({ status }) => {
+    const config = {
+      Paid:       { color: '#10B981', bg: 'rgba(16,185,129,0.1)'  },
+      Pending:    { color: '#F59E0B', bg: 'rgba(245,158,11,0.1)'  },
+      Resolved:   { color: '#2BBBAD', bg: 'rgba(43,187,173,0.1)' },
+      Active:     { color: '#10B981', bg: 'rgba(16,185,129,0.1)'  },
+      'In Progress': { color: '#1F3C88', bg: 'rgba(31,60,136,0.1)' },
+    };
+    const cfg = config[status] || { color: '#6B7280', bg: '#F4F6F9' };
+    return (
+      <span className="sp-status-badge" style={{ color: cfg.color, backgroundColor: cfg.bg }}>
+        {status === 'Paid'     && <CheckCircle2 size={10} />}
+        {status === 'Pending'  && <AlertCircle  size={10} />}
+        {status === 'Resolved' && <CheckCircle2 size={10} />}
+        {status === 'Active'   && <CheckCircle  size={10} />}
+        {status}
+      </span>
+    );
+  };
+
+  // ── Info Row Component ────────────────────────────────────────
+  const InfoRow = ({ label, value, last = false }) => (
+    <div className={`sp-info-row ${last ? 'sp-info-row--last' : ''}`}>
+      <span className="sp-info-label">{label}</span>
+      <span className="sp-info-value">{value}</span>
+    </div>
+  );
+
+  if (loading) return <div className="loading">Loading profile...</div>;
+  if (error) return <div className="error">{error}</div>;
+  if (!student) return null;
 
   return (
     <div className="sp-page">
@@ -116,7 +97,7 @@ const StudentProfile = () => {
             <span className="sp-breadcrumb-active">My Profile</span>
           </div>
           <h1 className="sp-page-title">My Profile</h1>
-          <p className="sp-page-subtitle">Manage your personal information and view hostel records.</p>
+          <p className="sp-page-subtitle">Manage your personal information and View hostel records.</p>
         </div>
         <div className="sp-page-actions">
           <button className="sp-btn-outline" onClick={() => navigate('/student/profile/edit')}>
@@ -146,9 +127,9 @@ const StudentProfile = () => {
               <h2 className="sp-hero-name">{savedData.name}</h2>
             )}
             <div className="sp-hero-meta">
-              <span className="sp-role-badge"><Shield size={11} /> {studentData.role}</span>
+              <span className="sp-role-badge"><Shield size={11} /> {student.role}</span>
               <span className="sp-meta-dot">•</span>
-              <span className="sp-meta-id">{studentData.studentId}</span>
+              <span className="sp-meta-id">{student.studentId}</span>
             </div>
           </div>
         </div>
@@ -172,7 +153,7 @@ const StudentProfile = () => {
           <div className="sp-strip-icon"><Mail size={15} /></div>
           <div className="sp-strip-content">
             <span className="sp-strip-label">EMAIL ADDRESS</span>
-            <span className="sp-strip-value">{studentData.email}</span>
+            <span className="sp-strip-value">{student.email}</span>
           </div>
         </div>
         <div className="sp-strip-divider" />
@@ -196,7 +177,7 @@ const StudentProfile = () => {
           <div className="sp-strip-icon"><Building2 size={15} /></div>
           <div className="sp-strip-content">
             <span className="sp-strip-label">ROOM / BED</span>
-            <span className="sp-strip-value">{studentData.roomNo} • {studentData.bedId}</span>
+            <span className="sp-strip-value">{student.roomNo} • {student.bedId}</span>
           </div>
         </div>
         <div className="sp-strip-divider" />
@@ -204,7 +185,7 @@ const StudentProfile = () => {
           <div className="sp-strip-icon"><Calendar size={15} /></div>
           <div className="sp-strip-content">
             <span className="sp-strip-label">JOINED ON</span>
-            <span className="sp-strip-value">{studentData.joinDate}</span>
+            <span className="sp-strip-value">{student.joinDate}</span>
           </div>
         </div>
       </div>
@@ -225,10 +206,10 @@ const StudentProfile = () => {
               </div>
             </div>
             <InfoRow label="Full Name"          value={savedData.name} />
-            <InfoRow label="Date of Birth"      value={studentData.dob} />
-            <InfoRow label="Gender"             value={studentData.gender} />
-            <InfoRow label="Nationality"        value={studentData.nationality} />
-            <InfoRow label="National ID"        value={studentData.nationalId} last />
+            <InfoRow label="Date of Birth"      value={student.dob} />
+            <InfoRow label="Gender"             value={student.gender} />
+            <InfoRow label="Nationality"        value={student.nationality} />
+            <InfoRow label="National ID"        value={student.nationalId} last />
           </div>
 
           {/* Hostel Allocation */}
@@ -240,12 +221,12 @@ const StudentProfile = () => {
                 <p className="sp-section-sub">Your current room assignment.</p>
               </div>
             </div>
-            <InfoRow label="Block"          value={studentData.block} />
-            <InfoRow label="Floor"          value={studentData.floor} />
-            <InfoRow label="Room Number"    value={studentData.roomNo} />
-            <InfoRow label="Bed ID"         value={studentData.bedId} />
-            <InfoRow label="Check-in Date"  value={studentData.checkInDate} />
-            <InfoRow label="Contract Type"  value={studentData.contractType} last />
+            <InfoRow label="Block"          value={student.block} />
+            <InfoRow label="Floor"          value={student.floor} />
+            <InfoRow label="Room Number"    value={student.roomNo} />
+            <InfoRow label="Bed ID"         value={student.bedId} />
+            <InfoRow label="Check-in Date"  value={student.checkInDate} />
+            <InfoRow label="Contract Type"  value={student.contractType} last />
           </div>
 
           {/* Academic Records */}
@@ -257,12 +238,12 @@ const StudentProfile = () => {
                 <p className="sp-section-sub">Enrollment and academic performance.</p>
               </div>
             </div>
-            <InfoRow label="Enrollment ID"        value={studentData.enrollmentId} />
-            <InfoRow label="Course"               value={studentData.course} />
-            <InfoRow label="Current Semester"     value={studentData.semester} />
-            <InfoRow label="Advisor"              value={studentData.advisor} />
-            <InfoRow label="CGPA"                 value={studentData.cgpa} />
-            <InfoRow label="Expected Graduation"  value={studentData.expectedGraduation} last />
+            <InfoRow label="Enrollment ID"        value={student.enrollmentId} />
+            <InfoRow label="Course"               value={student.course} />
+            <InfoRow label="Current Semester"     value={student.semester} />
+            <InfoRow label="Advisor"              value={student.advisor} />
+            <InfoRow label="CGPA"                 value={student.cgpa} />
+            <InfoRow label="Expected Graduation"  value={student.expectedGraduation} last />
           </div>
 
           {/* Guardian & Emergency */}
@@ -274,12 +255,12 @@ const StudentProfile = () => {
                 <p className="sp-section-sub">Emergency contact information.</p>
               </div>
             </div>
-            <InfoRow label="Guardian Name"    value={studentData.guardianName} />
-            <InfoRow label="Relationship"     value={studentData.guardianRelation} />
-            <InfoRow label="Guardian Phone"   value={studentData.guardianPhone} />
-            <InfoRow label="Emergency Contact" value={studentData.emergencyContact} />
-            <InfoRow label="Emergency Phone"  value={studentData.emergencyPhone} />
-            <InfoRow label="Home Address"     value={studentData.homeAddress} last />
+            <InfoRow label="Guardian Name"    value={student.guardianName} />
+            <InfoRow label="Relationship"     value={student.guardianRelation} />
+            <InfoRow label="Guardian Phone"   value={student.guardianPhone} />
+            <InfoRow label="Emergency Contact" value={student.emergencyContact} />
+            <InfoRow label="Emergency Phone"  value={student.emergencyPhone} />
+            <InfoRow label="Home Address"     value={student.homeAddress} last />
           </div>
         </div>
 
@@ -295,12 +276,12 @@ const StudentProfile = () => {
                 <p className="sp-section-sub">System metadata and login status.</p>
               </div>
             </div>
-            <InfoRow label="Student ID"    value={studentData.studentId} />
+            <InfoRow label="Student ID"    value={student.studentId} />
             <InfoRow label="Course"        value="B.C.A" />
-            <InfoRow label="Last Login"    value={studentData.lastLogin} />
+            <InfoRow label="Last Login"    value={student.lastLogin} />
             <div className="sp-info-row sp-info-row--last">
               <span className="sp-info-label">Account Status</span>
-              <StatusBadge status={studentData.accountStatus} />
+              <StatusBadge status={student.accountStatus} />
             </div>
           </div>
 
@@ -330,7 +311,7 @@ const StudentProfile = () => {
               <div className="sp-sec-content">
                 <h4 className="sp-sec-title">Active Sessions</h4>
                 <p className="sp-sec-desc">
-                  You are logged in on {studentData.activeSessions} active device. Logout to terminate all sessions.
+                  You are logged in on {student.activeSessions} active device. Logout to terminate all sessions.
                 </p>
                 <button className="sp-btn-logout">
                   <LogOut size={14} /> Logout All Devices
@@ -362,14 +343,14 @@ const StudentProfile = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {paymentHistory.map((p) => (
+                  {student?.paymentHistory?.map((p) => (
                     <tr key={p.id}>
                       <td className="sp-td-primary">{p.description}</td>
                       <td className="sp-td-secondary">{p.date}</td>
                       <td className="sp-td-amount">{p.amount}</td>
                       <td><StatusBadge status={p.status} /></td>
                     </tr>
-                  ))}
+                  )) || <tr><td colSpan="4" style={{ textAlign: 'center' }}>No payment history available</td></tr>}
                 </tbody>
               </table>
             </div>
@@ -398,14 +379,14 @@ const StudentProfile = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {complaintLogs.map((c) => (
+                  {student?.complaints?.map((c) => (
                     <tr key={c.id}>
                       <td className="sp-td-ticket">{c.id}</td>
                       <td className="sp-td-primary">{c.category}</td>
                       <td className="sp-td-secondary">{c.date}</td>
                       <td><StatusBadge status={c.status} /></td>
                     </tr>
-                  ))}
+                  )) || <tr><td colSpan="4" style={{ textAlign: 'center' }}>No complaints found</td></tr>}
                 </tbody>
               </table>
             </div>

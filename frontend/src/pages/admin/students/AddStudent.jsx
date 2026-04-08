@@ -41,44 +41,32 @@ const AddStudent = () => {
     defaultValues: { gender: 'Male', nationality: 'Indian' }
   });
 
+  const normalizeDateForBackend = (value, fieldLabel) => {
+    if (!value) return value;
+    const raw = String(value).trim();
+    if (!raw) return raw;
+
+    // Accept already-normalized backend format: YYYY-MM-DD
+    if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+
+    // Accept UI format: DD-MM-YYYY
+    const m = raw.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+    if (m) {
+      const [, dd, mm, yyyy] = m;
+      return `${yyyy}-${mm}-${dd}`;
+    }
+
+    alert(`Please enter ${fieldLabel} in DD-MM-YYYY format (4-digit year)`);
+    throw new Error(`Invalid ${fieldLabel} format`);
+  };
+
   const onSubmit = async (data) => {
     try {
-      // Convert date format from DD-MM-YYYY to YYYY-MM-DD for backend
       const dataToSend = { ...data };
-      if (dataToSend.dob) {
-        // Handle DD-MM-YYYY format only
-        const dateParts = dataToSend.dob.split('-');
-        if (dateParts.length === 3) {
-          const day = dateParts[0].padStart(2, '0');
-          const month = dateParts[1].padStart(2, '0');
-          const year = dateParts[2];
-          
-          // Validate year is 4 digits
-          if (year.length === 4) {
-            dataToSend.dob = `${year}-${month}-${day}`;
-          } else {
-            alert('Please enter date of birth in DD-MM-YYYY format (4-digit year)');
-            return;
-          }
-        }
-      }
+      dataToSend.dob = normalizeDateForBackend(dataToSend.dob, 'date of birth');
       
       if (dataToSend.joinDate) {
-        // Handle DD-MM-YYYY format only
-        const dateParts = dataToSend.joinDate.split('-');
-        if (dateParts.length === 3) {
-          const day = dateParts[0].padStart(2, '0');
-          const month = dateParts[1].padStart(2, '0');
-          const year = dateParts[2];
-          
-          // Validate year is 4 digits
-          if (year.length === 4) {
-            dataToSend.joinDate = `${year}-${month}-${day}`;
-          } else {
-            alert('Please enter join date in DD-MM-YYYY format (4-digit year)');
-            return;
-          }
-        }
+        dataToSend.joinDate = normalizeDateForBackend(dataToSend.joinDate, 'join date');
       }
       
       await adminStudentApi.create({
@@ -87,6 +75,7 @@ const AddStudent = () => {
       });
       navigate('/admin/students');
     } catch (err) {
+      if (err?.message?.startsWith('Invalid ') || err?.message?.includes('format')) return;
       alert(err.response?.data?.message || 'Failed to create student.');
     }
   };

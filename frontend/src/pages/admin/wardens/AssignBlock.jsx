@@ -1,38 +1,114 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { MapPin, Building2, FileText, Info, X } from 'lucide-react';
-import { getWardenById, hostelOptions, blockOptions } from '../../../data/wardensData';
+import { adminWardenApi } from '../../../services/adminWardenApi';
+import { adminRoomApi } from '../../../services/adminRoomApi';
 import '../../../styles/admin/wardens/assignBlock.css';
 
 const AssignBlock = () => {
   const navigate = useNavigate();
   const { id } = useParams();
-  const warden = getWardenById(id) || {
-    id: 'WRD-2024-089',
-    name: 'Robert J. Cunningham',
-    email: 'r.cunningham@hms-institution.com',
-    phone: '+1 (555) 234-5678',
-    hostel: 'North Campus Residency',
-    block: 'Block B - Floor 2',
-    photo: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Robert',
-    status: 'Active',
-  };
-
+  const [warden, setWarden] = useState(null);
+  const [hostelOptions, setHostelOptions] = useState([]);
+  const [blockOptions, setBlockOptions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  
   const [formData, setFormData] = useState({
     targetHostel: '',
     targetBlock: '',
     notes: '',
   });
 
+  // Load warden data and room data
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        
+        // Load warden data
+        const wardenRes = await adminWardenApi.getById(id);
+        const wardenData = wardenRes.data.data;
+        setWarden(wardenData);
+
+        // Load hostel blocks data
+        const hostelBlocks = await adminRoomApi.getHostelBlocks();
+        setHostelOptions(hostelBlocks);
+        
+      } catch (err) {
+        console.error('Error loading data:', err);
+        setError('Failed to load data');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadData();
+  }, [id]);
+
+  // Load blocks when hostel changes
+  const handleHostelChange = async (e) => {
+    const hostel = e.target.value;
+    setFormData(prev => ({ ...prev, targetHostel: hostel, targetBlock: '' }));
+    
+    if (hostel) {
+      try {
+        const rooms = await adminRoomApi.getRoomsByHostel(hostel);
+        setBlockOptions(rooms);
+      } catch (err) {
+        console.error('Error loading blocks:', err);
+      }
+    } else {
+      setBlockOptions([]);
+    }
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    navigate('/admin/wardens');
+    
+    try {
+      setLoading(true);
+      // TODO: Call API to update warden assignment
+      // await adminWardenApi.updateAssignment(id, formData);
+      
+      // For now, just navigate back
+      navigate('/admin/wardens');
+    } catch (err) {
+      console.error('Error saving assignment:', err);
+      setError('Failed to save assignment');
+    } finally {
+      setLoading(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="assign-block-page">
+        <div className="loading-spinner">Loading warden and room data...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="assign-block-page">
+        <div className="error-message">{error}</div>
+      </div>
+    );
+  }
+
+  if (!warden) {
+    return (
+      <div className="assign-block-page">
+        <div className="error-message">Warden not found</div>
+      </div>
+    );
+  }
 
   return (
     <div className="assign-block-page">
@@ -72,8 +148,8 @@ const AssignBlock = () => {
           <div className="current-assignment">
             <MapPin size={16} className="assignment-pin" />
             <div>
-              <div className="assignment-hostel">{warden.hostel}</div>
-              <div className="assignment-block">{warden.block}</div>
+              <div className="assignment-hostel">No current assignment</div>
+              <div className="assignment-block">Not assigned</div>
             </div>
           </div>
         </div>

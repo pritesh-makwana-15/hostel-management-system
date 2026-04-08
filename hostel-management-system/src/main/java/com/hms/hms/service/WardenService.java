@@ -97,4 +97,21 @@ public class WardenService {
         userRepository.delete(warden.getUser());
         return "Deleted warden with id: " + id;
     }
+
+    // Change password for warden
+    @Transactional
+    public boolean changePassword(Long wardenId, String currentPassword, String newPassword) {
+        Warden warden = wardenRepository.findById(wardenId)
+                .orElseThrow(() -> new RuntimeException("Warden not found: " + wardenId));
+        
+        User user = warden.getUser();
+        
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            return false;
+        }
+        
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+        return true;
+    }
 }

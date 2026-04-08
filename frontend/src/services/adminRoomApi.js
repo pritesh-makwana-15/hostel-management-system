@@ -16,4 +16,34 @@ export const adminRoomApi = {
 
   // PUT /api/admin/rooms/:id — update room + adjust beds
   update: (id, data) => api.put(`/api/admin/rooms/${id}`, data),
+
+  // Get unique hostel blocks from rooms
+  getHostelBlocks: async () => {
+    const response = await api.get('/api/admin/rooms');
+    const rooms = response.data.data || [];
+    
+    // Extract unique hostel blocks
+    const uniqueBlocks = [...new Set(rooms.map(room => room.hostelBlock))];
+    
+    return uniqueBlocks.map(block => ({
+      id: block.toLowerCase().replace(/\s+/g, '-'),
+      name: block
+    }));
+  },
+
+  // Get room numbers for specific hostel block
+  getRoomsByHostel: async (hostelBlock) => {
+    const response = await api.get('/api/admin/rooms');
+    const rooms = response.data.data || [];
+    
+    // Filter rooms by hostel block
+    const filteredRooms = rooms.filter(room => room.hostelBlock === hostelBlock);
+    
+    return filteredRooms.map(room => ({
+      id: room.id,
+      name: room.roomNumber,
+      roomType: room.roomType,
+      totalBeds: room.totalBeds
+    }));
+  }
 };
