@@ -19,9 +19,13 @@ const WardensList = () => {
     try {
       setLoading(true);
       const res = await adminWardenApi.getAll();
-      setWardens(res.data.data || []);
-    } catch {
-      setError('Failed to load wardens.');
+      console.log('WardensList: API response:', res);
+      const wardensData = res.data.data || [];
+      console.log('WardensList: Wardens data:', wardensData);
+      setWardens(wardensData);
+    } catch (error) {
+      console.error('WardensList: Error loading wardens:', error);
+      setError('Failed to load wardens: ' + (error.response?.data?.message || error.message));
     } finally {
       setLoading(false);
     }
@@ -101,13 +105,13 @@ const WardensList = () => {
                   <td>
                     <div className="action-buttons">
                       <button className="action-btn" title="View"
-                        onClick={() => navigate(`/admin/wardens/${w.id}/edit`)}>
+                        onClick={() => navigate(`/admin/wardens/edit/${w.id}`)}>
                         <Eye size={17} /></button>
                       <button className="action-btn" title="Edit"
-                        onClick={() => navigate(`/admin/wardens/${w.id}/edit`)}>
+                        onClick={() => navigate(`/admin/wardens/edit/${w.id}`)}>
                         <Edit size={17} /></button>
                       <button className="action-btn" title="Assign"
-                        onClick={() => navigate(`/admin/wardens/${w.id}/assign`)}>
+                        onClick={() => navigate(`/admin/wardens/assign/${w.id}`)}>
                         <MapPin size={17} /></button>
                     </div>
                   </td>

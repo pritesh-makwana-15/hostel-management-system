@@ -77,25 +77,28 @@ const EditStudent = () => {
     setSaving(true);
     setError('');
     try {
+      // HTML5 date inputs already provide YYYY-MM-DD format, no conversion needed
+      const dataToSend = { ...formData };
+      
       await adminStudentApi.update(id, {
-        name:             formData.name,
-        email:            formData.email,
-        phone:            formData.phone,
-        gender:           formData.gender,
-        dob:              formData.dob      || null,
-        nationality:      formData.nationality,
-        photoUrl:         formData.photoUrl || null,
-        enrollmentNo:     formData.enrollmentNo,
-        course:           formData.course,
-        yearSemester:     formData.yearSemester,
-        batch:            formData.batch,
-        program:          formData.program,
-        joinDate:         formData.joinDate || null,
-        guardianName:     formData.guardianName,
-        guardianPhone:    formData.guardianPhone,
-        guardianRelation: formData.guardianRelation,
-        address:          formData.address,
-        status:           formData.status,
+        name:             dataToSend.name,
+        email:            dataToSend.email,
+        phone:            dataToSend.phone,
+        gender:           dataToSend.gender,
+        dob:              dataToSend.dob      || null,
+        nationality:      dataToSend.nationality,
+        photoUrl:         dataToSend.photoUrl || null,
+        enrollmentNo:     dataToSend.enrollmentNo,
+        course:           dataToSend.course,
+        yearSemester:     dataToSend.yearSemester,
+        batch:            dataToSend.batch,
+        program:          dataToSend.program,
+        joinDate:         dataToSend.joinDate || null,
+        guardianName:     dataToSend.guardianName,
+        guardianPhone:    dataToSend.guardianPhone,
+        guardianRelation: dataToSend.guardianRelation,
+        address:          dataToSend.address,
+        status:           dataToSend.status,
       });
       navigate('/admin/students');
     } catch (err) {

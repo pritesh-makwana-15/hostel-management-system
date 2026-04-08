@@ -6,6 +6,31 @@
   margin: 0 auto;
 }
 
+/* Loading State */
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+  font-size: 16px;
+  color: #1f3c88;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+/* Error State */
+.error-message {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  padding: 16px;
+  border-radius: 8px;
+  text-align: center;
+  font-weight: 500;
+  margin: 20px 0;
+}
+
 /* Header */
 .page-header {
   display: flex;
@@ -274,6 +299,15 @@
 }
 
 .form-textarea::placeholder {
+  color: var(--text-secondary);
+}
+
+.form-checkbox {
+  margin-right: 8px;
+}
+
+.form-checkbox-label {
+  font-size: 13px;
   color: var(--text-secondary);
 }
 

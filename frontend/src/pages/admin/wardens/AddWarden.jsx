@@ -25,14 +25,35 @@ const AddWarden = () => {
     setLoading(true);
     setError('');
     try {
+      // Convert date format from DD-MM-YYYY to YYYY-MM-DD for backend
+      const dataToSend = { ...formData };
+      if (dataToSend.joinDate) {
+        // Handle DD-MM-YYYY format only
+        const dateParts = dataToSend.joinDate.split('-');
+        if (dateParts.length === 3) {
+          const day = dateParts[0].padStart(2, '0');
+          const month = dateParts[1].padStart(2, '0');
+          const year = dateParts[2];
+          
+          // Validate year is 4 digits
+          if (year.length === 4) {
+            dataToSend.joinDate = `${year}-${month}-${day}`;
+          } else {
+            setError('Please enter date in DD-MM-YYYY format (4-digit year)');
+            setLoading(false);
+            return;
+          }
+        }
+      }
+      
       await adminWardenApi.create({
-        name: formData.name,
-        email: formData.email,
-        password: formData.password,
-        phone: formData.phone,
-        gender: formData.gender,
-        address: formData.address,
-        joinDate: formData.joinDate || null,
+        name: dataToSend.name,
+        email: dataToSend.email,
+        password: dataToSend.password,
+        phone: dataToSend.phone,
+        gender: dataToSend.gender,
+        address: dataToSend.address,
+        joinDate: dataToSend.joinDate || null,
       });
       navigate('/admin/wardens');
     } catch (err) {
@@ -85,18 +106,32 @@ const AddWarden = () => {
             </div>
             <div className="form-group">
               <label className="form-label">Gender</label>
-              <select name="gender" value={formData.gender}
-                onChange={handleChange} className="form-select">
-                <option value="">Select Gender</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-                <option value="Other">Other</option>
-              </select>
+              <div className="radio-group">
+                <label className="radio-label">
+                  <input type="radio" name="gender" value="Male"
+                    checked={formData.gender === 'Male'}
+                    onChange={handleChange} className="radio-input" />
+                  <span className="radio-text">Male</span>
+                </label>
+                <label className="radio-label">
+                  <input type="radio" name="gender" value="Female"
+                    checked={formData.gender === 'Female'}
+                    onChange={handleChange} className="radio-input" />
+                  <span className="radio-text">Female</span>
+                </label>
+                <label className="radio-label">
+                  <input type="radio" name="gender" value="Other"
+                    checked={formData.gender === 'Other'}
+                    onChange={handleChange} className="radio-input" />
+                  <span className="radio-text">Other</span>
+                </label>
+              </div>
             </div>
             <div className="form-group">
               <label className="form-label">Date of Joining</label>
-              <input type="date" name="joinDate" value={formData.joinDate}
-                onChange={handleChange} className="form-input" />
+              <input type="text" name="joinDate" value={formData.joinDate}
+                onChange={handleChange} className="form-input" 
+                placeholder="DD-MM-YYYY" />
             </div>
             <div className="form-group form-group-full">
               <label className="form-label">Address</label>

@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Lock, Eye, EyeOff, Shield, AlertCircle, CheckCircle } from 'lucide-react';
-import { wardenApi } from '../../../services/wardenApi';
-import '../../../styles/warden/profile/changePassword.css';
+import { adminApi } from '../../../services/adminApi';
+import '../../../styles/admin/profile/changePassword.css';
 
-const WardenChangePassword = () => {
+const AdminChangePassword = () => {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -73,14 +73,14 @@ const WardenChangePassword = () => {
         newPassword: formData.newPassword,
       };
 
-      await wardenApi.changePassword(passwordData);
+      await adminApi.changePassword(passwordData);
       
       setSuccessMsg('Password updated successfully!');
       setFormData({ currentPassword: '', newPassword: '', confirmPassword: '' });
       
       // Redirect to profile after 2 seconds
       setTimeout(() => {
-        navigate('/warden/profile');
+        navigate('/admin/profile');
       }, 2000);
       
     } catch (err) {
@@ -104,14 +104,14 @@ const WardenChangePassword = () => {
   ];
 
   return (
-    <div className="warden-change-password-page">
+    <div className="admin-change-password-page">
       {/* Page Header */}
       <div className="page-header">
         <div className="breadcrumb">
-          <span className="breadcrumb-link" onClick={() => navigate('/warden/dashboard')}>Dashboard</span>
-          <span className="breadcrumb-sep">›</span>
-          <span className="breadcrumb-link" onClick={() => navigate('/warden/profile')}>Profile</span>
-          <span className="breadcrumb-sep">›</span>
+          <span className="breadcrumb-link" onClick={() => navigate('/admin/dashboard')}>Dashboard</span>
+          <span className="breadcrumb-sep">{'>'}</span>
+          <span className="breadcrumb-link" onClick={() => navigate('/admin/profile')}>Profile</span>
+          <span className="breadcrumb-sep">{'>'}</span>
           <span className="breadcrumb-active">Change Password</span>
         </div>
         <h1 className="page-title">Change Password</h1>
@@ -221,7 +221,7 @@ const WardenChangePassword = () => {
         <div className="cp-divider"></div>
 
         <div className="cp-actions">
-          <button className="btn-cp-cancel" onClick={() => navigate('/warden/profile')} disabled={loading}>
+          <button className="btn-cp-cancel" onClick={() => navigate('/admin/profile')} disabled={loading}>
             Cancel
           </button>
           <button className="btn-cp-submit" onClick={handleSubmit} disabled={loading}>
@@ -242,4 +242,4 @@ const WardenChangePassword = () => {
   );
 };
 
-export default WardenChangePassword;
+export default AdminChangePassword;

@@ -52,6 +52,22 @@ public class AdminService {
         return AdminRepository.findById(id).orElse(null);
     }
 
+    public Admin getByEmail(String email) {
+        if (email == null || email.isBlank()) return null;
+
+        return userRepository.findByEmail(email)
+                .flatMap(u -> AdminRepository.findByUserId(u.getId()))
+                .orElse(null);
+    }
+
+    public Admin save(Admin admin) {
+        // Save user first if it has changes
+        if (admin.getUser() != null) {
+            userRepository.save(admin.getUser());
+        }
+        return AdminRepository.save(admin);
+    }
+
     @Transactional
     public Admin updateAdmin(Long id, RegisterRequest request) {
         Admin existing = AdminRepository.findById(id)

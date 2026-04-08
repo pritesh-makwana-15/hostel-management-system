@@ -41,14 +41,41 @@ const AddStudent = () => {
     defaultValues: { gender: 'Male', nationality: 'Indian' }
   });
 
+  const normalizeDateForBackend = (value, fieldLabel) => {
+    if (!value) return value;
+    const raw = String(value).trim();
+    if (!raw) return raw;
+
+    // Accept already-normalized backend format: YYYY-MM-DD
+    if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+
+    // Accept UI format: DD-MM-YYYY
+    const m = raw.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+    if (m) {
+      const [, dd, mm, yyyy] = m;
+      return `${yyyy}-${mm}-${dd}`;
+    }
+
+    alert(`Please enter ${fieldLabel} in DD-MM-YYYY format (4-digit year)`);
+    throw new Error(`Invalid ${fieldLabel} format`);
+  };
+
   const onSubmit = async (data) => {
     try {
+      const dataToSend = { ...data };
+      dataToSend.dob = normalizeDateForBackend(dataToSend.dob, 'date of birth');
+      
+      if (dataToSend.joinDate) {
+        dataToSend.joinDate = normalizeDateForBackend(dataToSend.joinDate, 'join date');
+      }
+      
       await adminStudentApi.create({
-        ...data,
+        ...dataToSend,
         status: 'Active',
       });
       navigate('/admin/students');
     } catch (err) {
+      if (err?.message?.startsWith('Invalid ') || err?.message?.includes('format')) return;
       alert(err.response?.data?.message || 'Failed to create student.');
     }
   };
@@ -115,7 +142,7 @@ const AddStudent = () => {
             </Field>
             <Field label="Batch" name="batch" placeholder="2022-2026" />
             <Field label="Program" name="program" placeholder="Undergraduate" />
-            <Field label="Join Date" name="joinDate" type="date" />
+            <Field label="Join Date" name="joinDate" type="text" placeholder="DD-MM-YYYY" />
           </div>
         </div>
 
