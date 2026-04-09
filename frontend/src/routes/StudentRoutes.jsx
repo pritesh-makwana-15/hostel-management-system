@@ -5,15 +5,20 @@ import DashboardLayout from '../layouts/DashboardLayout';
 
 // ── Lazy Load Student Pages ───────────────────────────────────
 const StudentDashboard     = lazy(() => import('../pages/student/dashboard/StudentDashboard'));
-const FeePayment           = lazy(() => import('../pages/student/FeePayment'));
+const StudentRoomDetails   = lazy(() => import('../pages/student/room/RoomDetails'));
 const StudentComplaints    = lazy(() => import('../pages/student/Complaints'));
-const StudentRoom          = lazy(() => import('../pages/student/Room'));
 const StudentAnnouncements = lazy(() => import('../pages/student/Announcements'));
 
 // Profile Module
 const StudentProfile  = lazy(() => import('../pages/student/profile/StudentProfile'));
 const EditProfile     = lazy(() => import('../pages/student/profile/EditProfile'));
 const ChangePassword  = lazy(() => import('../pages/student/profile/ChangePassword'));
+
+// Fee Module
+const FeeDetails       = lazy(() => import('../pages/student/fees/FeeDetails'));
+const PayFee           = lazy(() => import('../pages/student/fees/PayFee'));
+const PaymentHistory   = lazy(() => import('../pages/student/fees/PaymentHistory'));
+const PaymentReceipt   = lazy(() => import('../pages/student/fees/PaymentReceipt'));
 // ─────────────────────────────────────────────────────────────
 
 const StudentRoutes = () => (
@@ -28,18 +33,23 @@ const StudentRoutes = () => (
         }
       >
         {/* ── Dashboard ── */}
-        <Route path="dashboard"     element={<StudentDashboard />} />
+        <Route path="dashboard" element={<StudentDashboard />} />
 
         {/* ── Core Modules ── */}
-        <Route path="fees"          element={<FeePayment />} />
+        <Route path="room"          element={<StudentRoomDetails />} />
         <Route path="complaints"    element={<StudentComplaints />} />
-        <Route path="room"          element={<StudentRoom />} />
         <Route path="announcements" element={<StudentAnnouncements />} />
 
+        {/* ── Fee Module (sub-routes) ── */}
+        <Route path="fees"                   element={<FeeDetails />} />
+        <Route path="fees/pay"               element={<PayFee />} />
+        <Route path="fees/history"           element={<PaymentHistory />} />
+        <Route path="fees/receipt/:id"       element={<PaymentReceipt />} />
+
         {/* ── Profile Module ── */}
-        <Route path="profile"                   element={<StudentProfile />} />
-        <Route path="profile/edit"              element={<EditProfile />} />
-        <Route path="profile/change-password"   element={<ChangePassword />} />
+        <Route path="profile"                 element={<StudentProfile />} />
+        <Route path="profile/edit"            element={<EditProfile />} />
+        <Route path="profile/change-password" element={<ChangePassword />} />
       </Route>
     </Routes>
   </Suspense>

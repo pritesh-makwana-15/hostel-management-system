@@ -1,0 +1,436 @@
+/* ============================================================
+   pay-fee.css  |  prefix: .pf-
+   ============================================================ */
+
+.pf-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px;
+  background: #F4F6F9;
+  min-height: 100%;
+  font-family: 'Inter', sans-serif;
+}
+
+/* ── Breadcrumb ── */
+.pf-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #6B7280;
+}
+.pf-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  color: #1F3C88;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.pf-back-btn:hover { text-decoration: underline; }
+.pf-bc-sep { color: #D1D5DB; }
+.pf-bc-current { font-weight: 600; color: #2E2E2E; }
+
+/* ── Header ── */
+.pf-title {
+  font-size: 26px;
+  font-weight: 700;
+  color: #2E2E2E;
+  margin: 0 0 4px 0;
+}
+.pf-subtitle {
+  font-size: 14px;
+  color: #6B7280;
+  margin: 0;
+  max-width: 600px;
+}
+
+/* ── Summary Row ── */
+.pf-summary-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+.pf-sum-card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 18px 20px;
+  box-shadow: 0px 4px 12px rgba(0,0,0,0.07);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.pf-sum-card--active {
+  background: #1F3C88;
+}
+.pf-sum-card--active .pf-sum-label,
+.pf-sum-card--active .pf-sum-value {
+  color: #fff !important;
+}
+.pf-sum-card--active .pf-sum-icon--dark {
+  background: rgba(255,255,255,0.2);
+  color: #fff;
+}
+.pf-sum-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: #EEF2FF;
+  color: #1F3C88;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.pf-sum-icon--warn { background: #FFF8E7; color: #F59E0B; }
+.pf-sum-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6B7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 4px 0;
+}
+.pf-sum-value {
+  font-size: 20px;
+  font-weight: 800;
+  color: #2E2E2E;
+  margin: 0;
+}
+
+/* ── Main Grid ── */
+.pf-main-grid {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 20px;
+  align-items: start;
+}
+
+/* ── Form Card ── */
+.pf-form-card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 28px;
+  box-shadow: 0px 4px 12px rgba(0,0,0,0.07);
+}
+.pf-section-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #2E2E2E;
+  margin: 0 0 4px 0;
+}
+.pf-section-sub {
+  font-size: 13px;
+  color: #6B7280;
+  margin: 0 0 24px 0;
+}
+
+/* ── Form Fields ── */
+.pf-field-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 20px; }
+.pf-field-group:last-of-type { margin-bottom: 0; }
+.pf-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #2E2E2E;
+}
+.pf-input-wrap { position: relative; }
+.pf-input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid #E5E7EB;
+  border-radius: 7px;
+  font-size: 14px;
+  color: #2E2E2E;
+  background: #fff;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+.pf-input:focus { border-color: #1F3C88; box-shadow: 0 0 0 3px rgba(31,60,136,0.1); }
+.pf-input--icon { padding-left: 36px; }
+.pf-input-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6B7280;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+}
+.pf-hint { font-size: 11px; color: #9CA3AF; }
+.pf-hint--req { color: #F59E0B; font-weight: 600; }
+.pf-textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid #E5E7EB;
+  border-radius: 7px;
+  font-size: 14px;
+  color: #2E2E2E;
+  font-family: inherit;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+.pf-textarea:focus { border-color: #1F3C88; box-shadow: 0 0 0 3px rgba(31,60,136,0.1); }
+
+/* ── 2-col row ── */
+.pf-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* ── Payment Method Selector ── */
+.pf-method-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.pf-method-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 16px;
+  border: 1.5px solid #E5E7EB;
+  border-radius: 7px;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6B7280;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.pf-method-btn:hover { border-color: #1F3C88; color: #1F3C88; }
+.pf-method-active {
+  border-color: #1F3C88 !important;
+  background: #EEF2FF !important;
+  color: #1F3C88 !important;
+}
+
+/* ── Upload Zone ── */
+.pf-upload-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 16px;
+  border: 2px dashed #D1D5DB;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #9CA3AF;
+  font-size: 13px;
+  text-align: center;
+  transition: all 0.2s;
+  min-height: 80px;
+}
+.pf-upload-zone:hover { border-color: #1F3C88; color: #1F3C88; background: #FAFBFF; }
+.pf-upload-filled { border-color: #22c55e; background: #F0FDF4; }
+.pf-upload-filled-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #22c55e;
+  font-weight: 600;
+  font-size: 13px;
+}
+.pf-upload-types { font-size: 11px; color: #9CA3AF; }
+
+/* ── Form Footer ── */
+.pf-form-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #E5E7EB;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.pf-footer-warn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #6B7280;
+}
+.pf-footer-actions {
+  display: flex;
+  gap: 10px;
+}
+.pf-btn-cancel {
+  padding: 10px 20px;
+  background: #fff;
+  border: 1.5px solid #E5E7EB;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6B7280;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.pf-btn-cancel:hover { border-color: #1F3C88; color: #1F3C88; }
+.pf-btn-submit {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 22px;
+  background: #1F3C88;
+  color: #fff;
+  border: none;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+}
+.pf-btn-submit:hover:not(:disabled) { background: #162d6b; transform: translateY(-1px); }
+.pf-btn-submitted { background: #22c55e !important; }
+.pf-btn-submit:disabled { cursor: not-allowed; }
+
+/* ── Right Preview ── */
+.pf-preview-col { display: flex; flex-direction: column; gap: 14px; }
+.pf-preview-card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0px 4px 12px rgba(0,0,0,0.07);
+}
+.pf-preview-tabs {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.pf-preview-tab {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.7px;
+  color: #6B7280;
+  text-transform: uppercase;
+  border-bottom: 2px solid #1F3C88;
+  padding-bottom: 4px;
+}
+.pf-preview-tab-active { color: #1F3C88; }
+.pf-preview-tab-badge {
+  font-size: 10px;
+  font-weight: 700;
+  background: #FFF8E7;
+  color: #F59E0B;
+  border: 1px solid #fde68a;
+  border-radius: 20px;
+  padding: 2px 8px;
+}
+
+/* ── Receipt Preview ── */
+.pf-receipt-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.pf-rp-icons {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.pf-rp-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  background: #EEF2FF;
+  color: #1F3C88;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 800;
+}
+.pf-rp-icon--doc { background: #F4F6F9; color: #6B7280; }
+.pf-rp-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: #2E2E2E;
+  letter-spacing: 0.5px;
+  margin: 0;
+}
+.pf-rp-id { font-size: 11px; color: #9CA3AF; margin: 0; }
+.pf-rp-divider { height: 1px; background: #E5E7EB; }
+.pf-rp-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.pf-rp-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #9CA3AF;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+.pf-rp-val { display: block; font-size: 13px; font-weight: 600; color: #2E2E2E; }
+.pf-rp-line {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #6B7280;
+}
+.pf-rp-fee { font-weight: 600; color: #2E2E2E; }
+.pf-rp-total-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 700;
+  color: #2E2E2E;
+}
+.pf-rp-total-val { font-size: 16px; font-weight: 800; color: #1F3C88; }
+.pf-rp-note {
+  font-size: 11px;
+  color: #9CA3AF;
+  line-height: 1.5;
+  background: #F8FAFC;
+  border-radius: 6px;
+  padding: 10px;
+}
+
+/* ── Tip Card ── */
+.pf-tip-card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: 0px 4px 12px rgba(0,0,0,0.07);
+}
+.pf-tip-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #2E2E2E;
+  margin-bottom: 6px;
+}
+.pf-tip-text { font-size: 12px; color: #6B7280; line-height: 1.5; margin: 0; }
+
+/* ── Responsive ── */
+@media (max-width: 1100px) {
+  .pf-main-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 768px) {
+  .pf-page { padding: 16px; }
+  .pf-title { font-size: 22px; }
+  .pf-summary-row { grid-template-columns: 1fr; }
+  .pf-row-2 { grid-template-columns: 1fr; }
+  .pf-form-card { padding: 18px; }
+  .pf-form-footer { flex-direction: column; align-items: flex-start; }
+  .pf-footer-actions { width: 100%; }
+  .pf-btn-submit { flex: 1; justify-content: center; }
+  .pf-btn-cancel { flex: 1; text-align: center; }
+}
