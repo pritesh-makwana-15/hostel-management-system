@@ -1,44 +1,113 @@
 // src/pages/admin/announcements/AnnouncementsList.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Plus, Search, Eye, Edit, Send, Trash2,
-  RotateCcw, Filter, RefreshCw, Download,
+  RotateCcw, Filter, Download,
   Megaphone, Radio, Calendar
 } from 'lucide-react';
-import {
-  announcementsData, audienceOptions, statusOptions, getAnnouncementStats
-} from '../../../data/announcementsData';
 import '../../../styles/admin/announcements/announcementsList.css';
 
 const AnnouncementsList = () => {
   const navigate = useNavigate();
+  const [announcements, setAnnouncements] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [search, setSearch] = useState('');
-  const [audienceFilter, setAudienceFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  const [audienceFilter, setAudienceFilter] = useState('All');
+  const [statusFilter, setStatusFilter] = useState('All');
   const [currentPage, setCurrentPage] = useState(1);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
   const perPage = 5;
-  const stats = getAnnouncementStats();
 
-  const filtered = announcementsData.filter((a) => {
+  // Fetch announcements from backend
+  const fetchAnnouncements = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      
+      const token = localStorage.getItem('hms_token');
+      const response = await fetch('http://localhost:8080/api/announcements/all', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data.data) {
+          setAnnouncements(data.data);
+        }
+      } else {
+        setError('Failed to fetch announcements');
+      }
+    } catch (err) {
+      console.error('Error fetching announcements:', err);
+      setError('Error connecting to server');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAnnouncements();
+  }, []);
+
+  // Status logic based on dates
+  const getAnnouncementStatus = (announcement) => {
+    const now = new Date();
+    const publishDate = announcement.publishDate ? new Date(announcement.publishDate) : null;
+    const expiryDate = announcement.expiryDate ? new Date(announcement.expiryDate) : null;
+
+    if (publishDate && now < publishDate) {
+      return 'Scheduled';
+    } else if (expiryDate && now > expiryDate) {
+      return 'Expired';
+    } else {
+      return 'Active';
+    }
+  };
+
+  // Format date for display
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  };
+
+  // Filter announcements
+  const filtered = announcements.filter((a) => {
+    const status = getAnnouncementStatus(a);
     const matchSearch =
       a.title.toLowerCase().includes(search.toLowerCase()) ||
-      a.id.toLowerCase().includes(search.toLowerCase());
-    const matchAudience = !audienceFilter || audienceFilter === 'All Audience' || a.audience === audienceFilter;
-    const matchStatus = !statusFilter || statusFilter === 'All Status' || a.status === statusFilter;
+      a.id.toString().toLowerCase().includes(search.toLowerCase());
+    const matchAudience = audienceFilter === 'All' || a.audience === audienceFilter;
+    const matchStatus = statusFilter === 'All' || status === statusFilter;
     return matchSearch && matchAudience && matchStatus;
   });
 
   const totalPages = Math.ceil(filtered.length / perPage);
   const paginated = filtered.slice((currentPage - 1) * perPage, currentPage * perPage);
 
+  // Calculate stats
+  const stats = {
+    total: announcements.length,
+    active: announcements.filter(a => getAnnouncementStatus(a) === 'Active').length,
+    scheduled: announcements.filter(a => getAnnouncementStatus(a) === 'Scheduled').length
+  };
+
   const handleReset = () => {
     setSearch('');
-    setAudienceFilter('');
-    setStatusFilter('');
+    setAudienceFilter('All');
+    setStatusFilter('All');
     setCurrentPage(1);
   };
 
@@ -47,10 +116,61 @@ const AnnouncementsList = () => {
     setShowDeleteModal(true);
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+
+    try {
+      const token = localStorage.getItem('hms_token');
+      const response = await fetch(`http://localhost:8080/api/announcements/${deleteTarget.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        setAnnouncements(prev => prev.filter(a => a.id !== deleteTarget.id));
+        setToastMessage('Announcement deleted successfully');
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 3000);
+      } else {
+        setToastMessage('Failed to delete announcement');
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 3000);
+      }
+    } catch (err) {
+      console.error('Error deleting announcement:', err);
+      setToastMessage('Error connecting to server');
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+    }
+
     setShowDeleteModal(false);
-    setShowToast(true);
-    setTimeout(() => setShowToast(false), 3000);
+    setDeleteTarget(null);
+  };
+
+  const handleExport = () => {
+    const csvContent = [
+      ['ID', 'Title', 'Audience', 'Created By', 'Publish Date', 'Expiry Date', 'Status'],
+      ...filtered.map(a => [
+        `ANN-${a.id}`,
+        a.title,
+        a.audience,
+        a.createdBy || 'Admin',
+        formatDate(a.publishDate),
+        formatDate(a.expiryDate),
+        getAnnouncementStatus(a)
+      ])
+    ].map(row => row.join(',')).join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'announcements.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
   };
 
   const getStatusClass = (s) => {
@@ -70,8 +190,23 @@ const AnnouncementsList = () => {
       {/* Toast */}
       {showToast && (
         <div className="al-toast">
-          <span>✓ Announcement deleted successfully.</span>
-          <button onClick={() => setShowToast(false)}>✕</button>
+          <span>×</span> {toastMessage}
+          <button onClick={() => setShowToast(false)}>×</button>
+        </div>
+      )}
+
+      {/* Loading State */}
+      {loading && (
+        <div className="al-loading">
+          <div className="al-loading-spinner"></div>
+          <p>Loading announcements...</p>
+        </div>
+      )}
+
+      {/* Error State */}
+      {error && (
+        <div className="al-error">
+          <p>{error}</p>
         </div>
       )}
 
@@ -140,14 +275,20 @@ const AnnouncementsList = () => {
             value={audienceFilter}
             onChange={(e) => { setAudienceFilter(e.target.value); setCurrentPage(1); }}
           >
-            {audienceOptions.map((o) => <option key={o} value={o}>{o}</option>)}
+            <option value="All">All Audience</option>
+            <option value="Students">Students</option>
+            <option value="Wardens">Wardens</option>
+            <option value="Both">Both</option>
           </select>
           <select
             className="al-filter-select"
             value={statusFilter}
             onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
           >
-            {statusOptions.map((o) => <option key={o} value={o}>{o}</option>)}
+            <option value="All">All Status</option>
+            <option value="Active">Active</option>
+            <option value="Scheduled">Scheduled</option>
+            <option value="Expired">Expired</option>
           </select>
           <button className="al-btn-primary al-apply-btn">Apply Filters</button>
           <button className="al-btn-secondary" onClick={handleReset}>
@@ -161,8 +302,7 @@ const AnnouncementsList = () => {
         <div className="al-table-header-row">
           <h2 className="al-table-title">Announcement Records</h2>
           <div className="al-table-actions">
-            <button className="al-btn-secondary al-sm"><RefreshCw size={14} /> Refresh</button>
-            <button className="al-btn-secondary al-sm"><Download size={14} /> Export Data</button>
+            <button className="al-btn-secondary al-sm" onClick={handleExport}><Download size={14} /> Export Data</button>
           </div>
         </div>
         <div className="al-table-wrap">
@@ -182,15 +322,17 @@ const AnnouncementsList = () => {
             <tbody>
               {paginated.length === 0 ? (
                 <tr><td colSpan={8} className="al-empty">No announcements found.</td></tr>
-              ) : paginated.map((a) => (
+              ) : paginated.map((a) => {
+                const status = getAnnouncementStatus(a);
+                return (
                 <tr key={a.id}>
-                  <td className="al-id">{a.id}</td>
+                  <td className="al-id">ANN-{a.id}</td>
                   <td className="al-title-cell">{a.title}</td>
                   <td><span className={`al-audience-badge ${getAudienceBadge(a.audience)}`}>{a.audience}</span></td>
-                  <td className="al-created-by">{a.createdBy}</td>
-                  <td>{a.publishDate}</td>
-                  <td>{a.expiryDate}</td>
-                  <td><span className={`al-status-badge ${getStatusClass(a.status)}`}>{a.status}</span></td>
+                  <td className="al-created-by">{a.createdBy || 'Admin'}</td>
+                  <td>{formatDate(a.publishDate)}</td>
+                  <td>{formatDate(a.expiryDate)}</td>
+                  <td><span className={`al-status-badge ${getStatusClass(status)}`}>{status}</span></td>
                   <td>
                     <div className="al-actions">
                       <button className="al-action-btn" title="View" onClick={() => navigate(`/admin/announcements/edit/${a.id}`)}>
@@ -208,7 +350,8 @@ const AnnouncementsList = () => {
                     </div>
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -231,16 +374,18 @@ const AnnouncementsList = () => {
 
       {/* Mobile Cards */}
       <div className="al-mobile-cards">
-        {paginated.map((a) => (
+        {paginated.map((a) => {
+          const status = getAnnouncementStatus(a);
+          return (
           <div key={a.id} className="al-mobile-card">
             <div className="al-mobile-card-top">
-              <span className="al-id">{a.id}</span>
-              <span className={`al-status-badge ${getStatusClass(a.status)}`}>{a.status}</span>
+              <span className="al-id">ANN-{a.id}</span>
+              <span className={`al-status-badge ${getStatusClass(status)}`}>{status}</span>
             </div>
             <div className="al-mobile-card-title">{a.title}</div>
             <div className="al-mobile-card-meta">
               <span className={`al-audience-badge ${getAudienceBadge(a.audience)}`}>{a.audience}</span>
-              <span className="al-mobile-date">{a.publishDate}</span>
+              <span className="al-mobile-date">{formatDate(a.publishDate)}</span>
             </div>
             <div className="al-mobile-card-actions">
               <button className="al-mobile-action" onClick={() => navigate(`/admin/announcements/edit/${a.id}`)}>
@@ -257,7 +402,8 @@ const AnnouncementsList = () => {
               </button>
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Delete Modal */}

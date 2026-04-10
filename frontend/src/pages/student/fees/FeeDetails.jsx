@@ -1,78 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   CreditCard, Clock, Download, History, FileText,
   HelpCircle, CheckCircle, AlertCircle, AlertTriangle,
   ChevronRight, TrendingUp, Wifi, Zap, Wrench, Home, UtensilsCrossed
 } from 'lucide-react';
+import { studentFeeApi } from '../../../services/adminFeeApi';
 import '../../../styles/student/fees/fee-details.css';
 
-// ── Mock Data ─────────────────────────────────────────────────
-const feeData = {
-  paid: {
-    status: 'PAID',
-    month: 'October 2024',
-    totalFee: 12500,
-    paidAmount: 12500,
-    remaining: 0,
-    dueDate: 'Oct 15, 2024',
-    message: 'All dues for the current billing cycle have been cleared successfully.',
-    progressPercent: 100,
-    breakdown: [
-      { label: 'Monthly Hostel Rent (Premium AC Room)', icon: Home,           amount: 7500 },
-      { label: 'Mess Charges (Standard Veg/Non-Veg)',  icon: UtensilsCrossed, amount: 3200 },
-      { label: 'Electricity (Metered Usage – 45 Units)',icon: Zap,            amount: 900  },
-      { label: 'Maintenance & Security Fee',           icon: Wrench,          amount: 600  },
-      { label: 'Wi-Fi (High Speed – 100 Mbps)',        icon: Wifi,            amount: 300  },
-    ],
-    recentTxns: [
-      { id: 'RCPT-9921', date: 'Oct 02, 2024', method: 'UPI (GPay)',     amount: 12500, status: 'Verified' },
-      { id: 'RCPT-8712', date: 'Sep 05, 2024', method: 'Bank Transfer',  amount: 12200, status: 'Verified' },
-    ],
-  },
-  partial: {
-    status: 'PARTIAL',
-    month: 'April 2024',
-    totalFee: 45000,
-    paidAmount: 27000,
-    remaining: 18000,
-    dueDate: 'Oct 15, 2024',
-    message: 'A late fee of ₹100/day will be applicable if the remaining balance is not cleared by the due date.',
-    progressPercent: 60,
-    breakdown: [
-      { label: 'Hostel Room Rent (Premium Boys – Block A)', icon: Home,            amount: 30000 },
-      { label: 'Monthly Mess Charges (Veg + Non-Veg)',      icon: UtensilsCrossed, amount: 12000 },
-      { label: 'Electricity & Power Backup (Variable)',      icon: Zap,             amount: 1850  },
-      { label: 'Water & Maintenance Charges (Fixed)',        icon: Wrench,          amount: 1150  },
-    ],
-    recentTxns: [
-      { id: 'TXN-2024-8829', date: 'Sep 12, 2024', method: 'UPI Payment',    amount: 10000, status: 'Completed' },
-      { id: 'TXN-2024-7412', date: 'Aug 15, 2024', method: 'Bank Transfer',  amount: 8500,  status: 'Completed' },
-      { id: 'TXN-2024-6903', date: 'Jul 10, 2024', method: 'Cash Deposit',   amount: 8500,  status: 'Completed' },
-    ],
-  },
-  pending: {
-    status: 'PENDING',
-    month: 'April 2024',
-    totalFee: 12500,
-    paidAmount: 4000,
-    remaining: 8500,
-    dueDate: '15th April, 2024',
-    message: 'Your payment for April is currently overdue by 2 days. Late fees of ₹50/day will apply after 15th April.',
-    progressPercent: 32,
-    breakdown: [
-      { label: 'Room Rent (Standard AC) – Block B, Room 101', icon: Home,            amount: 7000 },
-      { label: 'Mess Charges – Regular Meal Plan',             icon: UtensilsCrossed, amount: 3500 },
-      { label: 'Electricity & Water – Metered Consumption',    icon: Zap,             amount: 1500 },
-      { label: 'Internet/WiFi Services – High Speed Fiber',    icon: Wifi,            amount: 500  },
-    ],
-    recentTxns: [
-      { id: 'TXN-88295', date: '2024-04-05', method: 'UPI',           amount: 4000,  status: 'Paid'    },
-      { id: 'TXN-88241', date: '2024-04-02', method: 'Bank Transfer', amount: 8500,  status: 'Failed'  },
-      { id: 'TXN-87110', date: '2024-03-15', method: 'UPI',           amount: 12500, status: 'Paid'    },
-    ],
-  },
-};
+const fmt = (n) => n ? `₹${Number(n).toLocaleString('en-IN')}` : '₹0';
 
 const statusConfig = {
   PAID:    { label: 'PAID',    color: '#22c55e', bg: '#F0FDF4', border: '#bbf7d0' },
@@ -88,37 +24,79 @@ const txnStatusCfg = {
   Failed:    { color: '#EF4444', bg: '#FEF2F2' },
 };
 
-const fmt = (n) => `₹${Number(n).toLocaleString('en-IN')}`;
-
-// ── Component ─────────────────────────────────────────────────
 const FeeDetails = () => {
   const navigate = useNavigate();
-  const [activeState, setActiveState] = useState('paid'); // 'paid' | 'partial' | 'pending'
-  const data = feeData[activeState];
+  const [feeStructure, setFeeStructure] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [activeState, setActiveState] = useState('pending');
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchFeeDetails();
+  }, []);
+
+  const fetchFeeDetails = async () => {
+    try {
+      const response = await studentFeeApi.getFeeStructure();
+      if (response.data.success && response.data.data && response.data.data.length > 0) {
+        setFeeStructure(response.data.data[0]);
+        setActiveState('pending');
+      } else {
+        setFeeStructure(null);
+      }
+    } catch (err) {
+      console.error('Error fetching fee details:', err);
+      setError('Failed to load fee details');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const data = feeStructure ? {
+    status: 'PENDING',
+    month: new Date().toLocaleDateString('en-IN', { month: 'long', year: 'numeric' }),
+    totalFee: (feeStructure.monthlyFee || 0) + (feeStructure.utilities || 0),
+    paidAmount: 0,
+    remaining: (feeStructure.monthlyFee || 0) + (feeStructure.utilities || 0),
+    dueDate: `15th ${new Date().toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}`,
+    message: `Your fee for ${feeStructure.roomType} room in ${feeStructure.hostelBlock} is pending. Please pay your monthly fee of ₹${feeStructure.monthlyFee?.toLocaleString()}.`,
+    progressPercent: 0,
+    breakdown: [
+      { label: `Monthly Hostel Rent (${feeStructure.roomType} Room - ${feeStructure.hostelBlock})`, icon: Home, amount: feeStructure.monthlyFee || 0 },
+      { label: 'Mess Charges (Standard Veg/Non-Veg)', icon: UtensilsCrossed, amount: 3500 },
+      { label: 'Electricity (Based on usage)', icon: Zap, amount: feeStructure.utilities || 0 },
+      { label: 'Maintenance & Security Fee', icon: Wrench, amount: 500 },
+      { label: 'Wi-Fi Services', icon: Wifi, amount: 300 },
+    ],
+    recentTxns: [],
+  } : {
+    status: 'PENDING',
+    month: new Date().toLocaleDateString('en-IN', { month: 'long', year: 'numeric' }),
+    totalFee: 0,
+    paidAmount: 0,
+    remaining: 0,
+    dueDate: 'N/A',
+    message: 'No room assigned yet. Please contact the administration.',
+    progressPercent: 0,
+    breakdown: [],
+    recentTxns: [],
+  };
+
   const scfg = statusConfig[data.status];
 
-  const progressColor =
-    data.status === 'PAID'    ? '#22c55e' :
-    data.status === 'PARTIAL' ? '#F59E0B' : '#EF4444';
+  const progressColor = data.status === 'PAID' ? '#22c55e' : data.status === 'PARTIAL' ? '#F59E0B' : '#EF4444';
+
+  if (loading) {
+    return (
+      <div className="fd-page" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+        <p>Loading fee details...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="fd-page">
-
-      {/* ── Demo State Switcher ── */}
-      <div className="fd-demo-bar">
-        <span className="fd-demo-label">Preview State:</span>
-        {['paid', 'partial', 'pending'].map((s) => (
-          <button
-            key={s}
-            className={`fd-demo-btn ${activeState === s ? 'fd-demo-active' : ''}`}
-            onClick={() => setActiveState(s)}
-          >
-            {s.charAt(0).toUpperCase() + s.slice(1)}
-          </button>
-        ))}
-      </div>
-
-      {/* ── Page Header ── */}
+      {/* Page Header */}
       <div className="fd-header">
         <div>
           <h1 className="fd-title">Fee Details</h1>
@@ -128,18 +106,18 @@ const FeeDetails = () => {
           <button className="fd-btn-outline" onClick={() => navigate('/student/fees/history')}>
             <History size={15} /> View History
           </button>
-          <button className="fd-btn-primary" onClick={() => navigate('/student/fees/pay')}>
-            <CreditCard size={15} /> Pay Fee
-          </button>
+          {feeStructure && (
+            <button className="fd-btn-primary" onClick={() => navigate('/student/fees/pay')}>
+              <CreditCard size={15} /> Pay Fee
+            </button>
+          )}
         </div>
       </div>
 
-      {/* ── Main Grid ── */}
+      {/* Main Grid */}
       <div className="fd-main-grid">
-
-        {/* ── Left Column ── */}
+        {/* Left Column */}
         <div className="fd-left">
-
           {/* Fee Summary Card */}
           <div className="fd-summary-card">
             <div className="fd-summary-top">
@@ -176,7 +154,7 @@ const FeeDetails = () => {
               </div>
             </div>
 
-            {data.status === 'PENDING' && (
+            {data.status === 'PENDING' && feeStructure && (
               <div className="fd-pay-now-strip">
                 <span><Clock size={13} /> Due Date: {data.dueDate}</span>
                 <button className="fd-btn-primary fd-btn-sm" onClick={() => navigate('/student/fees/pay')}>
@@ -213,13 +191,6 @@ const FeeDetails = () => {
                 <span>{fmt(data.totalFee)}</span>
               </div>
             </div>
-
-            {data.status === 'PAID' && (
-              <div className="fd-receipt-note">
-                <AlertCircle size={14} />
-                Receipt for this transaction has been automatically generated and sent to your registered email.
-              </div>
-            )}
           </div>
 
           {/* Recent Transactions */}
@@ -230,53 +201,58 @@ const FeeDetails = () => {
                 View All <ChevronRight size={13} />
               </button>
             </div>
-            <div className="fd-table-wrap">
-              <table className="fd-table">
-                <thead>
-                  <tr>
-                    <th>RECEIPT ID</th>
-                    <th>DATE</th>
-                    <th>METHOD</th>
-                    <th>AMOUNT</th>
-                    <th>STATUS</th>
-                    <th>ACTION</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.recentTxns.map((txn) => {
-                    const tcfg = txnStatusCfg[txn.status] || { color: '#6B7280', bg: '#F4F6F9' };
-                    return (
-                      <tr key={txn.id}>
-                        <td className="fd-txn-id">{txn.id}</td>
-                        <td>{txn.date}</td>
-                        <td>{txn.method}</td>
-                        <td className="fd-txn-amount">{fmt(txn.amount)}</td>
-                        <td>
-                          <span className="fd-txn-badge" style={{ color: tcfg.color, background: tcfg.bg }}>
-                            {txn.status}
-                          </span>
-                        </td>
-                        <td>
-                          <button
-                            className="fd-view-btn"
-                            onClick={() => navigate(`/student/fees/receipt/${txn.id}`)}
-                            title="View Receipt"
-                          >
-                            <FileText size={15} />
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+            {data.recentTxns.length > 0 ? (
+              <div className="fd-table-wrap">
+                <table className="fd-table">
+                  <thead>
+                    <tr>
+                      <th>RECEIPT ID</th>
+                      <th>DATE</th>
+                      <th>METHOD</th>
+                      <th>AMOUNT</th>
+                      <th>STATUS</th>
+                      <th>ACTION</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.recentTxns.map((txn) => {
+                      const tcfg = txnStatusCfg[txn.status] || { color: '#6B7280', bg: '#F4F6F9' };
+                      return (
+                        <tr key={txn.id}>
+                          <td className="fd-txn-id">{txn.id}</td>
+                          <td>{txn.date}</td>
+                          <td>{txn.method}</td>
+                          <td className="fd-txn-amount">{fmt(txn.amount)}</td>
+                          <td>
+                            <span className="fd-txn-badge" style={{ color: tcfg.color, background: tcfg.bg }}>
+                              {txn.status}
+                            </span>
+                          </td>
+                          <td>
+                            <button
+                              className="fd-view-btn"
+                              onClick={() => navigate(`/student/fees/receipt/${txn.id}`)}
+                              title="View Receipt"
+                            >
+                              <FileText size={15} />
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div style={{ padding: '20px', textAlign: 'center', color: '#6B7280' }}>
+                No recent transactions
+              </div>
+            )}
           </div>
         </div>
 
-        {/* ── Right Column ── */}
+        {/* Right Column */}
         <div className="fd-right">
-
           {/* Payment Status Card */}
           <div className="fd-card">
             <h3 className="fd-card-title" style={{ marginBottom: 16 }}>
@@ -325,20 +301,46 @@ const FeeDetails = () => {
                 <span style={{ color: '#EF4444' }}>Pending: {fmt(data.remaining)}</span>
               </div>
             </div>
-            {data.status === 'PARTIAL' && (
-              <div className="fd-next-due">
-                <Clock size={13} /> Next Due: {data.dueDate}
-              </div>
-            )}
           </div>
+
+          {/* Fee Structure Info Card */}
+          {feeStructure && (
+            <div className="fd-card">
+              <h3 className="fd-card-title" style={{ marginBottom: 14 }}>Your Fee Structure</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #e5e7eb' }}>
+                  <span style={{ color: '#6B7280' }}>Room Type</span>
+                  <span style={{ fontWeight: 500 }}>{feeStructure.roomType}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #e5e7eb' }}>
+                  <span style={{ color: '#6B7280' }}>Hostel Block</span>
+                  <span style={{ fontWeight: 500 }}>{feeStructure.hostelBlock}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #e5e7eb' }}>
+                  <span style={{ color: '#6B7280' }}>Monthly Fee</span>
+                  <span style={{ fontWeight: 600, color: '#1f3c86' }}>₹{feeStructure.monthlyFee?.toLocaleString()}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #e5e7eb' }}>
+                  <span style={{ color: '#6B7280' }}>Security Deposit</span>
+                  <span style={{ fontWeight: 500 }}>₹{feeStructure.securityDeposit?.toLocaleString()}</span>
+                </div>
+                {feeStructure.lateFee && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0' }}>
+                    <span style={{ color: '#6B7280' }}>Late Fee</span>
+                    <span style={{ fontWeight: 500, color: '#EF4444' }}>₹{feeStructure.lateFee}/day</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Quick Actions */}
           <div className="fd-card">
             <h3 className="fd-card-title" style={{ marginBottom: 14 }}>Quick Actions</h3>
             {[
-              { icon: Download,  label: 'Download Latest Receipt', onClick: () => navigate(`/student/fees/receipt/RCPT-9921`) },
+              { icon: Download,  label: 'Download Latest Receipt', onClick: () => {} },
               { icon: History,   label: 'View Payment History',    onClick: () => navigate('/student/fees/history') },
-              { icon: CreditCard,label: 'Update Payment Method',   onClick: () => {} },
+              { icon: CreditCard,label: 'Pay Fee',                  onClick: () => feeStructure ? navigate('/student/fees/pay') : () => {} },
               { icon: FileText,  label: 'Request Fee Certificate', onClick: () => {} },
             ].map((action, i) => {
               const Icon = action.icon;

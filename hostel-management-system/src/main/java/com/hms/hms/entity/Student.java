@@ -20,98 +20,98 @@ public class Student {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    public Long id;
 
     @OneToOne
     @JoinColumn(name = "user_id", nullable = false, unique = true)
-    private User user;
+    public User user;
 
     @ManyToOne
     @JoinColumn(name = "warden_id")
-    private Warden warden;
+    public Warden warden;
 
     // ── Academic ──────────────────────────────────────────────
     @Column(name = "enrollment_no", length = 50)
-    private String enrollmentNo;
+    public String enrollmentNo;
 
     @Column(length = 50)
-    private String course;
+    public String course;
 
     @Column(name = "year_semester", length = 50)
-    private String yearSemester;
+    public String yearSemester;
 
     @Column(length = 30)
-    private String batch;
+    public String batch;
 
     @Column(length = 30)
-    private String program;
+    public String program;
 
     // ── Personal ──────────────────────────────────────────────
     @Column(name = "dob")
-    private LocalDate dob;
+    public LocalDate dob;
 
     @Column(length = 10)
-    private String gender;
+    public String gender;
 
     @Column(length = 30)
-    private String nationality;
+    public String nationality;
 
     @Column(name = "photo_url", length = 255)
-    private String photoUrl;
+    public String photoUrl;
 
     // ── Guardian ──────────────────────────────────────────────
     @Column(name = "guardian_name", length = 100)
-    private String guardianName;
+    public String guardianName;
 
     @Column(name = "guardian_phone", length = 15)
-    private String guardianPhone;
+    public String guardianPhone;
 
     @Column(name = "guardian_relation", length = 30)
-    private String guardianRelation;
+    public String guardianRelation;
 
     @Column(columnDefinition = "TEXT")
-    private String address;
+    public String address;
 
     // ── Hostel Allocation (denormalized for quick access) ─────
     @Column(name = "hostel_block", length = 30)
-    private String hostelBlock;
+    public String hostelBlock;
 
     @Column(name = "room_type", length = 20)
-    private String roomType;
+    public String roomType;
 
     @Column(name = "room_no", length = 20)
-    private String roomNo;
+    public String roomNo;
 
     @Column(name = "bed_no", length = 10)
-    private String bedNo;
+    public String bedNo;
 
     @Column(name = "allocated_on")
-    private LocalDate allocatedOn;
+    public LocalDate allocatedOn;
 
     @ManyToOne
     @JoinColumn(name = "room_id")
-    private Room room;
+    public Room room;
 
     @ManyToOne
     @JoinColumn(name = "bed_id")
-    private Bed bed;
+    public Bed bed;
 
     // ── Status & Dates ────────────────────────────────────────
     @Column(length = 20)
     @Builder.Default
-    private String status = "Active";
+    public String status = "Active";
 
     @Column(name = "join_date")
-    private LocalDate joinDate;
+    public LocalDate joinDate;
 
     // ── Auditing ──────────────────────────────────────────────
     @CreatedDate
     @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
+    public LocalDateTime createdAt;
 
     @LastModifiedDate
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    public LocalDateTime updatedAt;
 
     // ── Helper methods ────────────────────────────────────────
     public String getName()  { return user != null ? user.getName()  : null; }

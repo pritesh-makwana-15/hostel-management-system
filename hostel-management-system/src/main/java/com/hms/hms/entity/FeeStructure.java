@@ -3,17 +3,15 @@ package com.hms.hms.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
-@Table(name = "rooms")
+@Table(name = "fee_structures")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Room {
+public class FeeStructure {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,25 +20,25 @@ public class Room {
     @Column(nullable = false)
     public String hostelBlock;
 
-    @Column(nullable = false, unique = true)
-    public String roomNumber;
+    @Column(nullable = false)
+    public String roomType; // AC, Non-AC
 
     @Column(nullable = false)
-    public String roomType; // AC / Non-AC
-
-    public String floor;
-
-    public String description;
+    public Double monthlyFee;
 
     @Column(nullable = false)
-    public int totalBeds;
+    public Double securityDeposit;
+
+    public Double utilities;
+
+    public Double lateFee;
+
+    @Column(nullable = false)
+    @Builder.Default
+    public String status = "Active";
 
     @Column(updatable = false)
     public LocalDateTime createdAt;
-
-    @OneToMany(mappedBy = "room", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    public List<Bed> beds = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {

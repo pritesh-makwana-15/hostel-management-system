@@ -22,32 +22,32 @@ public class Warden {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    public Long id;
 
     @OneToOne
     @JoinColumn(name = "user_id", nullable = false, unique = true)
-    private User user;
+    public User user;
 
     @ManyToOne
     @JoinColumn(name = "admin_id")
-    private Admin admin;
+    public Admin admin;
 
     @Column(length = 10)
-    private String gender;
+    public String gender;
 
     @Column(columnDefinition = "TEXT")
-    private String address;
+    public String address;
 
     @Column(name = "join_date")
-    private LocalDate joinDate;
+    public LocalDate joinDate;
 
     @CreatedDate
     @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
+    public LocalDateTime createdAt;
 
     @LastModifiedDate
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    public LocalDateTime updatedAt;
 
     // Helper methods
     public String getName()  { return user != null ? user.getName()  : null; }

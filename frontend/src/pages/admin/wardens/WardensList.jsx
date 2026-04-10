@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Eye, Edit, MapPin } from 'lucide-react';
+import { Plus, Search, Eye, Edit, MapPin, Trash2 } from 'lucide-react';
 import { adminWardenApi } from '../../../services/adminWardenApi';
 import '../../../styles/admin/wardens/wardensList.css';
 
@@ -31,13 +31,18 @@ const WardensList = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Delete this warden?')) return;
+  const handleDelete = async (warden) => {
+    if (!window.confirm(`Are you sure you want to delete ${warden.name}?\n\nThis action cannot be undone and will remove all warden data including:\n- Personal information\n- Contact details\n- Assignment records\n- Access permissions`)) return;
     try {
-      await adminWardenApi.delete(id);
-      setWardens(prev => prev.filter(w => w.id !== id));
-    } catch {
-      alert('Failed to delete warden.');
+      await adminWardenApi.delete(warden.id);
+      setWardens(prev => prev.filter(w => w.id !== warden.id));
+      alert('Warden deleted successfully.');
+    } catch (error) {
+      console.error('Delete warden error:', error);
+      console.error('Error response:', error.response);
+      console.error('Error status:', error.response?.status);
+      console.error('Error data:', error.response?.data);
+      alert('Failed to delete warden: ' + (error.response?.data?.message || error.message));
     }
   };
 
@@ -113,6 +118,9 @@ const WardensList = () => {
                       <button className="action-btn" title="Assign"
                         onClick={() => navigate(`/admin/wardens/assign/${w.id}`)}>
                         <MapPin size={17} /></button>
+                      <button className="action-btn action-btn--delete" title="Delete"
+                        onClick={() => handleDelete(w)}>
+                        <Trash2 size={17} /></button>
                     </div>
                   </td>
                 </tr>

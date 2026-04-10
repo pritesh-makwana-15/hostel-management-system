@@ -21,7 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Map;
 import java.time.LocalDate;
-import java.time.LocalDate;
 
 @Service
 public class StudentService {
@@ -33,7 +32,7 @@ public class StudentService {
     @Autowired private BedRepository bedRepository;
     @Autowired private PasswordEncoder passwordEncoder;
 
-    // ── Create ────────────────────────────────────────────────
+    // Create
     @Transactional
     public Student createStudent(RegisterRequest req) {
         if (userRepository.existsByEmail(req.getEmail())) {
@@ -93,65 +92,65 @@ public class StudentService {
         return studentRepository.save(student);
     }
 
-    // ── Read All ──────────────────────────────────────────────
+    // Read All
     public List<Student> getAllStudents() {
         return studentRepository.findAll();
     }
 
-    // ── Read All Paginated ─────────────────────────────────────
+    // Read All Paginated
     public Page<Student> getAllStudents(Pageable pageable) {
         return studentRepository.findAll(pageable);
     }
 
-    // ── Read One ──────────────────────────────────────────────
+    // Read One
     public Student getById(Long id) {
         return studentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Student not found: " + id));
     }
 
-    // ── Profile (full joined data for profile page) ───────────
+    // Profile
     public StudentProfileDTO getProfile(Long id) {
         Student s = getById(id);
 
-        // Fee summary — placeholder values (replace with real fee repo queries)
-        Double totalFeesDue      = 0.0;
+        // Fee summary - placeholder values
+        Double totalFeesDue = 0.0;
         Double currentOutstanding = 0.0;
-        String feeStatus          = "N/A";
+        String feeStatus = "N/A";
 
-        // Complaint summary — placeholder (replace with real complaint repo queries)
-        Integer totalComplaints    = 0;
-        Integer openComplaints     = 0;
+        // Complaint summary - placeholder
+        Integer totalComplaints = 0;
+        Integer openComplaints = 0;
         Integer resolvedComplaints = 0;
-        String lastComplaint       = "None";
+        String lastComplaint = "None";
 
         return StudentProfileDTO.builder()
-                .id(s.getId())
-                .enrollmentNo(s.getEnrollmentNo())
-                .status(s.getStatus())
+                .id(s.id)
+                .enrollmentNo(s.enrollmentNo)
+                .status(s.status)
                 // Personal
-                .name(s.getName())
-                .email(s.getEmail())
-                .phone(s.getPhone())
-                .gender(s.getGender())
-                .dob(s.getDob())
-                .nationality(s.getNationality())
-                .photoUrl(s.getPhotoUrl())
+                .name(s.user != null ? s.user.name : null)
+                .email(s.user != null ? s.user.email : null)
+                .phone(s.user != null ? s.user.phone : null)
+                .gender(s.gender)
+                .dob(s.dob)
+                .nationality(s.nationality)
+                .photoUrl(s.photoUrl)
                 // Academic
-                .course(s.getCourse())
-                .yearSemester(s.getYearSemester())
-                .batch(s.getBatch())
-                .program(s.getProgram())
+                .course(s.course)
+                .yearSemester(s.yearSemester)
+                .batch(s.batch)
+                .program(s.program)
                 // Guardian
-                .guardianName(s.getGuardianName())
-                .guardianPhone(s.getGuardianPhone())
-                .guardianRelation(s.getGuardianRelation())
-                .address(s.getAddress())
+                .guardianName(s.guardianName)
+                .guardianPhone(s.guardianPhone)
+                .guardianRelation(s.guardianRelation)
+                .address(s.address)
                 // Hostel
-                .hostelBlock(s.getHostelBlock())
-                .roomType(s.getRoomType())
-                .roomNo(s.getRoomNo())
-                .bedNo(s.getBedNo())
-                .allocatedOn(s.getAllocatedOn())
+                .hostelBlock(s.hostelBlock)
+                .roomType(s.roomType)
+                .roomNo(s.roomNo)
+                .bedNo(s.bedNo)
+                .allocatedOn(s.allocatedOn)
                 // Fee summary
                 .totalFeesDue(totalFeesDue)
                 .currentOutstanding(currentOutstanding)
@@ -162,196 +161,211 @@ public class StudentService {
                 .resolvedComplaints(resolvedComplaints)
                 .lastComplaint(lastComplaint)
                 // Relations
-                .wardenId(s.getWarden() != null ? s.getWarden().getId() : null)
-                .wardenName(s.getWarden() != null ? s.getWarden().getName() : null)
-                .joinDate(s.getJoinDate())
+                .wardenId(s.warden != null ? s.warden.id : null)
+                .wardenName(s.warden != null && s.warden.user != null ? s.warden.user.name : null)
+                .joinDate(s.joinDate)
                 .build();
     }
 
-    // ── Update ────────────────────────────────────────────────
+    // Update
     @Transactional
     public Student updateStudent(Long id, RegisterRequest req) {
         Student existing = getById(id);
 
-        User user = existing.getUser();
-        user.setName(req.getName());
-        user.setPhone(req.getPhone());
+        User user = existing.user;
+        user.name = req.getName();
+        user.phone = req.getPhone();
         if (req.getPassword() != null && !req.getPassword().isBlank()) {
-            user.setPassword(passwordEncoder.encode(req.getPassword()));
+            user.password = passwordEncoder.encode(req.getPassword());
         }
         userRepository.save(user);
 
         if (req.getWardenId() != null) {
-            wardenRepository.findById(req.getWardenId()).ifPresent(existing::setWarden);
+            wardenRepository.findById(req.getWardenId()).ifPresent(w -> existing.warden = w);
         }
 
         if (req.getRoomId() != null) {
-            roomRepository.findById(req.getRoomId()).ifPresent(existing::setRoom);
+            roomRepository.findById(req.getRoomId()).ifPresent(r -> existing.room = r);
         }
 
         // Academic
-        existing.setEnrollmentNo(req.getEnrollmentNo());
-        existing.setCourse(req.getCourse());
-        existing.setYearSemester(req.getYearSemester());
-        existing.setBatch(req.getBatch());
-        existing.setProgram(req.getProgram());
+        existing.enrollmentNo = req.getEnrollmentNo();
+        existing.course = req.getCourse();
+        existing.yearSemester = req.getYearSemester();
+        existing.batch = req.getBatch();
+        existing.program = req.getProgram();
         // Personal
-        existing.setDob(req.getDob());
-        existing.setGender(req.getGender());
-        existing.setNationality(req.getNationality());
-        if (req.getPhotoUrl() != null) existing.setPhotoUrl(req.getPhotoUrl());
+        existing.dob = req.getDob();
+        existing.gender = req.getGender();
+        existing.nationality = req.getNationality();
+        if (req.getPhotoUrl() != null) existing.photoUrl = req.getPhotoUrl();
         // Guardian
-        existing.setGuardianName(req.getGuardianName());
-        existing.setGuardianPhone(req.getGuardianPhone());
-        existing.setGuardianRelation(req.getGuardianRelation());
-        existing.setAddress(req.getAddress());
+        existing.guardianName = req.getGuardianName();
+        existing.guardianPhone = req.getGuardianPhone();
+        existing.guardianRelation = req.getGuardianRelation();
+        existing.address = req.getAddress();
         // Hostel
-        existing.setHostelBlock(req.getHostelBlock());
-        existing.setRoomType(req.getRoomType());
-        existing.setRoomNo(req.getRoomNo());
-        existing.setBedNo(req.getBedNo());
-        existing.setAllocatedOn(req.getAllocatedOn());
+        existing.hostelBlock = req.getHostelBlock();
+        existing.roomType = req.getRoomType();
+        existing.roomNo = req.getRoomNo();
+        existing.bedNo = req.getBedNo();
+        existing.allocatedOn = req.getAllocatedOn();
         // Status
-        if (req.getStatus() != null) existing.setStatus(req.getStatus());
-        if (req.getJoinDate() != null) existing.setJoinDate(req.getJoinDate());
+        if (req.getStatus() != null) existing.status = req.getStatus();
+        if (req.getJoinDate() != null) existing.joinDate = req.getJoinDate();
 
         return studentRepository.save(existing);
     }
 
-    // ── Update Status Only ────────────────────────────────────
+    // Update Status Only
     @Transactional
     public Student updateStatus(Long id, String status) {
         Student student = getById(id);
-        student.setStatus(status);
+        student.status = status;
         return studentRepository.save(student);
     }
 
-    // ── Partial Update ─────────────────────────────────────────
+    // Delete - FIXED VERSION WITH FOREIGN KEY CONSTRAINT HANDLING
+    @Transactional
+    public String deleteStudent(Long id) {
+        Student student = getById(id);
+        
+        // Clear bed assignment if student has a bed assigned
+        if (student.bed != null) {
+            student.bed.status = "Available";
+            student.bed.student = null;
+            bedRepository.save(student.bed);
+        }
+        
+        // Clear room assignment
+        student.room = null;
+        student.bed = null;
+        student.hostelBlock = null;
+        student.roomType = null;
+        student.roomNo = null;
+        student.bedNo = null;
+        student.allocatedOn = null;
+        
+        studentRepository.save(student);
+        
+        // Now delete the student and user
+        studentRepository.delete(student);
+        userRepository.delete(student.user);
+        
+        return "Deleted student with id: " + id;
+    }
+
+    // Partial Update
     @Transactional
     public Student updatePartial(Long id, Map<String, Object> updates) {
         Student existing = getById(id);
-        User user = existing.getUser();
+        User user = existing.user;
 
-        if (updates.containsKey("name")) user.setName((String) updates.get("name"));
-        if (updates.containsKey("email")) user.setEmail((String) updates.get("email"));
-        if (updates.containsKey("phone")) user.setPhone((String) updates.get("phone"));
+        if (updates.containsKey("name")) user.name = (String) updates.get("name");
+        if (updates.containsKey("email")) user.email = (String) updates.get("email");
+        if (updates.containsKey("phone")) user.phone = (String) updates.get("phone");
         userRepository.save(user);
 
-        if (updates.containsKey("gender")) existing.setGender((String) updates.get("gender"));
-        if (updates.containsKey("dateOfBirth")) existing.setDob(LocalDate.parse((String) updates.get("dateOfBirth")));
-        if (updates.containsKey("yearSemester")) existing.setYearSemester((String) updates.get("yearSemester"));
-        if (updates.containsKey("guardianName")) existing.setGuardianName((String) updates.get("guardianName"));
-        if (updates.containsKey("guardianPhone")) existing.setGuardianPhone((String) updates.get("guardianPhone"));
-        if (updates.containsKey("address")) existing.setAddress((String) updates.get("address"));
+        if (updates.containsKey("gender")) existing.gender = (String) updates.get("gender");
+        if (updates.containsKey("dateOfBirth")) existing.dob = LocalDate.parse((String) updates.get("dateOfBirth"));
+        if (updates.containsKey("yearSemester")) existing.yearSemester = (String) updates.get("yearSemester");
+        if (updates.containsKey("guardianName")) existing.guardianName = (String) updates.get("guardianName");
+        if (updates.containsKey("guardianPhone")) existing.guardianPhone = (String) updates.get("guardianPhone");
+        if (updates.containsKey("address")) existing.address = (String) updates.get("address");
 
         return studentRepository.save(existing);
     }
 
-    // ── Assign Room ───────────────────────────────────────────
+    // Assign Room
     @Transactional
     public Student assignRoom(Long studentId, com.hms.hms.dto.AssignRoomRequest request) {
-        // Fetch entities
         Student student = getById(studentId);
-        com.hms.hms.entity.Room room = roomRepository.findById(request.getRoomId())
+        Room room = roomRepository.findById(request.getRoomId())
                 .orElseThrow(() -> new RuntimeException("Room not found"));
-        com.hms.hms.entity.Bed bed = bedRepository.findByRoomIdAndBedNumber(request.getRoomId(), request.getBedNo());
+        Bed bed = bedRepository.findByRoomIdAndBedNumber(request.getRoomId(), request.getBedNo());
         if (bed == null) {
             throw new RuntimeException("Bed not found in room");
         }
 
         // Validate bed is available
-        if (!"Available".equals(bed.getStatus())) {
+        if (!"Available".equals(bed.status)) {
             throw new RuntimeException("Bed is not available");
         }
 
         // Check if room is full
-        long occupiedBeds = room.getBeds().stream().filter(b -> "Occupied".equals(b.getStatus())).count();
-        if (occupiedBeds >= room.getTotalBeds()) {
+        long occupiedBeds = room.beds.stream().filter(b -> "Occupied".equals(b.status)).count();
+        if (occupiedBeds >= room.totalBeds) {
             throw new RuntimeException("Room is full");
         }
 
         // If student already has a room, free the old bed
-        if (student.getBed() != null) {
-            com.hms.hms.entity.Bed oldBed = student.getBed();
-            oldBed.setStatus("Available");
-            oldBed.setStudent(null);
+        if (student.bed != null) {
+            Bed oldBed = student.bed;
+            oldBed.status = "Available";
+            oldBed.student = null;
             bedRepository.save(oldBed);
-
-            // Decrease old room occupied beds
-            if (student.getRoom() != null && !student.getRoom().equals(room)) {
-                // Note: Since occupiedBeds is calculated, no need to decrement manually
-            }
         }
 
         // Assign new bed
-        bed.setStatus("Occupied");
-        bed.setStudent(student);
+        bed.status = "Occupied";
+        bed.student = student;
         bedRepository.save(bed);
 
         // Update student
-        student.setRoom(room);
-        student.setBed(bed);
-        student.setHostelBlock(room.getHostelBlock());
-        student.setRoomType(room.getRoomType());
-        student.setRoomNo(room.getRoomNumber());
-        student.setBedNo(bed.getBedNumber());
-        student.setAllocatedOn(java.time.LocalDate.now());
+        student.room = room;
+        student.bed = bed;
+        student.hostelBlock = room.hostelBlock;
+        student.roomType = room.roomType;
+        student.roomNo = room.roomNumber;
+        student.bedNo = bed.bedNumber;
+        student.allocatedOn = LocalDate.now();
 
         return studentRepository.save(student);
     }
 
-    // ── Delete ────────────────────────────────────────────────
-    @Transactional
-    public String deleteStudent(Long id) {
-        Student student = getById(id);
-        studentRepository.delete(student);
-        userRepository.delete(student.getUser());
-        return "Deleted student with id: " + id;
-    }
-
-    // Update student profile (partial update)
+    // Update student profile
     @Transactional
     public StudentProfileDTO updateStudentProfile(Long studentId, RegisterRequest request) {
         Student student = getById(studentId);
         
         // Update User entity fields
         if (request.getName() != null) {
-            student.getUser().setName(request.getName());
+            student.user.name = request.getName();
         }
         if (request.getPhone() != null) {
-            student.getUser().setPhone(request.getPhone());
+            student.user.phone = request.getPhone();
         }
         
         // Update Student entity fields
         if (request.getGender() != null) {
-            student.setGender(request.getGender());
+            student.gender = request.getGender();
         }
         if (request.getDob() != null) {
-            student.setDob(request.getDob());
+            student.dob = request.getDob();
         }
         if (request.getNationality() != null) {
-            student.setNationality(request.getNationality());
+            student.nationality = request.getNationality();
         }
         if (request.getCourse() != null) {
-            student.setCourse(request.getCourse());
+            student.course = request.getCourse();
         }
         if (request.getYearSemester() != null) {
-            student.setYearSemester(request.getYearSemester());
+            student.yearSemester = request.getYearSemester();
         }
         if (request.getGuardianName() != null) {
-            student.setGuardianName(request.getGuardianName());
+            student.guardianName = request.getGuardianName();
         }
         if (request.getGuardianPhone() != null) {
-            student.setGuardianPhone(request.getGuardianPhone());
+            student.guardianPhone = request.getGuardianPhone();
         }
         if (request.getGuardianRelation() != null) {
-            student.setGuardianRelation(request.getGuardianRelation());
+            student.guardianRelation = request.getGuardianRelation();
         }
         if (request.getAddress() != null) {
-            student.setAddress(request.getAddress());
+            student.address = request.getAddress();
         }
         
-        userRepository.save(student.getUser());
+        userRepository.save(student.user);
         studentRepository.save(student);
         
         return getProfile(studentId);
@@ -361,13 +375,13 @@ public class StudentService {
     @Transactional
     public boolean changePassword(Long studentId, String currentPassword, String newPassword) {
         Student student = getById(studentId);
-        User user = student.getUser();
+        User user = student.user;
         
-        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+        if (!passwordEncoder.matches(currentPassword, user.password)) {
             return false;
         }
         
-        user.setPassword(passwordEncoder.encode(newPassword));
+        user.password = passwordEncoder.encode(newPassword);
         userRepository.save(user);
         return true;
     }
@@ -376,7 +390,6 @@ public class StudentService {
     @Transactional
     public String createComplaint(Long studentId, String category, String description) {
         // TODO: Implement complaint creation logic
-        // This would involve saving to a Complaint entity/table
         return "Complaint created successfully";
     }
 }

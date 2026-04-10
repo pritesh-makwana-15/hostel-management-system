@@ -20,27 +20,27 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    public Long id;
 
     @Column(nullable = false, length = 100)
-    private String name;
+    public String name;
 
     @Column(nullable = false, unique = true, length = 100)
-    private String email;
+    public String email;
 
     @Column(nullable = false)
-    private String password;
+    public String password;
 
     @Column(length = 15)
-    private String phone;
+    public String phone;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private Role role;
+    public Role role;
 
     @CreatedDate
     @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    public LocalDateTime createdAt;
 
     public enum Role {
         ADMIN,

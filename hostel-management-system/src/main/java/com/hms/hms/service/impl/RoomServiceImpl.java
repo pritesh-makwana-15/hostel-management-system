@@ -131,7 +131,18 @@ public class RoomServiceImpl implements RoomService {
         return toDTO(room, existingBeds);
     }
 
-    // ── HELPER: Entity → DTO ─────────────────────────────────
+    // GET UNIQUE BLOCKS
+    @Override
+    @Transactional(readOnly = true)
+    public List<String> getUniqueBlocks() {
+        return roomRepository.findAll().stream()
+                .map(room -> room.hostelBlock)
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+    }
+
+    // HELPER: Entity -> DTO
     private RoomResponseDTO toDTO(Room room, List<Bed> beds) {
         long occupied = beds.stream().filter(b -> "Occupied".equals(b.getStatus())).count();
         long available = beds.stream().filter(b -> "Available".equals(b.getStatus())).count();

@@ -21,17 +21,17 @@ public class Admin {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    public Long id;
 
     @OneToOne
     @JoinColumn(name = "user_id", nullable = false, unique = true)
-    private User user;
+    public User user;
 
     @Column(length = 50)
-    private String designation;
+    public String designation;
 
     @Column(length = 15)
-    private String phone;
+    public String phone;
 
     @CreatedDate
     @Column(name = "created_at", updatable = false)

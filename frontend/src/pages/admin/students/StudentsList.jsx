@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Search, Plus, Eye, Edit, Home as HomeIcon, ShieldOff, ShieldCheck, X } from 'lucide-react';
+import { Search, Plus, Eye, Edit, Home as HomeIcon, Trash2, X } from 'lucide-react';
 import { adminStudentApi } from '../../../services/adminStudentApi';
 import '../../../styles/admin/students/students-list.css';
 
@@ -70,15 +70,22 @@ const StudentsList = () => {
       queryClient.invalidateQueries(['admin-students']);
       showToast('Student deleted successfully.');
     },
-    onError: () => showToast('Failed to delete student.', 'error'),
+    onError: (error) => {
+      console.error('Delete student error:', error);
+      console.error('Error response:', error.response);
+      console.error('Error status:', error.response?.status);
+      console.error('Error data:', error.response?.data);
+      console.error('Error data stringified:', JSON.stringify(error.response?.data, null, 2));
+      console.error('Error message:', error.response?.data?.message);
+      console.error('Full error:', error);
+      showToast('Failed to delete student.', 'error');
+    },
   });
 
   // ── Handlers ──────────────────────────────────────────────
-  const toggleStatus = (student) => {
-    const newStatus = student.status === 'Active' ? 'Inactive' : 'Active';
-    const action    = newStatus === 'Inactive' ? 'deactivate' : 'activate';
-    if (!window.confirm(`Are you sure you want to ${action} ${student.name}?`)) return;
-    statusMutation.mutate({ id: student.id, status: newStatus });
+  const deleteStudent = (student) => {
+    if (!window.confirm(`Are you sure you want to delete ${student.name}?\n\nThis action cannot be undone and will remove all student data including:\n- Personal information\n- Academic records\n- Room assignments\n- Fee records`)) return;
+    deleteMutation.mutate(student.id);
   };
 
   if (isLoading) return <div className="sl-loading">Loading students...</div>;
@@ -226,17 +233,15 @@ const StudentsList = () => {
                           <HomeIcon size={16} />
                         </button>
                         <button
-                          onClick={() => toggleStatus(student)}
-                          disabled={statusMutation.isPending && statusMutation.variables?.id === student.id}
-                          className={`sl-action-btn sl-action-btn--${student.status === 'Active' ? 'deactivate' : 'activate'}`}
-                          title={student.status === 'Active' ? 'Deactivate' : 'Activate'}
+                          onClick={() => deleteStudent(student)}
+                          disabled={deleteMutation.isPending}
+                          className="sl-action-btn sl-action-btn--delete"
+                          title="Delete Student"
                         >
-                          {statusMutation.isPending && statusMutation.variables?.id === student.id ? (
+                          {deleteMutation.isPending ? (
                             <div className="sl-spinner" />
-                          ) : student.status === 'Active' ? (
-                            <ShieldOff size={16} />
                           ) : (
-                            <ShieldCheck size={16} />
+                            <Trash2 size={16} />
                           )}
                         </button>
                       </div>
