@@ -19,13 +19,10 @@ export const adminRoomApi = {
 
   // Get unique hostel blocks from rooms
   getHostelBlocks: async () => {
-    const response = await api.get('/api/admin/rooms');
-    const rooms = response.data.data || [];
+    const response = await api.get('/api/admin/rooms/blocks');
+    const blocks = response.data.data || [];
     
-    // Extract unique hostel blocks
-    const uniqueBlocks = [...new Set(rooms.map(room => room.hostelBlock))];
-    
-    return uniqueBlocks.map(block => ({
+    return blocks.map(block => ({
       id: block.toLowerCase().replace(/\s+/g, '-'),
       name: block
     }));

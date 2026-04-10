@@ -19,9 +19,18 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ApiResponse<Void>> handleRuntime(RuntimeException ex) {
+        ex.printStackTrace();
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiResponse<Void>> handleGeneral(Exception ex) {
+        ex.printStackTrace();
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.error("Server error: " + ex.getMessage()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

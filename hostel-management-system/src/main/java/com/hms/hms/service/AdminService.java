@@ -16,82 +16,80 @@ import java.util.List;
 public class AdminService {
 
     @Autowired private UserRepository userRepository;
-    @Autowired private AdminRepository AdminRepository;
+    @Autowired private AdminRepository adminRepository;
     @Autowired private PasswordEncoder passwordEncoder;
 
     @Transactional
     public Admin createAdmin(RegisterRequest request) {
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("Email already registered: " + request.getEmail());
+        if (userRepository.existsByEmail(request.email)) {
+            throw new RuntimeException("Email already registered: " + request.email);
         }
 
         // 1. Save user
-        User user = User.builder()
-                .name(request.getName())
-                .email(request.getEmail())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .phone(request.getPhone())
-                .role(User.Role.ADMIN)
-                .build();
+        User user = new User();
+        user.name = request.name;
+        user.email = request.email;
+        user.password = passwordEncoder.encode(request.password);
+        user.phone = request.phone;
+        user.role = User.Role.ADMIN;
         user = userRepository.save(user);
 
         // 2. Save admin profile
-        Admin profile = Admin.builder()
-                .user(user)
-                .designation(request.getDesignation())
-                .phone(request.getPhone())
-                .build();
-        return AdminRepository.save(profile);
+        Admin profile = new Admin();
+        profile.user = user;
+        profile.designation = request.designation;
+        profile.phone = request.phone;
+        return adminRepository.save(profile);
     }
 
     public List<Admin> getAllAdmins() {
-        return AdminRepository.findAll();
+        return adminRepository.findAll();
     }
 
     public Admin getById(Long id) {
-        return AdminRepository.findById(id).orElse(null);
+        return adminRepository.findById(id).orElse(null);
     }
 
     public Admin getByEmail(String email) {
         if (email == null || email.isBlank()) return null;
 
         return userRepository.findByEmail(email)
-                .flatMap(u -> AdminRepository.findByUserId(u.getId()))
+                .flatMap(u -> adminRepository.findByUserId(u.id))
                 .orElse(null);
     }
 
     public Admin save(Admin admin) {
         // Save user first if it has changes
-        if (admin.getUser() != null) {
-            userRepository.save(admin.getUser());
+        if (admin.user != null) {
+            userRepository.save(admin.user);
         }
-        return AdminRepository.save(admin);
+        return adminRepository.save(admin);
     }
 
     @Transactional
     public Admin updateAdmin(Long id, RegisterRequest request) {
-        Admin existing = AdminRepository.findById(id)
+        Admin existing = adminRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Admin not found: " + id));
 
-        User user = existing.getUser();
-        user.setName(request.getName());
-        user.setPhone(request.getPhone());
-        if (request.getPassword() != null && !request.getPassword().isBlank()) {
-            user.setPassword(passwordEncoder.encode(request.getPassword()));
+        User user = existing.user;
+        user.name = request.name;
+        user.phone = request.phone;
+        if (request.password != null && !request.password.isBlank()) {
+            user.password = passwordEncoder.encode(request.password);
         }
         userRepository.save(user);
 
-        existing.setDesignation(request.getDesignation());
-        existing.setPhone(request.getPhone());
-        return AdminRepository.save(existing);
+        existing.designation = request.designation;
+        existing.phone = request.phone;
+        return adminRepository.save(existing);
     }
 
     @Transactional
     public String deleteAdmin(Long id) {
-        Admin profile = AdminRepository.findById(id)
+        Admin profile = adminRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Admin not found: " + id));
-        AdminRepository.delete(profile);
-        userRepository.delete(profile.getUser());
+        adminRepository.delete(profile);
+        userRepository.delete(profile.user);
         return "Deleted admin with id: " + id;
     }
 }

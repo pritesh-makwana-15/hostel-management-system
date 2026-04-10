@@ -48,4 +48,22 @@ public class RoomController {
         RoomResponseDTO room = roomService.updateRoom(id, request);
         return ResponseEntity.ok(ApiResponse.success("Room updated successfully", room));
     }
+
+    // GET /api/admin/rooms/blocks - Get unique hostel blocks
+    @GetMapping("/blocks")
+    public ResponseEntity<ApiResponse<List<String>>> getUniqueBlocks() {
+        List<String> blocks = roomService.getUniqueBlocks();
+        return ResponseEntity.ok(ApiResponse.success("Blocks fetched successfully", blocks));
+    }
+
+    // GET /api/admin/rooms/test - Test endpoint to check room count
+    @GetMapping("/test")
+    public ResponseEntity<ApiResponse<String>> testRooms() {
+        try {
+            List<RoomResponseDTO> rooms = roomService.getAllRooms();
+            return ResponseEntity.ok(ApiResponse.success("Test successful", "Found " + rooms.size() + " rooms"));
+        } catch (Exception e) {
+            return ResponseEntity.ok(ApiResponse.success("Test failed", "Error: " + e.getMessage()));
+        }
+    }
 }

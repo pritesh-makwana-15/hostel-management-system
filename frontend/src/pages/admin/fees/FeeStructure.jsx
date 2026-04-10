@@ -1,25 +1,181 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Search, Filter, Download, Plus, Edit, PowerOff,
-  Shield, Layers, Clock, MoreVertical, ChevronLeft, ChevronRight
+  Shield, Layers, Clock, MoreVertical, X
 } from 'lucide-react';
-import { feeStructures } from '../../../data/feesData';
+import { feeStructureApi } from '../../../services/adminFeeApi';
+import { adminRoomApi } from '../../../services/adminRoomApi';
 import '../../../styles/admin/fees/feeStructure.css';
 
 const FeeStructure = () => {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [feeStructures, setFeeStructures] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [editData, setEditData] = useState(null);
+  const [hostelBlocks, setHostelBlocks] = useState([]);
+  const [submitting, setSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    hostelBlock: '',
+    roomType: 'AC',
+    monthlyFee: '',
+    securityDeposit: '',
+    utilities: '',
+    lateFee: '',
+    status: 'Active'
+  });
+
   const perPage = 5;
 
+  useEffect(() => {
+    fetchFeeStructures();
+    fetchHostelBlocks();
+    testApiConnection();
+  }, []);
+
+  const testApiConnection = async () => {
+    try {
+      const response = await feeStructureApi.healthCheck();
+      console.log('API test response:', response.data);
+    } catch (error) {
+      console.error('API test error:', error);
+    }
+  };
+
+  const fetchFeeStructures = async () => {
+    try {
+      const response = await feeStructureApi.getAll();
+      console.log('Fetch fee structures response:', response);
+      console.log('Response.data:', response.data);
+      console.log('Response.data.status:', response.data?.status);
+      if (response.data && response.data.status === 'success') {
+        setFeeStructures(response.data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching fee structures:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const filtered = feeStructures.filter(s =>
-    s.id.toLowerCase().includes(search.toLowerCase()) ||
-    s.hostelName.toLowerCase().includes(search.toLowerCase())
+    s.hostelBlock.toLowerCase().includes(search.toLowerCase()) ||
+    s.roomType.toLowerCase().includes(search.toLowerCase())
   );
 
   const totalPages = Math.ceil(filtered.length / perPage);
   const paged = filtered.slice((currentPage - 1) * perPage, currentPage * perPage);
+
+  const handleOpenModal = (structure = null) => {
+    if (structure) {
+      setEditData(structure);
+      setFormData({
+        hostelBlock: structure.hostelBlock,
+        roomType: structure.roomType,
+        monthlyFee: structure.monthlyFee || '',
+        securityDeposit: structure.securityDeposit || '',
+        utilities: structure.utilities || '',
+        lateFee: structure.lateFee || '',
+        status: structure.status
+      });
+    } else {
+      setEditData(null);
+      setFormData({
+        hostelBlock: '',
+        roomType: 'AC',
+        monthlyFee: '',
+        securityDeposit: '',
+        utilities: '',
+        lateFee: '',
+        status: 'Active'
+      });
+    }
+    setShowModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setEditData(null);
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      const data = {
+        hostelBlock: formData.hostelBlock,
+        roomType: formData.roomType,
+        monthlyFee: parseFloat(formData.monthlyFee),
+        securityDeposit: parseFloat(formData.securityDeposit),
+        utilities: formData.utilities ? parseFloat(formData.utilities) : null,
+        lateFee: formData.lateFee ? parseFloat(formData.lateFee) : null,
+        status: formData.status
+      };
+
+      console.log('Submitting fee structure:', data);
+      console.log('Edit mode:', editData ? 'Update' : 'Create');
+      
+      const response = editData 
+        ? await feeStructureApi.update(editData.id, data)
+        : await feeStructureApi.create(data);
+      
+      console.log('Response:', response);
+      console.log('Response.data:', response.data);
+      console.log('Response.data.success:', response.data?.success);
+      console.log('Response.data.status:', response.data?.status);
+      console.log('Response.data.message:', response.data?.message);
+      
+      if (response.data && response.data.status === 'success') {
+        fetchFeeStructures();
+        handleCloseModal();
+      } else {
+        console.error('API returned error:', response.data);
+        console.error('Full response structure:', response);
+      }
+    } catch (error) {
+      console.error('Error saving fee structure:', error);
+      if (error.response) {
+        console.error('Status:', error.response.status);
+        console.error('Data:', error.response.data);
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleToggleStatus = async (structure) => {
+    try {
+      const newStatus = structure.status === 'Active' ? 'Inactive' : 'Active';
+      await feeStructureApi.update(structure.id, { ...structure, status: newStatus });
+      fetchFeeStructures();
+    } catch (error) {
+      console.error('Error updating status:', error);
+    }
+  };
+
+  const fetchHostelBlocks = async () => {
+    try {
+      console.log('Fetching hostel blocks...');
+      const blocks = await adminRoomApi.getHostelBlocks();
+      console.log('Hostel blocks fetched:', blocks);
+      setHostelBlocks(blocks);
+    } catch (error) {
+      console.error('Error fetching hostel blocks:', error);
+      console.error('Error response:', error.response);
+      console.error('Error status:', error.response?.status);
+      console.error('Error data:', error.response?.data);
+      // Fallback to empty array
+      setHostelBlocks([]);
+    }
+  };
 
   return (
     <div className="fee-structure-page">
@@ -34,7 +190,7 @@ const FeeStructure = () => {
           <h1 className="page-title">Fee Structure Setup</h1>
           <p className="page-sub">Manage and define fee configurations for different hostels and room categories.</p>
         </div>
-        <button className="btn-primary" onClick={() => navigate('/admin/fees/structure/new')}>
+        <button className="btn-primary" onClick={() => handleOpenModal()}>
           <Plus size={16} /> Add New Structure
         </button>
       </div>
@@ -47,7 +203,7 @@ const FeeStructure = () => {
             <Search size={16} className="search-icon" />
             <input
               className="search-input"
-              placeholder="Search by ID or Hostel..."
+              placeholder="Search by Hostel or Room Type..."
               value={search}
               onChange={e => setSearch(e.target.value)}
             />
@@ -64,51 +220,65 @@ const FeeStructure = () => {
           <table className="fees-table">
             <thead>
               <tr>
-                <th>Structure ID</th>
-                <th>Hostel Name</th>
+                <th>ID</th>
+                <th>Hostel Block</th>
                 <th>Room Type</th>
-                <th>Monthly Fee ($)</th>
-                <th>Security Deposit ($)</th>
-                <th>Utilities ($)</th>
-                <th>Late Fee ($)</th>
+                <th>Monthly Fee (₹)</th>
+                <th>Security Deposit (₹)</th>
+                <th>Utilities (₹)</th>
+                <th>Late Fee (₹)</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {paged.map((s) => (
-                <tr key={s.id}>
-                  <td className="str-id">{s.id}</td>
-                  <td className="hostel-name">{s.hostelName}</td>
-                  <td><span className={`room-type-badge ${s.roomType === 'AC' ? 'badge-ac' : 'badge-nonac'}`}>{s.roomType}</span></td>
-                  <td className="fee-amount">{s.monthlyFee.toLocaleString()}</td>
-                  <td>{s.securityDeposit.toLocaleString()}</td>
-                  <td>{s.utilities}</td>
-                  <td className="late-fee-amount">{s.lateFee}</td>
-                  <td>
-                    <span className={`status-badge ${s.status === 'Active' ? 'badge-active' : 'badge-inactive'}`}>
-                      {s.status}
-                    </span>
-                  </td>
-                  <td>
-                    <div className="action-buttons">
-                      <button className="action-btn" title="Edit" onClick={() => navigate('/admin/fees/structure/new')}>
-                        <Edit size={16} />
-                      </button>
-                      <button className="action-btn" title="Deactivate">
-                        <PowerOff size={16} />
-                      </button>
-                    </div>
-                  </td>
+              {loading ? (
+                <tr>
+                  <td colSpan="9" style={{ textAlign: 'center' }}>Loading...</td>
                 </tr>
-              ))}
+              ) : paged.length === 0 ? (
+                <tr>
+                  <td colSpan="9" style={{ textAlign: 'center' }}>No fee structures found</td>
+                </tr>
+              ) : (
+                paged.map((s) => (
+                  <tr key={s.id}>
+                    <td className="str-id">{s.id}</td>
+                    <td className="hostel-name">{s.hostelBlock}</td>
+                    <td><span className={`room-type-badge ${s.roomType === 'AC' ? 'badge-ac' : 'badge-nonac'}`}>{s.roomType}</span></td>
+                    <td className="fee-amount">₹{s.monthlyFee?.toLocaleString()}</td>
+                    <td>₹{s.securityDeposit?.toLocaleString()}</td>
+                    <td>{s.utilities ? `₹${s.utilities}` : '-'}</td>
+                    <td className="late-fee-amount">{s.lateFee ? `₹${s.lateFee}` : '-'}</td>
+                    <td>
+                      <span className={`status-badge ${s.status === 'Active' ? 'badge-active' : 'badge-inactive'}`}>
+                        {s.status}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="action-buttons">
+                        <button className="action-btn" title="Edit" onClick={() => handleOpenModal(s)}>
+                          <Edit size={16} />
+                        </button>
+                        <button 
+                          className="action-btn" 
+                          title={s.status === 'Active' ? 'Deactivate' : 'Activate'}
+                          onClick={() => handleToggleStatus(s)}
+                        >
+                          <PowerOff size={16} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
 
         {/* Pagination */}
         <div className="table-footer">
-          <span className="showing-text">Showing 1 to {paged.length} of {filtered.length} entries</span>
+          <span className="showing-text">Showing {paged.length > 0 ? (currentPage - 1) * perPage + 1 : 0} to {Math.min(currentPage * perPage, filtered.length)} of {filtered.length} entries</span>
           <div className="pagination">
             <button className="pag-btn" onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1}>
               Previous
@@ -118,7 +288,7 @@ const FeeStructure = () => {
                 {i + 1}
               </button>
             ))}
-            <button className="pag-btn" onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages}>
+            <button className="pag-btn" onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages || totalPages === 0}>
               Next
             </button>
           </div>
@@ -149,6 +319,73 @@ const FeeStructure = () => {
           </div>
         </div>
       </div>
+
+      {/* Add/Edit Modal */}
+      {showModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h2>{editData ? 'Edit Fee Structure' : 'Add New Fee Structure'}</h2>
+              <button className="modal-close" onClick={handleCloseModal}>
+                <X size={20} />
+              </button>
+            </div>
+            <form onSubmit={handleSubmit}>
+              <div className="modal-body">
+                <div className="form-group">
+                  <label>Hostel Block</label>
+                  <select name="hostelBlock" value={formData.hostelBlock} onChange={handleInputChange} required>
+                    <option value="">Select Hostel Block</option>
+                    {hostelBlocks.map(block => (
+                      <option key={block.id} value={block.name}>{block.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Room Type</label>
+                  <select name="roomType" value={formData.roomType} onChange={handleInputChange} required>
+                    <option value="AC">AC</option>
+                    <option value="Non-AC">Non-AC</option>
+                  </select>
+                </div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Monthly Fee (₹)</label>
+                    <input type="number" name="monthlyFee" value={formData.monthlyFee} onChange={handleInputChange} required placeholder="e.g., 5000" />
+                  </div>
+                  <div className="form-group">
+                    <label>Security Deposit (₹)</label>
+                    <input type="number" name="securityDeposit" value={formData.securityDeposit} onChange={handleInputChange} required placeholder="e.g., 10000" />
+                  </div>
+                </div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Utilities (₹)</label>
+                    <input type="number" name="utilities" value={formData.utilities} onChange={handleInputChange} placeholder="Optional" />
+                  </div>
+                  <div className="form-group">
+                    <label>Late Fee (₹)</label>
+                    <input type="number" name="lateFee" value={formData.lateFee} onChange={handleInputChange} placeholder="Optional" />
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label>Status</label>
+                  <select name="status" value={formData.status} onChange={handleInputChange}>
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                  </select>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn-secondary" onClick={handleCloseModal}>Cancel</button>
+                <button type="submit" className="btn-primary" disabled={submitting}>
+                  {submitting ? 'Saving...' : (editData ? 'Update' : 'Create')}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

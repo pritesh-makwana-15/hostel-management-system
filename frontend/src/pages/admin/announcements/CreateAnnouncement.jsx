@@ -1,19 +1,18 @@
 // src/pages/admin/announcements/CreateAnnouncement.jsx
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Megaphone, Info, Upload, X, FileText, Image as ImageIcon } from 'lucide-react';
+import { Megaphone, Info } from 'lucide-react';
 import '../../../styles/admin/announcements/createAnnouncement.css';
 
 const CreateAnnouncement = () => {
   const navigate = useNavigate();
-  const fileRef = useRef();
   const [form, setForm] = useState({
     title: '', message: '', audience: 'Students', priority: 'Normal',
     publishDate: '', expiryDate: '',
   });
   const [charCount, setCharCount] = useState(0);
-  const [attachments, setAttachments] = useState([]);
-  const [dragOver, setDragOver] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -24,32 +23,73 @@ const CreateAnnouncement = () => {
   const handleAudience = (val) => setForm(prev => ({ ...prev, audience: val }));
   const handlePriority = (val) => setForm(prev => ({ ...prev, priority: val }));
 
-  const handleFileDrop = (e) => {
-    e.preventDefault();
-    setDragOver(false);
-    const files = Array.from(e.dataTransfer.files);
-    addFiles(files);
-  };
-
-  const addFiles = (files) => {
-    const newFiles = files.map(f => ({
-      name: f.name,
-      size: (f.size / (1024 * 1024)).toFixed(1) + ' MB',
-      progress: 100,
-    }));
-    setAttachments(prev => [...prev, ...newFiles]);
-  };
-
-  const removeAttachment = (idx) => setAttachments(prev => prev.filter((_, i) => i !== idx));
-
   const getAudienceLabel = () => {
     if (form.audience === 'Students') return 'all students';
     if (form.audience === 'Wardens') return 'all wardens';
     return 'all students and wardens';
   };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    // Validate form
+    if (!form.title.trim() || !form.message.trim()) {
+      setError('Title and message are required');
+      return;
+    }
+    
+    if (form.message.length > 500) {
+      setError('Message must be 500 characters or less');
+      return;
+    }
+    
+    setLoading(true);
+    setError('');
+    
+    try {
+      const token = localStorage.getItem('hms_token');
+      const announcementData = {
+        title: form.title.trim(),
+        message: form.message.trim(),
+        audience: form.audience,
+        priority: form.priority,
+        publishDate: form.publishDate || null,
+        expiryDate: form.expiryDate || null
+      };
+      
+      const response = await fetch('http://localhost:8080/api/announcements', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(announcementData)
+      });
+      
+      if (response.ok) {
+        navigate('/admin/announcements');
+      } else {
+        const errorData = await response.json();
+        setError(errorData.message || 'Failed to create announcement');
+      }
+    } catch (err) {
+      console.error('Error creating announcement:', err);
+      setError('Error connecting to server');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="ca-page">
+      {/* Error Display */}
+      {error && (
+        <div className="ca-error">
+          <span>{error}</span>
+          <button onClick={() => setError('')}>×</button>
+        </div>
+      )}
+
       {/* Header */}
       <div className="ca-header">
         <div className="ca-breadcrumb">
@@ -162,44 +202,16 @@ const CreateAnnouncement = () => {
         </div>
       </div>
 
-      {/* Attachments */}
-      <div className="ca-card">
-        <div className="ca-section-title">Attachments (Optional)</div>
-        <p className="ca-section-sub">Upload documents or images relevant to this announcement.</p>
-        <div
-          className={`ca-dropzone ${dragOver ? 'ca-dropzone-active' : ''}`}
-          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-          onDragLeave={() => setDragOver(false)}
-          onDrop={handleFileDrop}
-          onClick={() => fileRef.current?.click()}
-        >
-          <Upload size={28} className="ca-upload-icon" />
-          <p className="ca-dropzone-text">Click to upload or drag and drop</p>
-          <p className="ca-dropzone-sub">PDF, JPG, PNG or DOC (max. 10MB)</p>
-          <input
-            ref={fileRef}
-            type="file"
-            multiple
-            hidden
-            onChange={(e) => addFiles(Array.from(e.target.files))}
-          />
-        </div>
-        {attachments.map((f, i) => (
-          <div key={i} className="ca-attachment-row">
-            <div className="ca-attachment-icon"><FileText size={16} /></div>
-            <div className="ca-attachment-info">
-              <span className="ca-attachment-name">{f.name}</span>
-              <span className="ca-attachment-size">{f.size} • 100% Uploaded</span>
-            </div>
-            <button className="ca-attachment-remove" onClick={() => removeAttachment(i)}><X size={14} /></button>
-          </div>
-        ))}
-      </div>
-
       {/* Actions */}
       <div className="ca-form-actions">
         <button className="ca-btn-cancel" onClick={() => navigate('/admin/announcements')}>Cancel</button>
-        <button className="ca-btn-primary">Publish Announcement</button>
+        <button 
+          className="ca-btn-primary" 
+          onClick={handleSubmit}
+          disabled={loading}
+        >
+          {loading ? 'Publishing...' : 'Publish Announcement'}
+        </button>
       </div>
     </div>
   );

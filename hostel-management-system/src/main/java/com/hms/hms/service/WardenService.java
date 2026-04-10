@@ -72,20 +72,20 @@ public class WardenService {
         Warden existing = wardenRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Warden not found: " + id));
 
-        User user = existing.getUser();
-        user.setName(request.getName());
-        user.setPhone(request.getPhone());
+        User user = existing.user;
+        user.name = request.getName();
+        user.phone = request.getPhone();
         if (request.getPassword() != null && !request.getPassword().isBlank()) {
-            user.setPassword(passwordEncoder.encode(request.getPassword()));
+            user.password = passwordEncoder.encode(request.getPassword());
         }
         userRepository.save(user);
 
         if (request.getAdminId() != null) {
-            adminRepository.findById(request.getAdminId()).ifPresent(existing::setAdmin);
+            adminRepository.findById(request.getAdminId()).ifPresent(admin -> existing.admin = admin);
         }
-        existing.setGender(request.getGender());
-        existing.setAddress(request.getAddress());
-        existing.setJoinDate(request.getJoinDate());
+        existing.gender = request.getGender();
+        existing.address = request.getAddress();
+        existing.joinDate = request.getJoinDate();
         return wardenRepository.save(existing);
     }
 
@@ -94,7 +94,7 @@ public class WardenService {
         Warden warden = wardenRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Warden not found: " + id));
         wardenRepository.delete(warden);
-        userRepository.delete(warden.getUser());
+        userRepository.delete(warden.user);
         return "Deleted warden with id: " + id;
     }
 
@@ -104,13 +104,13 @@ public class WardenService {
         Warden warden = wardenRepository.findById(wardenId)
                 .orElseThrow(() -> new RuntimeException("Warden not found: " + wardenId));
         
-        User user = warden.getUser();
+        User user = warden.user;
         
-        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+        if (!passwordEncoder.matches(currentPassword, user.password)) {
             return false;
         }
         
-        user.setPassword(passwordEncoder.encode(newPassword));
+        user.password = passwordEncoder.encode(newPassword);
         userRepository.save(user);
         return true;
     }

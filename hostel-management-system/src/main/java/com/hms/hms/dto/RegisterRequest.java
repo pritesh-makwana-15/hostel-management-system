@@ -8,19 +8,19 @@ import java.time.LocalDate;
 public class RegisterRequest {
 
     // ── Common (User table) ───────────────────────────────────
-    private String name;
-    private String email;
-    private String password;
-    private String phone;
+    public String name;
+    public String email;
+    public String password;
+    public String phone;
 
     // ── Admin-specific ────────────────────────────────────────
-    private String designation;
+    public String designation;
 
     // ── Warden-specific ───────────────────────────────────────
-    private Long adminId;
-    private String gender;
-    private String address;
-    private LocalDate joinDate;
+    public Long adminId;
+    public String gender;
+    public String address;
+    public LocalDate joinDate;
 
     // ── Student — Academic ────────────────────────────────────
     private Long wardenId;

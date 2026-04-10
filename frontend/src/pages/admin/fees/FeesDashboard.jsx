@@ -16,10 +16,10 @@ const FeesDashboard = () => {
 
   const stats = [
     { label: 'Total Students',   value: '1,240',   sub: '+12% from last month', icon: Users,         color: '#1F3C88' },
-    { label: 'Total Monthly Fees', value: '$150,000', sub: 'Projected Revenue',  icon: CreditCard,    color: '#2BBBAD' },
-    { label: 'Fees Collected',   value: '$132,450', sub: '88% Completion',       icon: CheckCircle,   color: '#10B981' },
-    { label: 'Pending Fees',     value: '$14,200',  sub: '142 Students',         icon: Clock,         color: '#F59E0B' },
-    { label: 'Overdue Fees',     value: '$3,350',   sub: 'Action Required',      icon: AlertTriangle, color: '#EF4444' },
+    { label: 'Total Monthly Fees', value: '₹150,000', sub: 'Projected Revenue',  icon: CreditCard,    color: '#2BBBAD' },
+    { label: 'Fees Collected',   value: '₹132,450', sub: '88% Completion',       icon: CheckCircle,   color: '#10B981' },
+    { label: 'Pending Fees',     value: '₹14,200',  sub: '142 Students',         icon: Clock,         color: '#F59E0B' },
+    { label: 'Overdue Fees',     value: '₹3,350',   sub: 'Action Required',      icon: AlertTriangle, color: '#EF4444' },
   ];
 
   const getStatusClass = (status) => {

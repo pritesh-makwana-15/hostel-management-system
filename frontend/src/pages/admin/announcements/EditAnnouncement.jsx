@@ -1,58 +1,74 @@
 // src/pages/admin/announcements/EditAnnouncement.jsx
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Info, Upload, X, FileText, Clock } from 'lucide-react';
-import { getAnnouncementById } from '../../../data/announcementsData';
+import { Info, Clock } from 'lucide-react';
 import '../../../styles/admin/announcements/editAnnouncement.css';
 
 const EditAnnouncement = () => {
   const navigate = useNavigate();
   const { id } = useParams();
-  const fileRef = useRef();
-  const ann = getAnnouncementById(id) || {
-    id: 'AN-2026-0123',
-    title: 'Quarterly Hostel Maintenance Schedule - Block A & B',
-    message: `Dear Residents,\n\nPlease be informed that the quarterly maintenance for Block A and Block B is scheduled for next week. Our technical team will be conducting fire safety audits and plumbing checks between 10 AM and 4 PM.\n\nKindly ensure your rooms are accessible if required. We apologize for any inconvenience caused.\n\nRegards,\nManagement`,
-    audience: 'Both',
-    priority: 'Urgent',
-    publishDate: '2026-03-15',
-    expiryDate: '2026-03-22',
-    status: 'Active',
-    attachments: [
-      { name: 'maintenance_map.pdf', size: '1.2 MB' },
-      { name: 'safety_checklist.docx', size: '450 KB' },
-    ],
-  };
-
+  const [ann, setAnn] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [form, setForm] = useState({
-    title: ann.title || '',
-    message: ann.message || '',
-    audience: ann.audience || 'Both',
-    priority: ann.priority || 'Urgent',
-    publishDate: ann.publishDate || '',
-    expiryDate: ann.expiryDate || '',
+    title: '',
+    message: '',
+    audience: 'Both',
+    priority: 'Normal',
+    publishDate: '',
+    expiryDate: '',
   });
-  const [attachments, setAttachments] = useState(ann.attachments || []);
-  const [dragOver, setDragOver] = useState(false);
+
+  // Fetch announcement data from backend
+  useEffect(() => {
+    const fetchAnnouncement = async () => {
+      try {
+        const token = localStorage.getItem('hms_token');
+        const response = await fetch(`http://localhost:8080/api/announcements/${id}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data && data.data) {
+            setAnn(data.data);
+            setForm({
+              title: data.data.title || '',
+              message: data.data.message || '',
+              audience: data.data.audience || 'Both',
+              priority: data.data.priority || 'Normal',
+              publishDate: data.data.publishDate ? new Date(data.data.publishDate).toISOString().slice(0, 16) : '',
+              expiryDate: data.data.expiryDate ? new Date(data.data.expiryDate).toISOString().slice(0, 16) : '',
+            });
+          } else {
+            setError('Announcement not found or has been deleted');
+          }
+        } else {
+          setError('Announcement not found or has been deleted');
+          // Redirect back to list after a short delay
+          setTimeout(() => {
+            navigate('/admin/announcements');
+          }, 2000);
+        }
+      } catch (err) {
+        console.error('Error fetching announcement:', err);
+        setError('Error connecting to server');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAnnouncement();
+  }, [id]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
   };
-
-  const handleFileDrop = (e) => {
-    e.preventDefault();
-    setDragOver(false);
-    const files = Array.from(e.dataTransfer.files);
-    addFiles(files);
-  };
-
-  const addFiles = (files) => {
-    const newFiles = files.map(f => ({ name: f.name, size: (f.size / (1024 * 1024)).toFixed(1) + ' MB' }));
-    setAttachments(prev => [...prev, ...newFiles]);
-  };
-
-  const removeAttachment = (idx) => setAttachments(prev => prev.filter((_, i) => i !== idx));
 
   const getStatusClass = (s) => {
     if (s === 'Active') return 'ea-status-active';
@@ -60,8 +76,53 @@ const EditAnnouncement = () => {
     return 'ea-status-expired';
   };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (updating) return;
+    
+    setUpdating(true);
+    try {
+      const token = localStorage.getItem('hms_token');
+      const response = await fetch(`http://localhost:8080/api/announcements/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(form)
+      });
+
+      if (response.ok) {
+        navigate('/admin/announcements');
+      } else {
+        setError('Failed to update announcement');
+      }
+    } catch (err) {
+      console.error('Error updating announcement:', err);
+      setError('Error connecting to server');
+    } finally {
+      setUpdating(false);
+    }
+  };
+
   return (
     <div className="ea-page">
+      {/* Loading State */}
+      {loading && (
+        <div className="ea-loading">
+          <div className="ea-loading-spinner"></div>
+          <p>Loading announcement...</p>
+        </div>
+      )}
+
+      {/* Error State */}
+      {error && (
+        <div className="ea-error">
+          <span>{error}</span>
+          <button onClick={() => setError('')}>×</button>
+        </div>
+      )}
+
       {/* Header */}
       <div className="ea-header">
         <div className="ea-header-left">
@@ -72,7 +133,7 @@ const EditAnnouncement = () => {
           </div>
           <div className="ea-title-row">
             <h1 className="ea-title">Edit Announcement</h1>
-            <span className={`ea-status-badge ${getStatusClass(ann.status)}`}>{ann.status}</span>
+            {ann && <span className={`ea-status-badge ${getStatusClass(ann.status)}`}>{ann.status}</span>}
           </div>
         </div>
         <button className="ea-back-btn" onClick={() => navigate('/admin/announcements')}>
@@ -84,19 +145,19 @@ const EditAnnouncement = () => {
       <div className="ea-meta-bar">
         <div className="ea-meta-item">
           <span className="ea-meta-label">ANNOUNCEMENT ID</span>
-          <span className="ea-meta-value">{ann.id}</span>
+          <span className="ea-meta-value">{ann ? `ANN-${ann.id}` : 'Loading...'}</span>
         </div>
         <div className="ea-meta-item">
           <span className="ea-meta-label">CREATED BY</span>
-          <span className="ea-meta-value">Admin Smith (ID: 9821)</span>
+          <span className="ea-meta-value">{ann ? ann.createdBy || 'Admin' : 'Loading...'}</span>
         </div>
         <div className="ea-meta-item">
           <span className="ea-meta-label">CREATED DATE</span>
-          <span className="ea-meta-value">10 Mar 2026, 09:45 AM</span>
+          <span className="ea-meta-value">{ann ? new Date(ann.createdAt).toLocaleDateString() : 'Loading...'}</span>
         </div>
         <div className="ea-meta-item">
           <span className="ea-meta-label">LAST MODIFIED</span>
-          <span className="ea-meta-value ea-meta-muted">No modifications yet</span>
+          <span className="ea-meta-value">{ann ? (ann.updatedAt ? new Date(ann.updatedAt).toLocaleDateString() : 'Never') : 'Loading...'}</span>
         </div>
       </div>
 
@@ -164,13 +225,13 @@ const EditAnnouncement = () => {
           <div className="ea-form-group">
             <label className="ea-label">Publish Date <span className="ea-required">*</span></label>
             <div className="ea-date-wrap">
-              <input className="ea-input" type="date" name="publishDate" value={form.publishDate} onChange={handleChange} />
+              <input className="ea-input" type="datetime-local" name="publishDate" value={form.publishDate} onChange={handleChange} />
             </div>
           </div>
           <div className="ea-form-group">
             <label className="ea-label">Expiry Date <span className="ea-required">*</span></label>
             <div className="ea-date-wrap">
-              <input className="ea-input" type="date" name="expiryDate" value={form.expiryDate} onChange={handleChange} />
+              <input className="ea-input" type="datetime-local" name="expiryDate" value={form.expiryDate} onChange={handleChange} />
             </div>
           </div>
         </div>
@@ -184,37 +245,14 @@ const EditAnnouncement = () => {
           </div>
         </div>
 
-        {/* Attachments */}
-        <div className="ea-form-group">
-          <label className="ea-label">Attachments (Optional)</label>
-          <div
-            className={`ea-dropzone ${dragOver ? 'ea-dropzone-active' : ''}`}
-            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-            onDragLeave={() => setDragOver(false)}
-            onDrop={handleFileDrop}
-            onClick={() => fileRef.current?.click()}
-          >
-            <Upload size={24} />
-            <p>Click to upload or drag and drop</p>
-            <p className="ea-dropzone-sub">PDF, JPG, PNG or DOCX (Max. 5MB)</p>
-            <input ref={fileRef} type="file" multiple hidden onChange={(e) => addFiles(Array.from(e.target.files))} />
-          </div>
-          <div className="ea-attachments-list">
-            {attachments.map((f, i) => (
-              <div key={i} className="ea-attachment-tag">
-                <span>{f.name}</span>
-                <button onClick={() => removeAttachment(i)}><X size={12} /></button>
-              </div>
-            ))}
-          </div>
-        </div>
-
         {/* Auto-save hint + Actions */}
-        <div className="ea-form-footer">
+        <div className="ea-form-actions">
           <span className="ea-autosave"><Info size={12} /> Last auto-saved at 10:24 AM</span>
           <div className="ea-form-actions">
             <button className="ea-btn-cancel" onClick={() => navigate('/admin/announcements')}>Cancel</button>
-            <button className="ea-btn-primary">Update Announcement</button>
+            <button className="ea-btn-primary" disabled={loading || updating} onClick={handleSubmit}>
+              {updating ? 'Updating...' : 'Update Announcement'}
+            </button>
           </div>
         </div>
       </div>

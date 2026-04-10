@@ -10,4 +10,5 @@ public interface RoomService {
     List<RoomResponseDTO> getAllRooms();
     RoomResponseDTO getRoomById(Long id);
     RoomResponseDTO updateRoom(Long id, RoomRequestDTO request);
+    List<String> getUniqueBlocks();
 }

@@ -1,8 +1,8 @@
 import React from 'react';
-import ComingSoon from '../../components/common/ComingSoon';
+import RealTimeRoomData from './room/RealTimeRoomData';
 
 const Room = () => {
-  return <ComingSoon title="My Room Details" />;
+  return <RealTimeRoomData />;
 };
 
 export default Room;

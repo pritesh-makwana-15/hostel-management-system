@@ -5,7 +5,7 @@ import DashboardLayout from '../layouts/DashboardLayout';
 
 // ── Lazy Load Student Pages ───────────────────────────────────
 const StudentDashboard     = lazy(() => import('../pages/student/dashboard/StudentDashboard'));
-const StudentRoomDetails   = lazy(() => import('../pages/student/room/RoomDetails'));
+const StudentRoomDetails   = lazy(() => import('../pages/student/Room'));
 const StudentComplaints    = lazy(() => import('../pages/student/Complaints'));
 const StudentAnnouncements = lazy(() => import('../pages/student/Announcements'));
 
