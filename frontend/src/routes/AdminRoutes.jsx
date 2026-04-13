@@ -116,7 +116,7 @@ const AdminRoutes = () => (
         <Route path="announcements/create"     element={<CreateAnnouncement />} />
         <Route path="announcements/edit"       element={<Navigate to="/admin/announcements" replace />} />
         <Route path="announcements/edit/:id"   element={<EditAnnouncement />} />
-        <Route path="announcements/broadcast"  element={<BroadcastAnnouncement />} />
+        <Route path="announcements/broadcast/:id"  element={<BroadcastAnnouncement />} />
         <Route path="announcements/history"    element={<NotificationHistory />} />
 
         {/* Profile */}

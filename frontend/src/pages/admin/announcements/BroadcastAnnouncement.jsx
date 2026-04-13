@@ -1,14 +1,19 @@
 // src/pages/admin/announcements/BroadcastAnnouncement.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Megaphone, Users, Clock, Send, X, Paperclip, Info, Calendar } from 'lucide-react';
-import { getAnnouncementById } from '../../../data/announcementsData';
+import { adminAnnouncementApi } from '../../../services/adminAnnouncementApi';
 import '../../../styles/admin/announcements/broadcastAnnouncement.css';
 
 const BroadcastAnnouncement = () => {
   const navigate = useNavigate();
   const { id } = useParams();
-  const ann = getAnnouncementById(id) || {
+  const [announcement, setAnnouncement] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  // Default announcement data for fallback
+  const defaultAnnouncement = {
     id: 'ANN-2024-020',
     title: 'Annual Hostel Maintenance & Safety Drill Schedule',
     audience: 'All Students',
@@ -19,6 +24,55 @@ const BroadcastAnnouncement = () => {
       { name: 'Maintenance_Checklist.jpg', size: '850 KB', type: 'IMG' },
     ],
   };
+
+  // Fetch announcement data
+  useEffect(() => {
+    fetchAnnouncement();
+  }, [id]);
+
+  const fetchAnnouncement = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      
+      const response = await adminAnnouncementApi.getById(id);
+      console.log('BroadcastAnnouncement: API response:', response);
+      
+      if (response.data && response.data.status === 'success') {
+        const announcementData = response.data.data;
+        
+        // Transform API data to match component expected format
+        const transformedAnnouncement = {
+          id: `ANN-${announcementData.id}`,
+          title: announcementData.title,
+          audience: announcementData.audience || 'All Students',
+          priority: announcementData.priority || 'Normal',
+          message: announcementData.message || 'No message content available',
+          attachments: [], // API doesn't provide attachments yet
+          createdBy: announcementData.createdBy || 'Admin',
+          publishDate: announcementData.publishDate,
+          expiryDate: announcementData.expiryDate,
+          status: announcementData.status || 'Active'
+        };
+        
+        setAnnouncement(transformedAnnouncement);
+      } else {
+        console.log('BroadcastAnnouncement: Using default data - API response not successful');
+        setAnnouncement(defaultAnnouncement);
+        setError('Failed to load announcement data, showing default content');
+      }
+    } catch (error) {
+      console.error('BroadcastAnnouncement: Error fetching announcement:', error);
+      console.log('BroadcastAnnouncement: Using default data due to error');
+      setAnnouncement(defaultAnnouncement);
+      setError('Error loading announcement data, showing default content');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Use announcement data or fallback to default
+  const ann = announcement || defaultAnnouncement;
 
   const [hostel, setHostel] = useState('All Hostels');
   const [block, setBlock] = useState('All Blocks (A, B, C, D)');
@@ -38,13 +92,32 @@ const BroadcastAnnouncement = () => {
     setTargetUsers(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
+  // Loading state
+  if (loading) {
+    return (
+      <div className="ba-page">
+        <div className="ba-loading">
+          <div className="ba-loading-spinner"></div>
+          <p>Loading announcement details...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="ba-page">
+      {/* Error Banner */}
+      {error && (
+        <div className="ba-error-banner">
+          <span>{error}</span>
+        </div>
+      )}
+      
       {/* Header */}
       <div className="ba-header">
         <div className="ba-breadcrumb">
-          <span>Dashboard</span><span className="ba-sep">›</span>
-          <span>Announcements</span><span className="ba-sep">›</span>
+          <span>Dashboard</span><span className="ba-sep">»</span>
+          <span>Announcements</span><span className="ba-sep">»</span>
           <span className="ba-breadcrumb-active">Broadcast</span>
         </div>
         <h1 className="ba-title">Broadcast Announcement</h1>
