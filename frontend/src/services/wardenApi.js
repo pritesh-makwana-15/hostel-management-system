@@ -19,6 +19,14 @@ export const wardenApi = {
 
   // POST /api/warden/logout-all — logout from all devices
   logoutAllDevices: () => api.post('/api/warden/logout-all'),
+
+  // ── Announcements API for Wardens ──────────────────────────
+
+  // GET /api/announcements/active — get active announcements for wardens
+  getActiveAnnouncements: () => api.get('/api/announcements/active'),
+
+  // POST /api/announcements/warden — create an announcement as a warden
+  createAnnouncement: (data) => api.post('/api/announcements/warden', data),
 };
 
 export default wardenApi;

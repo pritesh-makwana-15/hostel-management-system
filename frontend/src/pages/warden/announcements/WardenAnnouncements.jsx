@@ -1,11 +1,8 @@
 // src/pages/warden/announcements/WardenAnnouncements.jsx
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Megaphone, Radio, Archive, RefreshCw, Download, X } from 'lucide-react';
-import {
-  wardenAnnouncementsData,
-  getWardenAnnouncementStats,
-} from '../../../data/wardenAnnouncementsData';
+import { wardenApi } from '../../../services/wardenApi';
 import AnnouncementCard from '../../../components/warden/announcements/AnnouncementCard';
 import AnnouncementFilter from '../../../components/warden/announcements/AnnouncementFilter';
 import AnnouncementTable from '../../../components/warden/announcements/AnnouncementTable';
@@ -13,8 +10,9 @@ import '../../../styles/warden/announcements/announcements.css';
 
 const WardenAnnouncements = () => {
   const navigate = useNavigate();
-  const stats = getWardenAnnouncementStats();
-
+  const [announcements, setAnnouncements] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('All Status');
   const [targetFilter, setTargetFilter] = useState('');
@@ -24,14 +22,74 @@ const WardenAnnouncements = () => {
   const [showToast, setShowToast] = useState(false);
   const perPage = 5;
 
-  const filtered = wardenAnnouncementsData.filter((a) => {
+  useEffect(() => {
+    const fetchAnnouncements = async () => {
+      try {
+        setLoading(true);
+        const response = await wardenApi.getActiveAnnouncements();
+        const apiData = response.data?.data || [];
+
+        const formatDate = (value) => {
+          if (!value) return '';
+          return new Date(value).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+          });
+        };
+
+        const mapped = apiData.map((item) => ({
+          id: item.id,
+          title: item.title,
+          description: item.message,
+          targetAudience:
+            item.audience === 'WARDENS'
+              ? 'Wardens'
+              : item.audience === 'BOTH'
+              ? 'All Students & Wardens'
+              : 'All Students',
+          createdDate: formatDate(item.createdAt),
+          expiryDate: formatDate(item.expiryDate),
+          status:
+            item.status === 'PUBLISHED'
+              ? 'Active'
+              : item.status === 'EXPIRED'
+              ? 'Expired'
+              : 'Scheduled',
+          priority:
+            item.priority?.charAt(0).toUpperCase() + item.priority?.slice(1).toLowerCase(),
+          createdBy: item.createdBy,
+        }));
+
+        setAnnouncements(mapped);
+      } catch (err) {
+        console.error('Error loading announcements:', err);
+        setError('Unable to load announcements from the database.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAnnouncements();
+  }, []);
+
+  const stats = {
+    total: announcements.length,
+    active: announcements.filter((a) => a.status === 'Active').length,
+    expired: announcements.filter((a) => a.status === 'Expired').length,
+  };
+
+  const filtered = announcements.filter((a) => {
     const matchSearch =
       a.title.toLowerCase().includes(search.toLowerCase()) ||
       a.description.toLowerCase().includes(search.toLowerCase());
     const matchStatus =
       !statusFilter || statusFilter === 'All Status' || a.status === statusFilter;
     const matchTarget =
-      !targetFilter || a.targetAudience === targetFilter;
+      !targetFilter ||
+      (targetFilter === 'All Students' && (a.targetAudience === 'All Students' || a.targetAudience === 'All Students & Wardens')) ||
+      (targetFilter === 'Wardens' && (a.targetAudience === 'Wardens' || a.targetAudience === 'All Students & Wardens')) ||
+      a.targetAudience === targetFilter;
     return matchSearch && matchStatus && matchTarget;
   });
 
@@ -124,6 +182,9 @@ const WardenAnnouncements = () => {
         setTargetFilter={setTargetFilter}
         onReset={handleReset}
       />
+
+      {loading && <div className="wa-loading">Loading announcements from the database...</div>}
+      {error && <div className="wa-error">{error}</div>}
 
       {/* Table Card */}
       <div className="wa-table-card">

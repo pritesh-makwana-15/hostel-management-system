@@ -55,6 +55,21 @@ public class AnnouncementController {
         }
     }
 
+    // Create a new announcement as a warden
+    @PostMapping("/warden")
+    @PreAuthorize("hasRole('WARDEN') or hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<Announcement>> createAnnouncementAsWarden(@Valid @RequestBody AnnouncementDTO announcementDTO) {
+        try {
+            String createdBy = getCurrentUser();
+            Announcement announcement = announcementService.createAnnouncement(announcementDTO, createdBy);
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(ApiResponse.success("Announcement created successfully", announcement));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error("Error creating announcement: " + e.getMessage()));
+        }
+    }
+
     // Get announcement by ID
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")

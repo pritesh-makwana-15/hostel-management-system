@@ -14,6 +14,7 @@ const AnnouncementsList = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
+  const [idFilter, setIdFilter] = useState('');
   const [audienceFilter, setAudienceFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
   const [currentPage, setCurrentPage] = useState(1);
@@ -86,12 +87,19 @@ const AnnouncementsList = () => {
   // Filter announcements
   const filtered = announcements.filter((a) => {
     const status = getAnnouncementStatus(a);
+    const searchValue = search.toLowerCase();
     const matchSearch =
-      a.title.toLowerCase().includes(search.toLowerCase()) ||
-      a.id.toString().toLowerCase().includes(search.toLowerCase());
+      a.title.toLowerCase().includes(searchValue) ||
+      a.id.toString().toLowerCase().includes(searchValue);
+
+    const idValue = idFilter.trim().toLowerCase().replace(/^ann-/, '');
+    const matchId =
+      idValue === '' ||
+      a.id.toString().toLowerCase().includes(idValue);
+
     const matchAudience = audienceFilter === 'All' || a.audience === audienceFilter;
     const matchStatus = statusFilter === 'All' || status === statusFilter;
-    return matchSearch && matchAudience && matchStatus;
+    return matchSearch && matchId && matchAudience && matchStatus;
   });
 
   const totalPages = Math.ceil(filtered.length / perPage);
@@ -106,8 +114,13 @@ const AnnouncementsList = () => {
 
   const handleReset = () => {
     setSearch('');
+    setIdFilter('');
     setAudienceFilter('All');
     setStatusFilter('All');
+    setCurrentPage(1);
+  };
+
+  const handleApplyFilters = () => {
     setCurrentPage(1);
   };
 
@@ -269,6 +282,8 @@ const AnnouncementsList = () => {
             className="al-filter-input"
             type="text"
             placeholder="Announcement ID (e.g. ANN-001)"
+            value={idFilter}
+            onChange={(e) => { setIdFilter(e.target.value); setCurrentPage(1); }}
           />
           <select
             className="al-filter-select"
@@ -290,7 +305,7 @@ const AnnouncementsList = () => {
             <option value="Scheduled">Scheduled</option>
             <option value="Expired">Expired</option>
           </select>
-          <button className="al-btn-primary al-apply-btn">Apply Filters</button>
+          <button className="al-btn-primary al-apply-btn" onClick={handleApplyFilters}>Apply Filters</button>
           <button className="al-btn-secondary" onClick={handleReset}>
             <RotateCcw size={14} /> Reset
           </button>

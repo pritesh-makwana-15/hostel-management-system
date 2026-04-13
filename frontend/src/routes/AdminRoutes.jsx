@@ -1,5 +1,5 @@
 import React, { Suspense, lazy } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import ProtectedRoute from '../components/ProtectedRoute';
 import DashboardLayout from '../layouts/DashboardLayout';
 
@@ -114,8 +114,9 @@ const AdminRoutes = () => (
         {/* Announcements */}
         <Route path="announcements"            element={<AnnouncementsList />} />
         <Route path="announcements/create"     element={<CreateAnnouncement />} />
+        <Route path="announcements/edit"       element={<Navigate to="/admin/announcements" replace />} />
         <Route path="announcements/edit/:id"   element={<EditAnnouncement />} />
-        <Route path="announcements/broadcast"  element={<BroadcastAnnouncement />} />
+        <Route path="announcements/broadcast/:id"  element={<BroadcastAnnouncement />} />
         <Route path="announcements/history"    element={<NotificationHistory />} />
 
         {/* Profile */}
