@@ -1,0 +1,181 @@
+/* src/styles/student/announcements/announcementDetails.css */
+
+.sad-page {
+  padding: 24px;
+  max-width: 900px;
+  font-family: var(--font-family, 'Inter', sans-serif);
+}
+
+/* Breadcrumb */
+.sad-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #6B7280;
+  margin-bottom: 16px;
+}
+.sad-bc-link {
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.sad-bc-link:hover { color: #1F3C88; }
+.sad-bc-sep { color: #9CA3AF; }
+.sad-bc-active { color: #2E2E2E; font-weight: 500; }
+
+/* Page header */
+.sad-page-header { margin-bottom: 20px; }
+.sad-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.sad-page-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #2E2E2E;
+  margin: 0;
+}
+.sad-badges { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.sad-priority-badge {
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.sad-priority-high { background: #FEF2F2; color: #EF4444; }
+.sad-priority-urgent { background: #EF4444; color: #fff; }
+.sad-priority-normal { background: #EEF2FF; color: #1F3C88; }
+
+.sad-status-badge {
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.sad-status-active { background: rgba(16,185,129,0.1); color: #059669; }
+.sad-status-scheduled { background: rgba(31,60,136,0.1); color: #1F3C88; }
+.sad-status-expired { background: rgba(107,114,128,0.1); color: #6B7280; }
+
+/* Card */
+.sad-card {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0px 4px 12px rgba(0,0,0,0.08);
+  display: flex;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+.sad-card-accent {
+  width: 5px;
+  flex-shrink: 0;
+}
+.sad-card-inner {
+  flex: 1;
+  padding: 28px;
+}
+
+.sad-category-tag {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #6B7280;
+  background: #F4F6F9;
+  border-radius: 4px;
+  padding: 3px 8px;
+  margin-bottom: 12px;
+}
+
+.sad-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #2E2E2E;
+  margin: 0 0 16px;
+  line-height: 1.4;
+}
+
+.sad-meta {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.sad-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #6B7280;
+}
+
+.sad-divider {
+  border: none;
+  border-top: 1px solid #E5E7EB;
+  margin-bottom: 20px;
+}
+
+.sad-description p {
+  font-size: 14px;
+  color: #4B5563;
+  line-height: 1.7;
+  margin: 0 0 10px;
+}
+.sad-description p:last-child { margin-bottom: 0; }
+
+.sad-footer {
+  display: flex;
+  align-items: center;
+  padding-top: 16px;
+  border-top: 1px solid #E5E7EB;
+  margin-top: 24px;
+}
+.sad-published-by {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #6B7280;
+}
+
+/* Actions */
+.sad-actions { display: flex; }
+.sad-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 18px;
+  background: #fff;
+  border: 1px solid #E5E7EB;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #4B5563;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+.sad-back-btn:hover {
+  border-color: #1F3C88;
+  color: #1F3C88;
+  background: #EEF2FF;
+}
+
+.sad-error {
+  background: #FEF2F2;
+  color: #DC2626;
+  padding: 20px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .sad-page { padding: 16px; }
+  .sad-title-row { flex-direction: column; align-items: flex-start; }
+  .sad-meta { flex-direction: column; gap: 8px; }
+}

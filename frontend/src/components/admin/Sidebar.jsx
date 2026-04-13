@@ -1,3 +1,4 @@
+// src/components/admin/Sidebar.jsx
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -26,10 +27,6 @@ const Sidebar = ({ isOpen, onClose, userRole = 'admin' }) => {
           { id: 'complaints',    label: 'Complaints',     icon: MessageSquare,  route: '/admin/complaints' },
           { id: 'announcements', label: 'Announcements',  icon: Megaphone,      route: '/admin/announcements' },
           { id: 'profile',       label: 'Profile',        icon: UserCircle,     route: '/admin/profile' },
-          // { id: 'attendance',    label: 'Attendance',     icon: Calendar,       route: '/admin/attendance' },
-          // { id: 'employees',     label: 'Employees',      icon: Briefcase,      route: '/admin/employees' },
-          // { id: 'expenses',      label: 'Expenses',       icon: Wallet,         route: '/admin/expenses' },
-          // { id: 'certificates',  label: 'Certificates',   icon: Receipt,        route: '/admin/certificates' },
         ];
       case 'warden':
         return [
@@ -39,19 +36,15 @@ const Sidebar = ({ isOpen, onClose, userRole = 'admin' }) => {
           { id: 'complaints',    label: 'Complaints',     icon: MessageSquare,  route: '/warden/complaints' },
           { id: 'announcements', label: 'Announcements',  icon: Megaphone,      route: '/warden/announcements' },
           { id: 'profile',       label: 'Profile',        icon: UserCircle,     route: '/warden/profile' },
-           // { id: 'attendance',    label: 'Attendance',     icon: Calendar,       route: '/warden/attendance' },
-           // { id: 'mess',          label: 'Mess Management',icon: UtensilsCrossed,route: '/warden/mess' },
         ];
-        case 'student':
-          return [
-            { id: 'dashboard',     label: 'Dashboard',      icon: Home,           route: '/student/dashboard' },
-            { id: 'room',          label: 'My Room',        icon: Building2,      route: '/student/room' },
-            { id: 'fees',          label: 'Fee Payment',    icon: CreditCard,     route: '/student/fees' },
-            { id: 'complaints',    label: 'Complaints',     icon: MessageSquare,  route: '/student/complaints' },
-            { id: 'announcements', label: 'Announcements',  icon: Megaphone,      route: '/student/announcements' },
-            { id: 'profile',       label: 'Profile',        icon: UserCircle,     route: '/student/profile' },
-          // { id: 'leave',         label: 'Leave Application',icon: ClipboardList,route: '/student/leave' },
-          // { id: 'mess',          label: 'Mess Menu',      icon: UtensilsCrossed,route: '/student/mess' },
+      case 'student':
+        return [
+          { id: 'dashboard',     label: 'Dashboard',      icon: Home,           route: '/student/dashboard' },
+          { id: 'room',          label: 'My Room',        icon: Building2,      route: '/student/room' },
+          { id: 'fees',          label: 'Fee Payment',    icon: CreditCard,     route: '/student/fees' },
+          { id: 'complaints',    label: 'Complaints',     icon: MessageSquare,  route: '/student/complaints' },
+          { id: 'announcements', label: 'Announcements',  icon: Megaphone,      route: '/student/announcements' }, // ✅ Enabled
+          { id: 'profile',       label: 'Profile',        icon: UserCircle,     route: '/student/profile' },
         ];
       default:
         return [];
@@ -69,42 +62,28 @@ const Sidebar = ({ isOpen, onClose, userRole = 'admin' }) => {
     }
   };
 
-  // ── Active state logic ───────────────────────────────────────
   const isItemActive = (item) => {
     const path = location.pathname;
 
     const exactRoutes = [
-      '/admin/dashboard',
-      '/admin/attendance',
-      '/admin/announcements',
-      '/admin/employees',
-      '/admin/expenses',
-      '/admin/certificates',
-      '/warden/dashboard',
-      '/warden/attendance',
-      '/warden/mess',
-      '/warden/complaints',
-      '/warden/students',
-      '/warden/rooms',
-      '/warden/announcements',
-      '/student/dashboard',
-      '/student/fees',
-      '/student/leave',
-      '/student/complaints',
-      '/student/room',
-      '/student/mess',
-      '/student/announcements',
+      '/admin/dashboard', '/admin/attendance', '/admin/announcements',
+      '/admin/employees', '/admin/expenses', '/admin/certificates',
+      '/warden/dashboard', '/warden/attendance', '/warden/mess',
+      '/warden/complaints', '/warden/students', '/warden/rooms', '/warden/announcements',
+      '/student/dashboard', '/student/fees', '/student/leave',
+      '/student/complaints', '/student/room', '/student/mess', '/student/announcements',
     ];
 
     if (exactRoutes.includes(item.route)) {
+      // For announcements, stay active on detail pages too
+      if (item.id === 'announcements') {
+        return path === item.route || path.startsWith(item.route + '/');
+      }
       return path === item.route;
     }
 
-    // Module routes: stay active for all child pages
-    // /admin/profile stays active for /admin/profile/change-password too
     return path === item.route || path.startsWith(item.route + '/');
   };
-  // ────────────────────────────────────────────────────────────
 
   const handleNavigate = (route) => {
     navigate(route);
@@ -149,17 +128,9 @@ const Sidebar = ({ isOpen, onClose, userRole = 'admin' }) => {
         </nav>
 
         <div className="sidebar-bottom">
-          <button className="sidebar-item">
-            <Settings size={20} />
-            <span>Settings</span>
-          </button>
           <button className="sidebar-item" onClick={handleLogout}>
             <LogOut size={20} />
             <span>Logout</span>
-          </button>
-          <button className="sidebar-collapse">
-            <ChevronLeft size={20} />
-            <span>Collapse</span>
           </button>
         </div>
       </aside>

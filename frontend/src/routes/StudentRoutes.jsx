@@ -1,3 +1,4 @@
+// src/routes/StudentRoutes.jsx
 import React, { Suspense, lazy } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import ProtectedRoute from '../components/ProtectedRoute';
@@ -7,7 +8,10 @@ import DashboardLayout from '../layouts/DashboardLayout';
 const StudentDashboard     = lazy(() => import('../pages/student/dashboard/StudentDashboard'));
 const StudentRoomDetails   = lazy(() => import('../pages/student/Room'));
 const StudentComplaints    = lazy(() => import('../pages/student/Complaints'));
-const StudentAnnouncements = lazy(() => import('../pages/student/Announcements'));
+
+// Announcements Module ✅
+const StudentAnnouncements    = lazy(() => import('../pages/student/announcements/StudentAnnouncements'));
+const AnnouncementDetails     = lazy(() => import('../pages/student/announcements/AnnouncementDetails'));
 
 // Profile Module
 const StudentProfile  = lazy(() => import('../pages/student/profile/StudentProfile'));
@@ -36,9 +40,12 @@ const StudentRoutes = () => (
         <Route path="dashboard" element={<StudentDashboard />} />
 
         {/* ── Core Modules ── */}
-        <Route path="room"          element={<StudentRoomDetails />} />
-        <Route path="complaints"    element={<StudentComplaints />} />
-        <Route path="announcements" element={<StudentAnnouncements />} />
+        <Route path="room"       element={<StudentRoomDetails />} />
+        <Route path="complaints" element={<StudentComplaints />} />
+
+        {/* ── Announcements Module ✅ ── */}
+        <Route path="announcements"     element={<StudentAnnouncements />} />
+        <Route path="announcements/:id" element={<AnnouncementDetails />} />
 
         {/* ── Fee Module (sub-routes) ── */}
         <Route path="fees"                   element={<FeeDetails />} />
