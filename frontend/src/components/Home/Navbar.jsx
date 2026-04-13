@@ -31,7 +31,7 @@ const Navbar = () => {
 
           <div className="home-nav-actions">
             <Link to="/login" className="home-nav-btn-primary">Login</Link>
-            <Link to="/register" className="home-nav-btn-outline">Register</Link>
+            {/* <Link to="/register" className="home-nav-btn-outline">Register</Link> */}
           </div>
         </div>
 
