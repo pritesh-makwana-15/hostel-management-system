@@ -10,6 +10,7 @@ const EditAnnouncement = () => {
   const [ann, setAnn] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [updating, setUpdating] = useState(false);
   const [form, setForm] = useState({
     title: '',
     message: '',
@@ -22,6 +23,12 @@ const EditAnnouncement = () => {
   // Fetch announcement data from backend
   useEffect(() => {
     const fetchAnnouncement = async () => {
+      if (!id) {
+        setError('Announcement ID is missing from the URL.');
+        setLoading(false);
+        return;
+      }
+
       try {
         const token = localStorage.getItem('hms_token');
         const response = await fetch(`http://localhost:8080/api/announcements/${id}`, {
@@ -84,7 +91,7 @@ const EditAnnouncement = () => {
     try {
       const token = localStorage.getItem('hms_token');
       const response = await fetch(`http://localhost:8080/api/announcements/${id}`, {
-        method: 'PATCH',
+        method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'

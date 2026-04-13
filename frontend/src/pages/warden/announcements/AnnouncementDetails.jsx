@@ -1,44 +1,79 @@
 // src/pages/warden/announcements/AnnouncementDetails.jsx
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft, Edit, Trash2, Users, Calendar, Clock,
   Download, FileText, Image, Info
 } from 'lucide-react';
-import { getWardenAnnouncementById } from '../../../data/wardenAnnouncementsData';
+import { wardenApi } from '../../../services/wardenApi';
 import '../../../styles/warden/announcements/announcementDetails.css';
 
 const AnnouncementDetails = () => {
   const navigate = useNavigate();
   const { id } = useParams();
-  const ann = getWardenAnnouncementById(id) || {
-    id: 'ANN-2024-012',
-    title: 'Urgent: Water Supply Maintenance in Block A & B',
-    description: `Dear Students,\n\nPlease be informed that a scheduled water supply maintenance check will be conducted for Blocks A & B tomorrow.\n\nDuring this period, there will be a temporary suspension of water supply to ensure the cleaning of overhead tanks and plumbing inspections.\n\nDetails:\n- Date: Saturday, Oct 12, 2024\n- Time: 10:00 AM to 02:00 PM\n- Affected Areas: All rooms in Block A and Block B\n\nWe advise all residents to store sufficient water for their basic needs prior to the commencement of work. We regret any inconvenience this may cause.\n\nRegards,\nHostel Administration`,
-    targetAudience: 'All Students in Block A & B',
-    createdDate: 'Oct 12, 2024, 09:00 AM',
-    expiryDate: 'Oct 13, 2024, 05:00 PM',
-    status: 'Active',
-    priority: 'Urgent',
-    createdBy: 'Chief Warden',
-    attachments: [
-      { name: 'Maintenance_Schedule.pdf', size: '1.2 MB', type: 'pdf' },
-      { name: 'Tank_Cleaning_SOP.pdf', size: '850 KB', type: 'pdf' },
-      { name: 'Notice_Board_Photo.jpg', size: '2.4 MB', type: 'image' },
-    ],
-    deliveryStatus: {
-      totalRecipients: 1240,
-      delivered: 1240,
-      read: 982,
-    },
-    recentActivity: [
-      { name: 'Rahul Sharma', room: 'A-102', action: 'Read', time: '10 mins ago', avatar: 'R' },
-      { name: 'Ananya Iyer', room: 'B-305', action: 'Read', time: '22 mins ago', avatar: 'A' },
-      { name: 'Vikram Singh', room: 'A-208', action: 'Delivered', time: '45 mins ago', avatar: 'V' },
-      { name: 'Sneha Patel', room: 'B-112', action: 'Read', time: '1 hour ago', avatar: 'S' },
-      { name: 'Kabir Das', room: 'A-415', action: 'Read', time: '2 hours ago', avatar: 'K' },
-    ],
+  const [announcement, setAnnouncement] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const formatDate = (value) => {
+    if (!value) return '';
+    return new Date(value).toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    });
   };
+
+  const mapAnnouncement = (item) => {
+    let targetAudience = 'All Students';
+    if (item.audience === 'WARDENS') targetAudience = 'Wardens';
+    else if (item.audience === 'BOTH') targetAudience = 'All Students & Wardens';
+
+    let status = 'Scheduled';
+    if (item.status === 'PUBLISHED') status = 'Active';
+    else if (item.status === 'EXPIRED') status = 'Expired';
+
+    return {
+      id: item.id,
+      title: item.title,
+      description: item.message,
+      targetAudience,
+      createdDate: formatDate(item.createdAt),
+      expiryDate: formatDate(item.expiryDate),
+      status,
+      priority:
+        item.priority?.charAt(0).toUpperCase() + item.priority?.slice(1).toLowerCase(),
+      createdBy: item.createdBy,
+      attachments: [],
+      deliveryStatus: { totalRecipients: 0, delivered: 0, read: 0 },
+      recentActivity: [],
+    };
+  };
+
+  useEffect(() => {
+    const fetchAnnouncement = async () => {
+      try {
+        setLoading(true);
+        const response = await wardenApi.getActiveAnnouncements();
+        const apiData = response.data?.data || [];
+        const found = apiData.find((item) => String(item.id) === id);
+        if (found) {
+          setAnnouncement(mapAnnouncement(found));
+        } else {
+          setError('Announcement not found or not currently active.');
+        }
+      } catch (err) {
+        console.error('Error loading announcement details:', err);
+        setError('Unable to load announcement details.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAnnouncement();
+  }, [id]);
 
   const priorityClass = (p) => {
     if (p === 'Urgent') return 'ad-priority-urgent';
@@ -57,12 +92,28 @@ const AnnouncementDetails = () => {
     return 'ad-action-delivered';
   };
 
-  const deliveredPct = ann.deliveryStatus
-    ? Math.round((ann.deliveryStatus.delivered / ann.deliveryStatus.totalRecipients) * 100)
+  const deliveredPct = announcement?.deliveryStatus
+    ? Math.round((announcement.deliveryStatus.delivered / announcement.deliveryStatus.totalRecipients) * 100)
     : 0;
-  const readPct = ann.deliveryStatus
-    ? Math.round((ann.deliveryStatus.read / ann.deliveryStatus.totalRecipients) * 100)
+  const readPct = announcement?.deliveryStatus
+    ? Math.round((announcement.deliveryStatus.read / announcement.deliveryStatus.totalRecipients) * 100)
     : 0;
+
+  if (loading) {
+    return (
+      <div className="ad-page">
+        <p className="ad-loading">Loading announcement details...</p>
+      </div>
+    );
+  }
+
+  if (error || !announcement) {
+    return (
+      <div className="ad-page ad-error-page">
+        <p className="ad-error-message">{error || 'Announcement details are unavailable.'}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="ad-page">
@@ -80,11 +131,11 @@ const AnnouncementDetails = () => {
         <div className="ad-page-title-row">
           <h1 className="ad-page-title">Announcement Details</h1>
           <div className="ad-badges">
-            <span className={`ad-priority-badge ${priorityClass(ann.priority)}`}>{ann.priority} Priority</span>
-            <span className={`ad-status-badge ${statusClass(ann.status)}`}>{ann.status}</span>
+            <span className={`ad-priority-badge ${priorityClass(announcement.priority)}`}>{announcement.priority} Priority</span>
+            <span className={`ad-status-badge ${statusClass(announcement.status)}`}>{announcement.status}</span>
           </div>
         </div>
-        <div className="ad-ref-id">Ref ID: <span className="ad-ref-id-val">{ann.id}</span></div>
+        <div className="ad-ref-id">Ref ID: <span className="ad-ref-id-val">{announcement.id}</span></div>
       </div>
 
       <div className="ad-layout">
@@ -92,39 +143,39 @@ const AnnouncementDetails = () => {
         <div className="ad-left">
           {/* Main Content Card */}
           <div className="ad-content-card">
-            <h2 className="ad-ann-title">{ann.title}</h2>
+            <h2 className="ad-ann-title">{announcement.title}</h2>
 
             <div className="ad-meta-row">
               <div className="ad-meta-item">
                 <Users size={14} />
-                <span>{ann.targetAudience}</span>
+                <span>{announcement.targetAudience}</span>
               </div>
               <div className="ad-meta-item">
                 <Calendar size={14} />
-                <span>Created: {ann.createdDate}</span>
+                <span>Created: {announcement.createdDate}</span>
               </div>
               <div className="ad-meta-item">
                 <Clock size={14} />
-                <span>Expires: {ann.expiryDate}</span>
+                <span>Expires: {announcement.expiryDate}</span>
               </div>
             </div>
 
             <div className="ad-divider" />
 
             <div className="ad-description">
-              {ann.description.split('\n').map((line, i) => (
+              {announcement.description.split('\n').map((line, i) => (
                 <p key={i}>{line || <br />}</p>
               ))}
             </div>
 
             {/* Attachments */}
-            {ann.attachments && ann.attachments.length > 0 && (
+            {announcement.attachments && announcement.attachments.length > 0 && (
               <div className="ad-attachments">
                 <div className="ad-attachments-title">
-                  <FileText size={16} /> Attachments ({ann.attachments.length})
+                  <FileText size={16} /> Attachments ({announcement.attachments.length})
                 </div>
                 <div className="ad-attachments-grid">
-                  {ann.attachments.map((att, i) => (
+                  {announcement.attachments.map((att, i) => (
                     <div key={i} className="ad-attachment-item">
                       <div className={`ad-att-icon ${att.type === 'image' ? 'ad-att-img' : 'ad-att-pdf'}`}>
                         {att.type === 'image' ? <Image size={18} /> : <FileText size={18} />}
@@ -145,7 +196,7 @@ const AnnouncementDetails = () => {
             {/* Footer */}
             <div className="ad-card-footer">
               <span className="ad-published-by">
-                <Info size={13} /> Post published by <strong>{ann.createdBy}</strong>
+                <Info size={13} /> Post published by <strong>{announcement.createdBy}</strong>
               </span>
               <button className="ad-preview-btn">👁 Preview Mode</button>
             </div>
@@ -181,7 +232,7 @@ const AnnouncementDetails = () => {
             <div className="ad-total-recipients">
               <div>
                 <div className="ad-total-label">TOTAL RECIPIENTS</div>
-                <div className="ad-total-value">{ann.deliveryStatus?.totalRecipients?.toLocaleString()}</div>
+                <div className="ad-total-value">{announcement.deliveryStatus?.totalRecipients?.toLocaleString()}</div>
               </div>
               <div className="ad-recipients-icon">
                 <Users size={22} />
@@ -193,7 +244,7 @@ const AnnouncementDetails = () => {
                 <div className="ad-metric-icon"><Clock size={13} /></div>
                 <span>Delivered</span>
                 <span className="ad-metric-val">
-                  {ann.deliveryStatus?.delivered?.toLocaleString()} / {ann.deliveryStatus?.totalRecipients?.toLocaleString()}
+                  {announcement.deliveryStatus?.delivered?.toLocaleString()} / {announcement.deliveryStatus?.totalRecipients?.toLocaleString()}
                 </span>
                 <span className="ad-metric-pct">{deliveredPct}%</span>
               </div>
@@ -207,7 +258,7 @@ const AnnouncementDetails = () => {
                 <div className="ad-metric-icon"><Users size={13} /></div>
                 <span>Read Receipts</span>
                 <span className="ad-metric-val">
-                  {ann.deliveryStatus?.read?.toLocaleString()} / {ann.deliveryStatus?.totalRecipients?.toLocaleString()}
+                  {announcement.deliveryStatus?.read?.toLocaleString()} / {announcement.deliveryStatus?.totalRecipients?.toLocaleString()}
                 </span>
                 <span className="ad-metric-pct">{readPct}%</span>
               </div>
@@ -220,13 +271,13 @@ const AnnouncementDetails = () => {
           </div>
 
           {/* Recent Activity */}
-          {ann.recentActivity && ann.recentActivity.length > 0 && (
+          {announcement.recentActivity && announcement.recentActivity.length > 0 && (
             <div className="ad-activity-card">
               <div className="ad-activity-title">
                 <Clock size={15} /> Recent Activity
               </div>
               <div className="ad-activity-list">
-                {ann.recentActivity.map((act, i) => (
+                {announcement.recentActivity.map((act, i) => (
                   <div key={i} className="ad-activity-item">
                     <div className="ad-activity-avatar">{act.avatar}</div>
                     <div className="ad-activity-info">
@@ -241,7 +292,7 @@ const AnnouncementDetails = () => {
                 ))}
               </div>
               <button className="ad-see-all-btn">
-                See All {ann.deliveryStatus?.totalRecipients?.toLocaleString()} Logs
+                See All {announcement.deliveryStatus?.totalRecipients?.toLocaleString()} Logs
               </button>
             </div>
           )}

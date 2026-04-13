@@ -1,25 +1,12 @@
 // src/components/warden/announcements/AnnouncementForm.jsx
-import React, { useRef } from 'react';
-import { Upload, X, FileText, Info } from 'lucide-react';
+import React from 'react';
+import { Info } from 'lucide-react';
 
-const AnnouncementForm = ({ form, setForm, attachments, setAttachments }) => {
-  const fileRef = useRef();
-
+const AnnouncementForm = ({ form, setForm }) => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
-
-  const addFiles = (files) => {
-    const newFiles = Array.from(files).map((f) => ({
-      name: f.name,
-      size: (f.size / (1024 * 1024)).toFixed(1) + ' MB',
-      type: f.type.includes('image') ? 'image' : 'pdf',
-    }));
-    setAttachments((prev) => [...prev, ...newFiles]);
-  };
-
-  const removeFile = (idx) => setAttachments((prev) => prev.filter((_, i) => i !== idx));
 
   return (
     <>
@@ -136,43 +123,6 @@ const AnnouncementForm = ({ form, setForm, attachments, setAttachments }) => {
         </div>
       </div>
 
-      {/* Attachments */}
-      <div className="wa-form-card">
-        <div className="wa-form-label-row">
-          <span className="wa-form-badge">ATTACHMENTS (OPTIONAL)</span>
-        </div>
-
-        <div
-          className="wa-dropzone"
-          onClick={() => fileRef.current?.click()}
-          onDragOver={(e) => e.preventDefault()}
-          onDrop={(e) => { e.preventDefault(); addFiles(e.dataTransfer.files); }}
-        >
-          <Upload size={28} className="wa-upload-icon" />
-          <p className="wa-dropzone-text">Click to upload or drag and drop</p>
-          <p className="wa-dropzone-sub">PDF, JPG, PNG or DOC (max. 10MB)</p>
-          <input
-            ref={fileRef}
-            type="file"
-            multiple
-            hidden
-            onChange={(e) => addFiles(e.target.files)}
-          />
-        </div>
-
-        {attachments.map((f, i) => (
-          <div key={i} className="wa-attachment-row">
-            <FileText size={16} className="wa-attachment-icon" />
-            <div className="wa-attachment-info">
-              <span className="wa-attachment-name">{f.name}</span>
-              <span className="wa-attachment-size">{f.size} • Uploaded</span>
-            </div>
-            <button className="wa-attachment-remove" onClick={() => removeFile(i)}>
-              <X size={14} />
-            </button>
-          </div>
-        ))}
-      </div>
     </>
   );
 };

@@ -300,6 +300,12 @@
   font-style: italic;
 }
 
+/* ── Loading Spinner ── */
+@keyframes wa-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 /* ── Status Badges ── */
 .wa-status-badge {
   display: inline-flex;

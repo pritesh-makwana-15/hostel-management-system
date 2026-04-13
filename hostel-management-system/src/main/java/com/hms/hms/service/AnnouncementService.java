@@ -3,7 +3,6 @@ package com.hms.hms.service;
 import com.hms.hms.entity.Announcement;
 import com.hms.hms.repository.AnnouncementRepository;
 import com.hms.hms.dto.AnnouncementDTO;
-import com.hms.hms.dto.ApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -35,8 +34,13 @@ public class AnnouncementService {
         
         // Handle publication date
         if (announcementDTO.getPublishDate() != null && !announcementDTO.getPublishDate().isEmpty()) {
-            announcement.setPublishDate(LocalDateTime.parse(announcementDTO.getPublishDate()));
-            announcement.setStatus(Announcement.Status.DRAFT); // Will be published later
+            LocalDateTime publishDate = LocalDateTime.parse(announcementDTO.getPublishDate());
+            announcement.setPublishDate(publishDate);
+            if (!publishDate.isAfter(LocalDateTime.now())) {
+                announcement.setStatus(Announcement.Status.PUBLISHED); // Publish immediately if date has arrived
+            } else {
+                announcement.setStatus(Announcement.Status.DRAFT); // Schedule for future publish
+            }
         } else {
             announcement.setPublishDate(LocalDateTime.now());
             announcement.setStatus(Announcement.Status.PUBLISHED); // Publish immediately
@@ -74,7 +78,13 @@ public class AnnouncementService {
             
             // Handle publication date
             if (announcementDTO.getPublishDate() != null && !announcementDTO.getPublishDate().isEmpty()) {
-                announcement.setPublishDate(LocalDateTime.parse(announcementDTO.getPublishDate()));
+                LocalDateTime publishDate = LocalDateTime.parse(announcementDTO.getPublishDate());
+                announcement.setPublishDate(publishDate);
+                if (!publishDate.isAfter(LocalDateTime.now())) {
+                    announcement.setStatus(Announcement.Status.PUBLISHED);
+                } else {
+                    announcement.setStatus(Announcement.Status.DRAFT);
+                }
             }
             
             // Handle expiry date

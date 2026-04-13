@@ -3,10 +3,13 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Megaphone } from 'lucide-react';
 import AnnouncementForm from '../../../components/warden/announcements/AnnouncementForm';
+import { wardenApi } from '../../../services/wardenApi';
 import '../../../styles/warden/announcements/createAnnouncement.css';
 
 const CreateAnnouncement = () => {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const [form, setForm] = useState({
     title: '',
@@ -17,11 +20,34 @@ const CreateAnnouncement = () => {
     startDate: '',
     endDate: '',
   });
-  const [attachments, setAttachments] = useState([]);
 
-  const handlePublish = () => {
-    // In a real app, submit to API
-    navigate('/warden/announcements');
+  const handlePublish = async () => {
+    if (!form.title.trim() || !form.description.trim()) {
+      setError('Title and announcement message are required.');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const announcementData = {
+        title: form.title.trim(),
+        message: form.description.trim(),
+        audience: 'Students',
+        priority: form.priority,
+        publishDate: form.startDate || null,
+        expiryDate: form.endDate || null,
+      };
+
+      await wardenApi.createAnnouncement(announcementData);
+      navigate('/warden/announcements');
+    } catch (err) {
+      console.error('Error creating warden announcement:', err);
+      setError('Unable to save announcement. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -45,11 +71,17 @@ const CreateAnnouncement = () => {
           <button className="wca-btn-cancel" onClick={() => navigate('/warden/announcements')}>
             Cancel
           </button>
-          <button className="wca-btn-publish" onClick={handlePublish}>
-            <Megaphone size={16} /> Publish Announcement
+          <button className="wca-btn-publish" onClick={handlePublish} disabled={loading}>
+            <Megaphone size={16} /> {loading ? 'Publishing...' : 'Publish Announcement'}
           </button>
         </div>
       </div>
+
+      {error && (
+        <div className="wca-error-banner">
+          <span>{error}</span>
+        </div>
+      )}
 
       {/* Live Preview Panel (right side on desktop) */}
       <div className="wca-layout">
@@ -57,8 +89,6 @@ const CreateAnnouncement = () => {
           <AnnouncementForm
             form={form}
             setForm={setForm}
-            attachments={attachments}
-            setAttachments={setAttachments}
           />
         </div>
 
@@ -85,16 +115,6 @@ const CreateAnnouncement = () => {
               <p className="wca-preview-message">
                 {form.description || 'Your announcement message will appear here...'}
               </p>
-              {attachments.length > 0 && (
-                <div className="wca-preview-attachments">
-                  <span className="wca-preview-att-label">ATTACHMENTS ({attachments.length})</span>
-                  {attachments.map((a, i) => (
-                    <div key={i} className="wca-preview-att-item">
-                      📎 {a.name}
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
             <div className="wca-preview-footer">
               <p>This is how the message will appear to students.</p>
