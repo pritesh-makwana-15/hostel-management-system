@@ -1,10 +1,11 @@
 // src/pages/student/announcements/AnnouncementDetails.jsx
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Users, Calendar, Clock, FileText, Info } from 'lucide-react';
+import { studentApi } from '../../../services/studentApi';
 import '../../../styles/student/announcements/announcementDetails.css';
 
-// ── Dummy data (replace with API call) ────────────────────────
+// Fallback data (used when API fails) ────────────────────────
 const dummyAnnouncements = [
   {
     id: '1',
@@ -72,8 +73,125 @@ const statusClass = (s) => {
 const AnnouncementDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [announcement, setAnnouncement] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const announcement = dummyAnnouncements.find((a) => a.id === id);
+  // Fetch announcement data
+  useEffect(() => {
+    fetchAnnouncement();
+  }, [id]);
+
+  const fetchAnnouncement = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      
+      // First try to get all announcements and find the one with matching ID
+      const response = await studentApi.getActiveAnnouncements();
+      console.log('AnnouncementDetails: API response:', response);
+      
+      if (response.data && response.data.status === 'success') {
+        const announcementsData = response.data.data;
+        const foundAnnouncement = announcementsData.find((a) => a.id.toString() === id);
+        
+        if (foundAnnouncement) {
+          // Transform API data to match component expected format
+          const transformedAnnouncement = {
+            id: foundAnnouncement.id.toString(),
+            category: getCategoryFromPriority(foundAnnouncement.priority),
+            priority: getPriorityDisplay(foundAnnouncement.priority),
+            status: getStatusDisplay(foundAnnouncement.status),
+            title: foundAnnouncement.title || 'Announcement',
+            description: foundAnnouncement.message || 'No description available',
+            targetAudience: foundAnnouncement.audience || 'All Students',
+            createdDate: formatDate(foundAnnouncement.publishDate),
+            expiryDate: formatDate(foundAnnouncement.expiryDate),
+            postedBy: foundAnnouncement.createdBy || 'Administration',
+            accentColor: getAccentColor(foundAnnouncement.priority),
+          };
+          
+          setAnnouncement(transformedAnnouncement);
+        } else {
+          console.log('AnnouncementDetails: Using fallback data - Announcement not found');
+          const fallbackAnnouncement = dummyAnnouncements.find((a) => a.id === id);
+          setAnnouncement(fallbackAnnouncement);
+          setError('Announcement not found, showing default content');
+        }
+      } else {
+        console.log('AnnouncementDetails: Using fallback data - API response not successful');
+        const fallbackAnnouncement = dummyAnnouncements.find((a) => a.id === id);
+        setAnnouncement(fallbackAnnouncement);
+        setError('Failed to load announcement, showing default content');
+      }
+    } catch (error) {
+      console.error('AnnouncementDetails: Error fetching announcement:', error);
+      console.log('AnnouncementDetails: Using fallback data due to error');
+      const fallbackAnnouncement = dummyAnnouncements.find((a) => a.id === id);
+      setAnnouncement(fallbackAnnouncement);
+      setError('Error loading announcement, showing default content');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Helper functions for data transformation
+  const getCategoryFromPriority = (priority) => {
+    switch (priority) {
+      case 'Urgent': return 'Important';
+      case 'Important': return 'Important';
+      case 'Normal': return 'General';
+      default: return 'General';
+    }
+  };
+
+  const getPriorityDisplay = (priority) => {
+    if (priority === 'Urgent' || priority === 'Important') return 'High Priority';
+    return null;
+  };
+
+  const getStatusDisplay = (status) => {
+    switch (status) {
+      case 'PUBLISHED': return 'Active';
+      case 'DRAFT': return 'Scheduled';
+      case 'EXPIRED': return 'Expired';
+      default: return 'Active';
+    }
+  };
+
+  const getAccentColor = (priority) => {
+    switch (priority) {
+      case 'Urgent': return '#EF4444';
+      case 'Important': return '#F59E0B';
+      case 'Normal': return '#22c55e';
+      default: return '#1F3C88';
+    }
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'Oct 12, 2024, 09:00 AM';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric', 
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    }).replace(',', ',');
+  };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="sad-page">
+        <div className="sad-loading">
+          <div className="sad-loading-spinner"></div>
+          <p>Loading announcement details...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!announcement) {
     return (
@@ -85,6 +203,13 @@ const AnnouncementDetails = () => {
 
   return (
     <div className="sad-page">
+      {/* Error Banner */}
+      {error && (
+        <div className="sad-error-banner">
+          <span>{error}</span>
+        </div>
+      )}
+      
       {/* Breadcrumb */}
       <div className="sad-breadcrumb">
         <span className="sad-bc-link" onClick={() => navigate('/student/dashboard')}>Dashboard</span>

@@ -142,7 +142,7 @@ const AddStudent = () => {
             </Field>
             <Field label="Batch" name="batch" placeholder="2022-2026" />
             <Field label="Program" name="program" placeholder="Undergraduate" />
-            <Field label="Join Date" name="joinDate" type="text" placeholder="DD-MM-YYYY" />
+            <Field label="Join Date" name="joinDate" type="date" />
           </div>
         </div>
 

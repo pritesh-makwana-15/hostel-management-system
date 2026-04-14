@@ -392,4 +392,11 @@ public class StudentService {
         // TODO: Implement complaint creation logic
         return "Complaint created successfully";
     }
+
+    // Get roommates by room number
+    public List<Student> getRoommatesByRoom(String roomNumber) {
+        return studentRepository.findByRoomNoAndStatusNot(roomNumber, "Inactive")
+                .stream()
+                .collect(Collectors.toList());
+    }
 }

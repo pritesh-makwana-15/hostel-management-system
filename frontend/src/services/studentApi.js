@@ -39,4 +39,9 @@ export const studentApi = {
   // POST /api/student/logout-all
   // Used by: StudentProfile.jsx
   logoutAllDevices: () => api.post('/api/student/logout-all'),
+
+  // GET /api/announcements/active
+  // Returns: ApiResponse<List<Announcement>>
+  // Used by: StudentAnnouncements.jsx
+  getActiveAnnouncements: () => api.get('/api/announcements/active'),
 };

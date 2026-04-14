@@ -9,9 +9,10 @@ import {
 import AnnouncementCard from '../../../components/student/announcements/AnnouncementCard';
 import NotificationPanel from '../../../components/student/announcements/NotificationPanel';
 import FilterBar from '../../../components/student/announcements/FilterBar';
+import { studentApi } from '../../../services/studentApi';
 import '../../../styles/student/announcements/announcements.css';
 
-// ── Dummy Data ────────────────────────────────────────────────
+// Fallback Data (used when API fails) ────────────────────────────────────────────────
 
 const announcementsData = [
   {
@@ -138,9 +139,111 @@ const StudentAnnouncements = () => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState(notificationsData);
   const [bookmarked, setBookmarked] = useState({});
+  const [announcements, setAnnouncements] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const notifRef = useRef(null);
 
   const unreadCount = notifications.filter((n) => n.isUnread).length;
+
+  // Fetch announcements from API
+  useEffect(() => {
+    fetchAnnouncements();
+  }, []);
+
+  const fetchAnnouncements = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      
+      const response = await studentApi.getActiveAnnouncements();
+      console.log('StudentAnnouncements: API response:', response);
+      
+      if (response.data && response.data.status === 'success') {
+        const announcementsData = response.data.data;
+        
+        // Transform API data to match component expected format
+        const transformedAnnouncements = announcementsData.map((announcement, index) => {
+          const priority = announcement.priority || 'Normal';
+          const isHighPriority = priority === 'Urgent' || priority === 'Important';
+          
+          return {
+            id: announcement.id || index + 1,
+            category: getCategoryFromPriority(priority),
+            priority: isHighPriority ? 'High Priority' : null,
+            isNew: index < 2, // Mark first 2 as new
+            isCritical: priority === 'Urgent',
+            title: announcement.title || 'Announcement',
+            description: announcement.message || 'No description available',
+            postedBy: announcement.createdBy || 'Administration',
+            department: 'ADMINISTRATION',
+            date: formatDate(announcement.publishDate),
+            time: formatTime(announcement.publishDate),
+            avatarInitials: getInitials(announcement.createdBy),
+            accentColor: getAccentColor(priority),
+          };
+        });
+        
+        setAnnouncements(transformedAnnouncements);
+      } else {
+        console.log('StudentAnnouncements: Using fallback data - API response not successful');
+        setAnnouncements(announcementsData);
+        setError('Failed to load announcements, showing default content');
+      }
+    } catch (error) {
+      console.error('StudentAnnouncements: Error fetching announcements:', error);
+      console.log('StudentAnnouncements: Using fallback data due to error');
+      setAnnouncements(announcementsData);
+      setError('Error loading announcements, showing default content');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Helper functions for data transformation
+  const getCategoryFromPriority = (priority) => {
+    switch (priority) {
+      case 'Urgent': return 'Important';
+      case 'Important': return 'Important';
+      case 'Normal': return 'General';
+      default: return 'General';
+    }
+  };
+
+  const getInitials = (name) => {
+    if (!name) return 'AD';
+    const words = name.split(' ');
+    return words.map(word => word[0]).join('').substring(0, 2).toUpperCase();
+  };
+
+  const getAccentColor = (priority) => {
+    switch (priority) {
+      case 'Urgent': return '#EF4444';
+      case 'Important': return '#F59E0B';
+      case 'Normal': return '#22c55e';
+      default: return '#1F3C88';
+    }
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'OCT 12, 2024';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric', 
+      year: 'numeric' 
+    }).toUpperCase();
+  };
+
+  const formatTime = (dateString) => {
+    if (!dateString) return '09:00 AM';
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('en-US', { 
+      hour: 'numeric', 
+      minute: '2-digit',
+      hour12: true 
+    });
+  };
 
   // Close notification panel on outside click
   useEffect(() => {
@@ -161,7 +264,7 @@ const StudentAnnouncements = () => {
     setBookmarked((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const filtered = announcementsData.filter((a) => {
+  const filtered = announcements.filter((a) => {
     const matchSearch =
       a.title.toLowerCase().includes(search.toLowerCase()) ||
       a.description.toLowerCase().includes(search.toLowerCase());
@@ -169,8 +272,27 @@ const StudentAnnouncements = () => {
     return matchSearch && matchCategory;
   });
 
+  // Loading state
+  if (loading) {
+    return (
+      <div className="sa-page">
+        <div className="sa-loading">
+          <div className="sa-loading-spinner"></div>
+          <p>Loading announcements...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="sa-page">
+      {/* Error Banner */}
+      {error && (
+        <div className="sa-error-banner">
+          <span>{error}</span>
+        </div>
+      )}
+      
       {/* ── Page Header ── */}
       <div className="sa-header">
         <div className="sa-header-left">
