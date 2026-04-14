@@ -7,9 +7,13 @@ import DashboardLayout from '../layouts/DashboardLayout';
 // ── Lazy Load Student Pages ───────────────────────────────────
 const StudentDashboard     = lazy(() => import('../pages/student/dashboard/StudentDashboard'));
 const StudentRoomDetails   = lazy(() => import('../pages/student/Room'));
-const StudentComplaints    = lazy(() => import('../pages/student/Complaints'));
 
-// Announcements Module ✅
+// Complaints Module
+const StudentComplaints    = lazy(() => import('../pages/student/complaints/Complaints'));
+const SubmitComplaint      = lazy(() => import('../pages/student/complaints/SubmitComplaint'));
+const ComplaintDetails     = lazy(() => import('../pages/student/complaints/ComplaintDetails'));
+
+// Announcements Module 
 const StudentAnnouncements    = lazy(() => import('../pages/student/announcements/StudentAnnouncements'));
 const AnnouncementDetails     = lazy(() => import('../pages/student/announcements/AnnouncementDetails'));
 
@@ -40,10 +44,14 @@ const StudentRoutes = () => (
         <Route path="dashboard" element={<StudentDashboard />} />
 
         {/* ── Core Modules ── */}
-        <Route path="room"       element={<StudentRoomDetails />} />
-        <Route path="complaints" element={<StudentComplaints />} />
+        <Route path="room" element={<StudentRoomDetails />} />
 
-        {/* ── Announcements Module ✅ ── */}
+        {/* ── Complaints Module ── */}
+        <Route path="complaints"        element={<StudentComplaints />} />
+        <Route path="complaints/new"    element={<SubmitComplaint />} />
+        <Route path="complaints/:id"    element={<ComplaintDetails />} />
+
+        {/* ── Announcements Module  ── */}
         <Route path="announcements"     element={<StudentAnnouncements />} />
         <Route path="announcements/:id" element={<AnnouncementDetails />} />
 
