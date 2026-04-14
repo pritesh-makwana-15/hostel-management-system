@@ -35,12 +35,14 @@ Example:
 
 ```bash
 git checkout pritesh
+git checkout v2
 ```
 
 If branch does not exist:
 
 ```bash
 git checkout -b vaibhav
+
 ```
 
 ---

@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Eye, Edit3, MoreVertical, Download, Plus,
+  Eye, Edit3, MoreVertical, Download,
   Search, RotateCcw, SlidersHorizontal,
   ClipboardList, Clock, CheckCircle2, ChevronLeft, ChevronRight
 } from 'lucide-react';
@@ -102,9 +102,6 @@ const WardenComplaints = () => {
         <div className="wc-header-actions">
           <button className="wc-btn-outline">
             <Download size={15} /> Export Data
-          </button>
-          <button className="wc-btn-primary" onClick={() => {}}>
-            <Plus size={15} /> Add Complaint
           </button>
         </div>
       </div>

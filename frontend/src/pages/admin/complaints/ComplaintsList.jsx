@@ -2,9 +2,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Search, Plus, Eye, UserCheck, MessageSquare, Edit3,
+  Search, Eye, UserCheck, MessageSquare, Edit3,
   Download, RotateCcw, SlidersHorizontal, ClipboardList,
-  AlertCircle, Clock, CheckCircle2, X
+  AlertCircle, Clock, CheckCircle2
 } from 'lucide-react';
 import {
   complaintsData,
@@ -16,93 +16,12 @@ import {
 } from '../../../data/complaintsData';
 import '../../../styles/admin/complaints/complaintsList.css';
 
-// ── Add Complaint Modal ──────────────────────────────────────
-const AddComplaintModal = ({ onClose }) => {
-  const [form, setForm] = useState({
-    studentName: '', studentId: '', roomNumber: '',
-    hostelBlock: '', complaintType: '', priority: '', description: '',
-  });
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // TODO: API call
-    alert('Complaint added successfully!');
-    onClose();
-  };
-
-  return (
-    <div className="cl-modal-overlay" onClick={onClose}>
-      <div className="cl-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="cl-modal-header">
-          <h2 className="cl-modal-title">Add New Complaint</h2>
-          <button className="cl-modal-close" onClick={onClose}><X size={20} /></button>
-        </div>
-        <form onSubmit={handleSubmit} className="cl-modal-body">
-          <div className="cl-form-grid">
-            <div className="cl-form-group">
-              <label className="cl-form-label">Student Name</label>
-              <input className="cl-form-input" placeholder="Enter student name"
-                value={form.studentName} onChange={e => setForm({ ...form, studentName: e.target.value })} required />
-            </div>
-            <div className="cl-form-group">
-              <label className="cl-form-label">Student ID</label>
-              <input className="cl-form-input" placeholder="e.g. STU-2291"
-                value={form.studentId} onChange={e => setForm({ ...form, studentId: e.target.value })} required />
-            </div>
-            <div className="cl-form-group">
-              <label className="cl-form-label">Room Number</label>
-              <input className="cl-form-input" placeholder="e.g. A-101"
-                value={form.roomNumber} onChange={e => setForm({ ...form, roomNumber: e.target.value })} required />
-            </div>
-            <div className="cl-form-group">
-              <label className="cl-form-label">Hostel / Block</label>
-              <select className="cl-form-input" value={form.hostelBlock}
-                onChange={e => setForm({ ...form, hostelBlock: e.target.value })} required>
-                <option value="">Select Block</option>
-                {hostelBlocks.map(b => <option key={b} value={b}>{b}</option>)}
-              </select>
-            </div>
-            <div className="cl-form-group">
-              <label className="cl-form-label">Complaint Type</label>
-              <select className="cl-form-input" value={form.complaintType}
-                onChange={e => setForm({ ...form, complaintType: e.target.value })} required>
-                <option value="">Select Type</option>
-                {complaintTypes.map(t => <option key={t} value={t}>{t}</option>)}
-              </select>
-            </div>
-            <div className="cl-form-group">
-              <label className="cl-form-label">Priority</label>
-              <select className="cl-form-input" value={form.priority}
-                onChange={e => setForm({ ...form, priority: e.target.value })} required>
-                <option value="">Select Priority</option>
-                {priorityOptions.map(p => <option key={p} value={p}>{p}</option>)}
-              </select>
-            </div>
-            <div className="cl-form-group cl-form-group-full">
-              <label className="cl-form-label">Description</label>
-              <textarea className="cl-form-input cl-form-textarea"
-                placeholder="Describe the complaint in detail..."
-                rows={4} value={form.description}
-                onChange={e => setForm({ ...form, description: e.target.value })} required />
-            </div>
-          </div>
-          <div className="cl-modal-actions">
-            <button type="button" className="cl-btn-secondary" onClick={onClose}>Cancel</button>
-            <button type="submit" className="cl-btn-primary"><Plus size={16} /> Add Complaint</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-};
-
 // ── Main Component ───────────────────────────────────────────
 const ComplaintsList = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState({ hostelBlock: '', complaintType: '', status: '', priority: '' });
   const [currentPage, setCurrentPage] = useState(1);
-  const [showModal, setShowModal] = useState(false);
   const itemsPerPage = 6;
 
   const stats = getComplaintStats();
@@ -174,7 +93,6 @@ const ComplaintsList = () => {
         </div>
         <div className="cl-page-header-actions">
           <button className="cl-btn-secondary"><Download size={16} /> Export Data</button>
-          <button className="cl-btn-primary" onClick={() => setShowModal(true)}><Plus size={16} /> Add Complaint</button>
         </div>
       </div>
 
@@ -347,7 +265,6 @@ const ComplaintsList = () => {
         ))}
       </div>
 
-      {showModal && <AddComplaintModal onClose={() => setShowModal(false)} />}
     </div>
   );
 };
