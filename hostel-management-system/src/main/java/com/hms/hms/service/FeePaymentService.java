@@ -12,6 +12,7 @@ import com.hms.hms.repository.FeeStructureRepository;
 import com.hms.hms.repository.StudentFeeRecordRepository;
 import com.hms.hms.repository.StudentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -101,13 +102,28 @@ public class FeePaymentService {
 
         StudentFeeRecord feeRecord = getOrCreateFeeRecord(student, cycle);
 
-        BigDecimal remaining = safe(feeRecord.balanceAmount);
-        if (remaining.compareTo(BigDecimal.ZERO) == 0) {
-            throw new RuntimeException("Fee is already fully paid for this cycle");
+        BigDecimal approvedBalance = safe(feeRecord.balanceAmount);
+        if (approvedBalance.compareTo(BigDecimal.ZERO) == 0) {
+            throw new RuntimeException("You have already paid fees for this cycle.");
+        }
+        
+        // Additional check: Don't allow payments if fee status is already PAID
+        if ("PAID".equalsIgnoreCase(feeRecord.status)) {
+            throw new RuntimeException("You have already paid fees for this cycle.");
         }
 
-        if (request.getAmount().compareTo(remaining) > 0) {
-            throw new RuntimeException("Payment amount cannot exceed remaining balance of " + remaining);
+        BigDecimal pendingReserved = safe(feePaymentTransactionRepository.sumPendingAmountByFeeRecordId(feeRecord.id));
+        BigDecimal availableBalance = approvedBalance.subtract(pendingReserved);
+        if (availableBalance.compareTo(BigDecimal.ZERO) < 0) {
+            availableBalance = BigDecimal.ZERO;
+        }
+
+        if (availableBalance.compareTo(BigDecimal.ZERO) == 0) {
+            throw new RuntimeException("You already have pending payment submissions for the full remaining amount. Please wait for admin verification.");
+        }
+
+        if (request.getAmount().compareTo(availableBalance) > 0) {
+            throw new RuntimeException("Payment amount cannot exceed available balance of " + availableBalance + " after pending submissions");
         }
 
         FeePaymentTransaction payment = FeePaymentTransaction.builder()
@@ -117,6 +133,7 @@ public class FeePaymentService {
                 .amount(request.getAmount())
                 .paymentMethod(normalizeMethod(request.getPaymentMethod()))
                 .transactionId(transactionId)
+                .proofFile(normalizeProofFile(request.getProofFile()))
                 .paymentDate(parseDate(request.getPaymentDate()))
                 .notes(request.getNotes())
                 .status("PENDING")
@@ -171,17 +188,48 @@ public class FeePaymentService {
         StudentFeeRecord record = payment.feeRecord;
         BigDecimal remaining = safe(record.balanceAmount);
 
+        // If request became stale, still keep admin action as VERIFIED but do not
+        // mutate fee ledger values again.
+        if ("PAID".equalsIgnoreCase(record.status)) {
+            return verifyWithoutLedgerUpdate(
+                    payment,
+                    verifierEmail,
+                    note,
+                "AUTO_VERIFIED_BY_ADMIN: Fee record already marked as PAID"
+            );
+        }
+        
+        // If balance is now zero, request is no longer valid to verify.
         if (remaining.compareTo(BigDecimal.ZERO) == 0) {
-            throw new RuntimeException("Fee is already fully paid. Cannot verify this payment.");
+            return verifyWithoutLedgerUpdate(
+                    payment,
+                    verifierEmail,
+                    note,
+                "AUTO_VERIFIED_BY_ADMIN: Fee already fully paid before verification"
+            );
         }
 
         if (safe(payment.amount).compareTo(remaining) > 0) {
-            throw new RuntimeException("Payment exceeds remaining fee balance. Reject this payment instead.");
+            return verifyWithoutLedgerUpdate(
+                    payment,
+                    verifierEmail,
+                    note,
+                "AUTO_VERIFIED_BY_ADMIN: Payment exceeds remaining balance"
+            );
         }
 
-        record.paidAmount = safe(record.paidAmount).add(safe(payment.amount));
-        record.balanceAmount = safe(record.totalFee).subtract(record.paidAmount);
-        record.status = resolveStatus(record.paidAmount, record.totalFee);
+        BigDecimal totalFee = safe(record.totalFee);
+        BigDecimal updatedPaid = safe(record.paidAmount).add(safe(payment.amount));
+
+        if (updatedPaid.compareTo(totalFee) >= 0) {
+            record.paidAmount = totalFee;
+            record.balanceAmount = BigDecimal.ZERO;
+            record.status = "PAID";
+        } else {
+            record.paidAmount = updatedPaid;
+            record.balanceAmount = totalFee.subtract(updatedPaid);
+            record.status = resolveStatus(record.paidAmount, totalFee);
+        }
         studentFeeRecordRepository.save(record);
 
         payment.status = "VERIFIED";
@@ -191,6 +239,29 @@ public class FeePaymentService {
             payment.notes = (payment.notes == null ? "" : payment.notes + "\n") + "ADMIN_NOTE: " + note;
         }
 
+        return toPaymentDTO(feePaymentTransactionRepository.save(payment));
+    }
+
+    private FeePaymentDTO verifyWithoutLedgerUpdate(
+            FeePaymentTransaction payment,
+            String verifierEmail,
+            String note,
+            String reason
+    ) {
+        payment.status = "VERIFIED";
+        payment.verifiedBy = verifierEmail;
+        payment.verifiedAt = java.time.LocalDateTime.now();
+
+        StringBuilder composedNote = new StringBuilder();
+        if (payment.notes != null && !payment.notes.isBlank()) {
+            composedNote.append(payment.notes).append("\n");
+        }
+        composedNote.append(reason);
+        if (note != null && !note.isBlank()) {
+            composedNote.append("\nADMIN_NOTE: ").append(note);
+        }
+
+        payment.notes = composedNote.toString();
         return toPaymentDTO(feePaymentTransactionRepository.save(payment));
     }
 
@@ -204,6 +275,42 @@ public class FeePaymentService {
         }
 
         payment.status = "REJECTED";
+        payment.verifiedBy = verifierEmail;
+        payment.verifiedAt = java.time.LocalDateTime.now();
+        if (note != null && !note.isBlank()) {
+            payment.notes = (payment.notes == null ? "" : payment.notes + "\n") + "ADMIN_NOTE: " + note;
+        }
+
+        return toPaymentDTO(feePaymentTransactionRepository.save(payment));
+    }
+
+    @Transactional
+    public FeePaymentDTO refundPayment(String paymentId, String verifierEmail, String note) {
+        FeePaymentTransaction payment = feePaymentTransactionRepository.findByPaymentId(paymentId)
+                .orElseThrow(() -> new RuntimeException("Payment not found"));
+
+        if (!"VERIFIED".equalsIgnoreCase(payment.status)) {
+            throw new RuntimeException("Only verified payments can be refunded");
+        }
+
+        StudentFeeRecord record = payment.feeRecord;
+        BigDecimal paidAmount = safe(record.paidAmount);
+        BigDecimal refundAmount = safe(payment.amount);
+
+        if (refundAmount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new RuntimeException("Refund amount must be greater than zero");
+        }
+
+        if (paidAmount.compareTo(refundAmount) < 0) {
+            throw new RuntimeException("Refund exceeds paid amount on student fee record");
+        }
+
+        record.paidAmount = paidAmount.subtract(refundAmount);
+        record.balanceAmount = safe(record.totalFee).subtract(record.paidAmount);
+        record.status = resolveStatus(record.paidAmount, record.totalFee);
+        studentFeeRecordRepository.save(record);
+
+        payment.status = "REFUNDED";
         payment.verifiedBy = verifierEmail;
         payment.verifiedAt = java.time.LocalDateTime.now();
         if (note != null && !note.isBlank()) {
@@ -252,7 +359,18 @@ public class FeePaymentService {
                 .status("PENDING")
                 .build();
 
-        return studentFeeRecordRepository.save(created);
+        try {
+            return studentFeeRecordRepository.save(created);
+        } catch (DataIntegrityViolationException ex) {
+            return studentFeeRecordRepository
+                .findByStudentIdAndAcademicCycleAndHostelBlockIgnoreCaseAndRoomTypeIgnoreCase(
+                    student.id,
+                    cycle,
+                    hostelBlock,
+                    roomType
+                )
+                .orElseThrow(() -> ex);
+        }
     }
 
     private StudentFeeSummaryDTO toSummaryDTO(StudentFeeRecord record) {
@@ -290,6 +408,7 @@ public class FeePaymentService {
                 .amount(safe(payment.amount))
                 .paymentMethod(payment.paymentMethod)
                 .transactionId(payment.transactionId)
+                .proofFile(payment.proofFile)
                 .status(payment.status)
                 .paymentDate(payment.paymentDate != null ? payment.paymentDate.toString() : null)
                 .createdAt(payment.createdAt != null ? payment.createdAt.format(dateTimeFmt) : null)
@@ -338,6 +457,13 @@ public class FeePaymentService {
             return "OFFLINE";
         }
         return value.trim().toUpperCase();
+    }
+
+    private String normalizeProofFile(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return value.trim();
     }
 
     private LocalDate parseDate(String value) {

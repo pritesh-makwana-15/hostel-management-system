@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { adminDashboardApi } from '../../services/adminDashboardApi';
-import { dashboardData } from '../../data/dashboardData';
 import '../../styles/admin/RecentActivity.css';
 
 const RecentActivity = () => {
@@ -12,54 +11,64 @@ const RecentActivity = () => {
     fetchRecentActivity();
   }, []);
 
+  const formatDateTime = (timestamp) => {
+    if (!timestamp) {
+      return '-';
+    }
+    const parsed = new Date(timestamp);
+    if (Number.isNaN(parsed.getTime())) {
+      return timestamp;
+    }
+    return parsed.toLocaleString();
+  };
+
   const fetchRecentActivity = async () => {
     try {
       setLoading(true);
+      setError('');
       const res = await adminDashboardApi.getRecentActivity();
-      console.log('RecentActivity: Recent activity response:', res);
-      
-      if (res.data && res.data.status === 'success') {
+
+      if (res.data?.status === 'success') {
         const dbActivity = res.data.data || {};
-        
-        // Map database activity to expected format
+
         const mappedActivities = [
           ...(dbActivity.recentRegistrations || []).map((reg, index) => ({
             id: `db-reg-${index}`,
             type: 'Student Registration',
-            description: `New student registered`,
-            dateTime: new Date().toLocaleString(),
+            description: `${reg.studentName || 'Student'} registered`,
+            sortTimestamp: reg.timestamp || '',
+            dateTime: formatDateTime(reg.timestamp),
             status: 'Completed',
             statusColor: '#10B981'
           })),
           ...(dbActivity.recentComplaints || []).map((complaint, index) => ({
             id: `db-comp-${index}`,
             type: 'Complaint Logged',
-            description: `${complaint.title || 'New complaint'}`,
-            dateTime: new Date().toLocaleString(),
-            status: 'Pending',
-            statusColor: '#F59E0B'
+            description: `${complaint.title || 'Complaint'} by ${complaint.studentName || 'Student'}`,
+            sortTimestamp: complaint.timestamp || '',
+            dateTime: formatDateTime(complaint.timestamp),
+            status: complaint.status || 'Open',
+            statusColor: complaint.status?.toLowerCase() === 'resolved' ? '#10B981' : '#F59E0B'
           })),
           ...(dbActivity.recentPayments || []).map((payment, index) => ({
             id: `db-payment-${index}`,
             type: 'Fee Payment',
-            description: `${payment.studentName || 'Student'} paid fee`,
-            dateTime: new Date().toLocaleString(),
-            status: 'Completed',
-            statusColor: '#10B981'
+            description: `${payment.studentName || 'Student'} paid ₹${Number(payment.amount || 0).toLocaleString('en-IN')}`,
+            sortTimestamp: payment.timestamp || '',
+            dateTime: formatDateTime(payment.timestamp),
+            status: payment.status || 'PENDING',
+            statusColor: payment.status?.toLowerCase() === 'verified' ? '#10B981' : '#F59E0B'
           }))
-        ];
-        
-        setActivities(mappedActivities.length > 0 ? mappedActivities : dashboardData.recentActivity);
+
+        ].sort((a, b) => new Date(b.sortTimestamp).getTime() - new Date(a.sortTimestamp).getTime()).slice(0, 10);
+
+        setActivities(mappedActivities);
       } else {
-        // Use dummy data as fallback if API fails
-        console.log('RecentActivity: Using dummy data as fallback');
-        setActivities(dashboardData.recentActivity);
+        setActivities([]);
+        setError('Failed to load recent activity');
       }
-    } catch (error) {
-      console.error('RecentActivity: Error fetching recent activity:', error);
-      console.log('RecentActivity: Using dummy data as fallback');
-      // Use dummy data as fallback
-      setActivities(dashboardData.recentActivity);
+    } catch {
+      setActivities([]);
       setError('Failed to load recent activity');
     } finally {
       setLoading(false);
@@ -92,6 +101,9 @@ const RecentActivity = () => {
       
       {/* Desktop/Tablet Table */}
       <div className="activity-table">
+        {activities.length === 0 ? (
+          <div className="loading" style={{ padding: '20px' }}>No recent activity found.</div>
+        ) : (
         <table>
           <thead>
             <tr>
@@ -122,6 +134,7 @@ const RecentActivity = () => {
             ))}
           </tbody>
         </table>
+        )}
       </div>
 
       {/* Mobile Cards */}

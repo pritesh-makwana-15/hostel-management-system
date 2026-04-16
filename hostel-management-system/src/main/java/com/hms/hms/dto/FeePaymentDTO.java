@@ -19,6 +19,7 @@ public class FeePaymentDTO {
     private BigDecimal amount;
     private String paymentMethod;
     private String transactionId;
+    private String proofFile;
     private String status;
     private String paymentDate;
     private String createdAt;

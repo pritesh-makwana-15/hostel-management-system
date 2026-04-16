@@ -166,6 +166,18 @@ public class AdminController {
         return ResponseEntity.ok(ApiResponse.success("Payment rejected", rejected));
     }
 
+    @PutMapping("/fees/payments/{paymentId}/refund")
+    public ResponseEntity<ApiResponse<FeePaymentDTO>> refundPayment(
+            Authentication authentication,
+            @PathVariable String paymentId,
+            @RequestBody(required = false) AdminPaymentUpdateRequest request
+    ) {
+        String adminEmail = authentication != null ? authentication.getName() : "ADMIN";
+        String note = request != null ? request.getNotes() : null;
+        FeePaymentDTO refunded = feePaymentService.refundPayment(paymentId, adminEmail, note);
+        return ResponseEntity.ok(ApiResponse.success("Payment refunded", refunded));
+    }
+
     // ── Admin Complaints API ──────────────────────────────────────
     @GetMapping("/complaints")
     public ResponseEntity<ApiResponse<List<AdminComplaintDTO>>> getAllComplaints() {
