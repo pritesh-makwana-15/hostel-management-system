@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Users, CreditCard, CheckCircle, Clock, AlertTriangle,
@@ -8,19 +8,113 @@ import {
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from 'recharts';
-import { recentPayments, monthlyCollectionData } from '../../../data/feesData';
+import { adminFeesApi } from '../../../services/adminFeeApi';
 import '../../../styles/admin/fees/feesDashboard.css';
 
 const FeesDashboard = () => {
   const navigate = useNavigate();
 
-  const stats = [
-    { label: 'Total Students',   value: '1,240',   sub: '+12% from last month', icon: Users,         color: '#1F3C88' },
-    { label: 'Total Monthly Fees', value: '₹150,000', sub: 'Projected Revenue',  icon: CreditCard,    color: '#2BBBAD' },
-    { label: 'Fees Collected',   value: '₹132,450', sub: '88% Completion',       icon: CheckCircle,   color: '#10B981' },
-    { label: 'Pending Fees',     value: '₹14,200',  sub: '142 Students',         icon: Clock,         color: '#F59E0B' },
-    { label: 'Overdue Fees',     value: '₹3,350',   sub: 'Action Required',      icon: AlertTriangle, color: '#EF4444' },
-  ];
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [feeRecords, setFeeRecords] = useState([]);
+  const [payments, setPayments] = useState([]);
+
+  useEffect(() => {
+    const loadDashboard = async () => {
+      try {
+        setLoading(true);
+        setError('');
+
+        const [recordsRes, paymentsRes] = await Promise.all([
+          adminFeesApi.getAllRecords(),
+          adminFeesApi.getAllPayments(),
+        ]);
+
+        setFeeRecords(Array.isArray(recordsRes?.data?.data) ? recordsRes.data.data : []);
+        setPayments(Array.isArray(paymentsRes?.data?.data) ? paymentsRes.data.data : []);
+      } catch (e) {
+        console.error('Failed to load admin fee dashboard:', e);
+        setError(e?.response?.data?.message || 'Unable to load fee dashboard data.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadDashboard();
+  }, []);
+
+  const toCurrency = (value) => `₹${Number(value || 0).toLocaleString('en-IN')}`;
+
+  const statusLabel = (status) => {
+    const s = String(status || '').toUpperCase();
+    if (s === 'VERIFIED') return 'Paid';
+    if (s === 'REJECTED') return 'Failed';
+    return 'Pending';
+  };
+
+  const stats = useMemo(() => {
+    const totalStudents = new Set(feeRecords.map((r) => r.studentId).filter(Boolean)).size;
+    const totalMonthlyFees = feeRecords.reduce((sum, r) => sum + Number(r.totalFee || 0), 0);
+    const feesCollected = feeRecords.reduce((sum, r) => sum + Number(r.paidAmount || 0), 0);
+    const pendingFees = feeRecords.reduce((sum, r) => sum + Number(r.balance || 0), 0);
+    const pendingVerification = payments
+      .filter((p) => String(p.status || '').toUpperCase() === 'PENDING')
+      .reduce((sum, p) => sum + Number(p.amount || 0), 0);
+
+    return [
+      { label: 'Total Students', value: String(totalStudents), sub: `${feeRecords.length} fee records`, icon: Users, color: '#1F3C88' },
+      { label: 'Total Monthly Fees', value: toCurrency(totalMonthlyFees), sub: 'Projected from current records', icon: CreditCard, color: '#2BBBAD' },
+      {
+        label: 'Fees Collected',
+        value: toCurrency(feesCollected),
+        sub: `${totalMonthlyFees > 0 ? Math.round((feesCollected / totalMonthlyFees) * 100) : 0}% completion`,
+        icon: CheckCircle,
+        color: '#10B981',
+      },
+      { label: 'Pending Fees', value: toCurrency(pendingFees), sub: 'Outstanding student balances', icon: Clock, color: '#F59E0B' },
+      { label: 'Pending Verification', value: toCurrency(pendingVerification), sub: 'Submitted by students', icon: AlertTriangle, color: '#EF4444' },
+    ];
+  }, [feeRecords, payments]);
+
+  const monthlyCollectionData = useMemo(() => {
+    const monthFmt = new Intl.DateTimeFormat('en', { month: 'short' });
+    const now = new Date();
+    const months = [];
+
+    for (let i = 5; i >= 0; i -= 1) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      months.push({ month: monthFmt.format(d), key, collected: 0 });
+    }
+
+    const index = new Map(months.map((m, i) => [m.key, i]));
+
+    payments.forEach((p) => {
+      if (String(p.status || '').toUpperCase() !== 'VERIFIED') {
+        return;
+      }
+
+      const rawDate = p.paymentDate || (p.createdAt ? p.createdAt.split(' ')[0] : null);
+      if (!rawDate) {
+        return;
+      }
+
+      const dt = new Date(rawDate);
+      if (Number.isNaN(dt.getTime())) {
+        return;
+      }
+
+      const key = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}`;
+      const idx = index.get(key);
+      if (idx !== undefined) {
+        months[idx].collected += Number(p.amount || 0);
+      }
+    });
+
+    return months;
+  }, [payments]);
+
+  const recentPayments = useMemo(() => payments.slice(0, 5), [payments]);
 
   const getStatusClass = (status) => {
     switch (status) {
@@ -32,13 +126,21 @@ const FeesDashboard = () => {
   };
 
   const getMethodIcon = (method) => {
-    if (method === 'Cash') return <Banknote size={14} />;
+    if (String(method || '').toUpperCase().includes('CASH')) return <Banknote size={14} />;
     return <Globe size={14} />;
   };
 
-  const getInitials = (name) => name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+  const getInitials = (name) => String(name || 'NA').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
 
   const avatarColors = ['#1F3C88', '#2BBBAD', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
+
+  if (loading) {
+    return (
+      <div className="fees-dashboard-page">
+        <div className="chart-card">Loading fee dashboard...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="fees-dashboard-page">
@@ -51,7 +153,7 @@ const FeesDashboard = () => {
           <h1 className="page-title">Fees Management</h1>
         </div>
         <div className="page-header-actions">
-          <button className="btn-secondary" onClick={() => navigate('/admin/fees/generate-invoice')}>
+          <button className="btn-secondary" onClick={() => navigate('/admin/fees/history')}>
             <FileText size={16} /> Generate Invoice
           </button>
           <button className="btn-primary" onClick={() => navigate('/admin/fees/structure')}>
@@ -59,6 +161,12 @@ const FeesDashboard = () => {
           </button>
         </div>
       </div>
+
+      {error && (
+        <div className="chart-card" style={{ color: '#b91c1c' }}>
+          {error}
+        </div>
+      )}
 
       {/* Stats Cards */}
       <div className="stats-grid">
@@ -95,7 +203,7 @@ const FeesDashboard = () => {
             <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 13, fill: '#6B7280' }} />
             <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6B7280' }} tickFormatter={v => v.toLocaleString()} />
             <Tooltip
-              formatter={(value) => [`$${value.toLocaleString()}`, 'Collected']}
+              formatter={(value) => [`₹${Number(value || 0).toLocaleString('en-IN')}`, 'Collected']}
               contentStyle={{ borderRadius: '8px', border: '1px solid #E5E7EB', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
             />
             <Legend iconType="circle" iconSize={10} wrapperStyle={{ paddingTop: '16px', fontSize: '13px' }} />
@@ -111,7 +219,7 @@ const FeesDashboard = () => {
             <h2 className="chart-title">Recent Payments</h2>
             <p className="chart-sub">The latest transactions across all hostels</p>
           </div>
-          <button className="btn-link" onClick={() => navigate('/admin/fees/payment-history')}>
+          <button className="btn-link" onClick={() => navigate('/admin/fees/history')}>
             View All Payments
           </button>
         </div>
@@ -129,29 +237,38 @@ const FeesDashboard = () => {
               </tr>
             </thead>
             <tbody>
-              {recentPayments.map((p, i) => (
-                <tr key={i}>
+              {recentPayments.map((p, i) => {
+                const name = p.studentName || `Student #${p.studentId || 'N/A'}`;
+                const room = p.roomNo || '-';
+                const amount = Number(p.amount || 0);
+                const method = p.paymentMethod || '-';
+                const date = p.paymentDate || (p.createdAt ? p.createdAt.split(' ')[0] : '-');
+                const status = statusLabel(p.status);
+
+                return (
+                <tr key={`${p.paymentId || i}-${i}`}>
                   <td>
                     <div className="student-cell">
                       <div className="avatar-circle" style={{ background: `${avatarColors[i % avatarColors.length]}20`, color: avatarColors[i % avatarColors.length] }}>
-                        {getInitials(p.name)}
+                        {getInitials(name)}
                       </div>
-                      <span className="student-name">{p.name}</span>
+                      <span className="student-name">{name}</span>
                     </div>
                   </td>
-                  <td><span className="room-badge">{p.room}</span></td>
-                  <td className="amount-cell">${p.amount.toLocaleString()}</td>
+                  <td><span className="room-badge">{room}</span></td>
+                  <td className="amount-cell">₹{amount.toLocaleString('en-IN')}</td>
                   <td>
                     <div className="method-cell">
-                      {getMethodIcon(p.method)}
-                      <span>{p.method}</span>
+                      {getMethodIcon(method)}
+                      <span>{method}</span>
                     </div>
                   </td>
-                  <td>{p.date}</td>
-                  <td><span className={`status-badge ${getStatusClass(p.status)}`}>{p.status}</span></td>
+                  <td>{date}</td>
+                  <td><span className={`status-badge ${getStatusClass(status)}`}>{status}</span></td>
                   <td><button className="action-more"><MoreVertical size={16} /></button></td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>

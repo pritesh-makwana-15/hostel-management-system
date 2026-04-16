@@ -1,13 +1,18 @@
 package com.hms.hms.service;
 
 import com.hms.hms.dto.RegisterRequest;
+import com.hms.hms.dto.ResolveComplaintRequest;
+import com.hms.hms.dto.WardenComplaintDTO;
 import com.hms.hms.entity.Admin;
+import com.hms.hms.entity.Complaint;
 import com.hms.hms.entity.User;
 import com.hms.hms.entity.Warden;
 import com.hms.hms.repository.AdminRepository;
+import com.hms.hms.repository.ComplaintRepository;
 import com.hms.hms.repository.UserRepository;
 import com.hms.hms.repository.WardenRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +25,7 @@ public class WardenService {
     @Autowired private UserRepository userRepository;
     @Autowired private WardenRepository wardenRepository;
     @Autowired private AdminRepository adminRepository;
+    @Autowired private ComplaintRepository complaintRepository;
     @Autowired private PasswordEncoder passwordEncoder;
 
     @Transactional
@@ -114,4 +120,67 @@ public class WardenService {
         userRepository.save(user);
         return true;
     }
+
+    // Get all complaints assigned to warden
+    public List<WardenComplaintDTO> getComplaints(Long wardenId) {
+        List<Complaint> complaints = complaintRepository.findByWardenIdOrStudent_WardenIdOrderByCreatedAtDesc(wardenId, wardenId);
+        return complaints.stream()
+            .map(c -> toWardenComplaintDTO(c, wardenId))
+            .collect(java.util.stream.Collectors.toList());
+        }
+
+        // Get all complaints from the complaint table for the warden list view
+        public List<WardenComplaintDTO> getAllComplaints() {
+        List<Complaint> complaints = complaintRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"));
+        return complaints.stream()
+                    .map(c -> toWardenComplaintDTO(c, c.warden != null ? c.warden.id : null))
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+        @Transactional
+        public WardenComplaintDTO updateComplaintStatus(Long complaintId, String wardenEmail, ResolveComplaintRequest request) {
+            Warden warden = getByEmail(wardenEmail);
+            if (warden == null) {
+                throw new RuntimeException("Warden not found for email: " + wardenEmail);
+            }
+
+            Complaint complaint = complaintRepository.findById(complaintId)
+                    .orElseThrow(() -> new RuntimeException("Complaint not found: " + complaintId));
+
+            boolean managedByWarden = (complaint.warden != null && complaint.warden.id != null && complaint.warden.id.equals(warden.id))
+                    || (complaint.student != null && complaint.student.warden != null && complaint.student.warden.id != null && complaint.student.warden.id.equals(warden.id));
+
+            if (!managedByWarden) {
+                throw new RuntimeException("Complaint is not assigned to this warden: " + complaintId);
+            }
+
+            if (request == null || request.getStatus() == null || request.getStatus().isBlank()) {
+                throw new RuntimeException("Status is required");
+            }
+
+            complaint.status = request.getStatus().trim();
+            complaintRepository.save(complaint);
+            return toWardenComplaintDTO(complaint, warden.id);
+        }
+
+        private WardenComplaintDTO toWardenComplaintDTO(Complaint c, Long wardenId) {
+        return WardenComplaintDTO.builder()
+                    .id(c.id)
+                    .complaintCode(c.complaintCode)
+                    .title(c.title)
+                    .category(c.category)
+                    .priority(c.priority)
+                    .description(c.description)
+                    .roomNumber(c.roomNumber)
+                    .status(c.status)
+                    .submittedDate(c.submittedDate != null ? c.submittedDate.toString() : null)
+                    .submittedTime(c.submittedTime)
+                    .studentName(c.student != null && c.student.user != null ? c.student.user.name : null)
+                    .studentId(c.student != null ? c.student.enrollmentNo : null)
+                    .hostelBlock(c.student != null ? c.student.hostelBlock : null)
+                    .studentUserId(c.student != null ? c.student.id : null)
+            .wardenId(wardenId)
+                    .createdAt(c.createdAt != null ? c.createdAt.toEpochSecond(java.time.ZoneOffset.UTC) : null)
+            .build();
+        }
 }

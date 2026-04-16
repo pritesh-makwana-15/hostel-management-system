@@ -2,6 +2,7 @@ package com.hms.hms.service;
 
 import com.hms.hms.dto.FeeStructureDTO;
 import com.hms.hms.entity.FeeStructure;
+import com.hms.hms.exception.FeeStructureConflictException;
 import com.hms.hms.repository.FeeStructureRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,10 +21,19 @@ public class FeeStructureService {
     private FeeStructureRepository feeStructureRepository;
 
     public FeeStructureDTO createFeeStructure(FeeStructureDTO dto) {
+        String hostelBlock = normalizeHostelBlock(dto.hostelBlock);
+        String roomType = normalizeRoomType(dto.roomType);
+
+        if (feeStructureRepository.existsByHostelBlockIgnoreCaseAndRoomTypeIgnoreCase(hostelBlock, roomType)) {
+            throw new FeeStructureConflictException(
+                "Fee structure already exists for block '" + hostelBlock + "' and room type '" + roomType + "'"
+            );
+        }
+
         logger.info("Creating fee structure with data: {}", dto);
         FeeStructure feeStructure = FeeStructure.builder()
-                .hostelBlock(dto.hostelBlock)
-                .roomType(dto.roomType)
+            .hostelBlock(hostelBlock)
+            .roomType(roomType)
                 .monthlyFee(dto.monthlyFee)
                 .securityDeposit(dto.securityDeposit)
                 .utilities(dto.utilities)
@@ -53,8 +63,17 @@ public class FeeStructureService {
         FeeStructure feeStructure = feeStructureRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Fee Structure not found with id: " + id));
 
-        feeStructure.hostelBlock = dto.hostelBlock;
-        feeStructure.roomType = dto.roomType;
+        String hostelBlock = normalizeHostelBlock(dto.hostelBlock);
+        String roomType = normalizeRoomType(dto.roomType);
+
+        if (feeStructureRepository.existsByHostelBlockIgnoreCaseAndRoomTypeIgnoreCaseAndIdNot(hostelBlock, roomType, id)) {
+            throw new FeeStructureConflictException(
+                "Fee structure already exists for block '" + hostelBlock + "' and room type '" + roomType + "'"
+            );
+        }
+
+        feeStructure.hostelBlock = hostelBlock;
+        feeStructure.roomType = roomType;
         feeStructure.monthlyFee = dto.monthlyFee;
         feeStructure.securityDeposit = dto.securityDeposit;
         feeStructure.utilities = dto.utilities;
@@ -81,6 +100,46 @@ public class FeeStructureService {
         return feeStructureRepository.findByRoomType(roomType).stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
+    }
+
+    public boolean feeStructureExists(String hostelBlock, String roomType, Long excludeId) {
+        String normalizedHostelBlock = normalizeHostelBlock(hostelBlock);
+        String normalizedRoomType = normalizeRoomType(roomType);
+
+        if (excludeId != null) {
+            return feeStructureRepository.existsByHostelBlockIgnoreCaseAndRoomTypeIgnoreCaseAndIdNot(
+                    normalizedHostelBlock,
+                    normalizedRoomType,
+                    excludeId
+            );
+        }
+
+        return feeStructureRepository.existsByHostelBlockIgnoreCaseAndRoomTypeIgnoreCase(
+                normalizedHostelBlock,
+                normalizedRoomType
+        );
+    }
+
+    private String normalizeHostelBlock(String hostelBlock) {
+        if (hostelBlock == null || hostelBlock.trim().isEmpty()) {
+            throw new RuntimeException("Hostel block is required");
+        }
+        return hostelBlock.trim();
+    }
+
+    private String normalizeRoomType(String roomType) {
+        if (roomType == null || roomType.trim().isEmpty()) {
+            throw new RuntimeException("Room type is required");
+        }
+
+        String normalized = roomType.trim();
+        if ("ac".equalsIgnoreCase(normalized)) {
+            return "AC";
+        }
+        if ("non-ac".equalsIgnoreCase(normalized) || "non ac".equalsIgnoreCase(normalized)) {
+            return "Non-AC";
+        }
+        return normalized;
     }
 
     private FeeStructureDTO mapToDTO(FeeStructure feeStructure) {

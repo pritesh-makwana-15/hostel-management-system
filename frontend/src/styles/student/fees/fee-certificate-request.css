@@ -1,0 +1,190 @@
+.fcr-page {
+  min-height: 100vh;
+  padding: 32px 24px 48px;
+  background:
+    radial-gradient(circle at top left, rgba(31, 60, 134, 0.12), transparent 34%),
+    linear-gradient(180deg, #f8fbff 0%, #eef4ff 100%);
+}
+
+.fcr-shell {
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.fcr-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  background: transparent;
+  color: #1f3c86;
+  font-weight: 700;
+  cursor: pointer;
+  margin-bottom: 18px;
+}
+
+.fcr-hero {
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 28px;
+  padding: 28px;
+  box-shadow: 0 18px 50px rgba(15, 23, 42, 0.08);
+  margin-bottom: 24px;
+}
+
+.fcr-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: #e8efff;
+  color: #1f3c86;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.fcr-hero h1 {
+  margin: 16px 0 10px;
+  font-size: clamp(30px, 4vw, 48px);
+  line-height: 1.05;
+  color: #10203f;
+}
+
+.fcr-hero p {
+  margin: 0;
+  max-width: 760px;
+  color: #475569;
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.fcr-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(300px, 0.8fr);
+  gap: 22px;
+}
+
+.fcr-form-card,
+.fcr-info-card {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 24px;
+  box-shadow: 0 14px 40px rgba(15, 23, 42, 0.08);
+}
+
+.fcr-form-card {
+  padding: 24px;
+}
+
+.fcr-form-card h2 {
+  margin: 0 0 20px;
+  color: #10203f;
+}
+
+.fcr-field {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.fcr-field span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #334155;
+  font-weight: 700;
+}
+
+.fcr-field select,
+.fcr-field textarea {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 16px;
+  padding: 14px 16px;
+  background: #fff;
+  color: #0f172a;
+  font: inherit;
+  resize: vertical;
+}
+
+.fcr-field select:focus,
+.fcr-field textarea:focus {
+  outline: none;
+  border-color: #1f3c86;
+  box-shadow: 0 0 0 4px rgba(31, 60, 134, 0.12);
+}
+
+.fcr-submit-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 16px;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, #1f3c86, #315fc9);
+  color: #fff;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.fcr-submit-btn:disabled {
+  opacity: 0.85;
+  cursor: default;
+}
+
+.fcr-info-card {
+  padding: 24px;
+  display: grid;
+  gap: 18px;
+  align-self: start;
+}
+
+.fcr-info-item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 16px;
+  border-radius: 18px;
+  background: #f8fbff;
+  border: 1px solid #e2e8f0;
+}
+
+.fcr-info-item svg {
+  flex: 0 0 auto;
+  color: #1f3c86;
+  margin-top: 2px;
+}
+
+.fcr-info-item h3 {
+  margin: 0 0 4px;
+  font-size: 15px;
+  color: #10203f;
+}
+
+.fcr-info-item p {
+  margin: 0;
+  color: #64748b;
+  line-height: 1.6;
+}
+
+@media (max-width: 960px) {
+  .fcr-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .fcr-page {
+    padding: 20px 14px 36px;
+  }
+
+  .fcr-hero,
+  .fcr-form-card,
+  .fcr-info-card {
+    border-radius: 20px;
+  }
+}

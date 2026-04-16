@@ -1,17 +1,60 @@
 // src/pages/warden/complaints/ComplaintDetails.jsx
-import React, { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import {
   ArrowLeft, Phone, Mail, RefreshCw, Paperclip,
   Send, UserCheck, MessageSquare, AlertCircle, X
 } from 'lucide-react';
 import { getComplaintById, wardensData, statusOptions } from '../../../data/complaintsData';
+import { wardenComplaintsApi } from '../../../services/wardenComplaintsApi';
 import '../../../styles/warden/complaints/complaintDetails.css';
 
 const ComplaintDetails = () => {
   const { id } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
-  const complaint = getComplaintById(id);
+  const decodedId = decodeURIComponent(id);
+  const [complaint, setComplaint] = useState(location.state?.complaint || null);
+  const [loadingComplaint, setLoadingComplaint] = useState(!location.state?.complaint);
+
+  useEffect(() => {
+    if (location.state?.complaint) {
+      setComplaint(location.state.complaint);
+      setLoadingComplaint(false);
+      return;
+    }
+
+    let cancelled = false;
+
+    const fetchComplaint = async () => {
+      try {
+        setLoadingComplaint(true);
+        const response = await wardenComplaintsApi.getAll();
+        const complaints = response?.data?.data || [];
+        const matchedComplaint = complaints.find((item) => {
+          return String(item.id) === String(decodedId) || item.complaintCode === decodedId;
+        });
+
+        if (!cancelled) {
+          setComplaint(matchedComplaint || getComplaintById(decodedId) || null);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setComplaint(getComplaintById(decodedId) || null);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoadingComplaint(false);
+        }
+      }
+    };
+
+    fetchComplaint();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [decodedId, location.state?.complaint]);
 
   const [currentStatus, setCurrentStatus] = useState(complaint?.status || 'Open');
   const [resolutionNotes, setResolutionNotes] = useState('');
@@ -20,6 +63,24 @@ const ComplaintDetails = () => {
   const [timeline, setTimeline] = useState(complaint?.timeline || []);
   const [statusSaved, setStatusSaved] = useState(false);
   const [replySent, setReplySent] = useState(false);
+
+  useEffect(() => {
+    if (complaint) {
+      setCurrentStatus(complaint.status || 'Open');
+      setTimeline(complaint.timeline || []);
+    }
+  }, [complaint]);
+
+  if (loadingComplaint) {
+    return (
+      <div className="wcd-page">
+        <div className="wcd-not-found">
+          <h2>Loading complaint...</h2>
+          <p>Fetching complaint details from the live complaint table.</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!complaint) {
     return (
@@ -53,21 +114,37 @@ const ComplaintDetails = () => {
     return 'wcd-priority wcd-priority-low';
   };
 
-  const handleUpdateStatus = () => {
-    const entry = {
-      id: timeline.length + 1,
-      user: 'Robert Miller',
-      role: 'Warden',
-      action: 'status change',
-      actionLabel: 'Updated status',
-      message: `Status updated to "${currentStatus}".${resolutionNotes ? ' ' + resolutionNotes : ''}`,
-      timestamp: new Date().toLocaleString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }),
-      avatar: 'RM',
-      side: 'right',
-    };
-    setTimeline(prev => [...prev, entry]);
-    setStatusSaved(true);
-    setTimeout(() => setStatusSaved(false), 2000);
+  const handleUpdateStatus = async () => {
+    try {
+      const response = await wardenComplaintsApi.updateStatus(complaint.id, {
+        status: currentStatus,
+        resolutionNotes,
+      });
+
+      const updatedComplaint = response?.data?.data;
+      if (updatedComplaint) {
+        setComplaint(updatedComplaint);
+        setCurrentStatus(updatedComplaint.status || currentStatus);
+      }
+
+      const entry = {
+        id: timeline.length + 1,
+        user: 'Robert Miller',
+        role: 'Warden',
+        action: 'status change',
+        actionLabel: 'Updated status',
+        message: `Status updated to "${currentStatus}".${resolutionNotes ? ' ' + resolutionNotes : ''}`,
+        timestamp: new Date().toLocaleString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }),
+        avatar: 'RM',
+        side: 'right',
+      };
+      setTimeline(prev => [...prev, entry]);
+      setStatusSaved(true);
+      setTimeout(() => setStatusSaved(false), 2000);
+    } catch (error) {
+      console.error('Error updating complaint status:', error);
+      alert(error.response?.data?.message || 'Failed to update complaint status');
+    }
   };
 
   const handleSendReply = () => {

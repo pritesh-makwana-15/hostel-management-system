@@ -1,11 +1,18 @@
 package com.hms.hms.controller;
 
+import com.hms.hms.dto.AdminComplaintDTO;
+import com.hms.hms.dto.AdminPaymentUpdateRequest;
 import com.hms.hms.dto.ApiResponse;
 import com.hms.hms.dto.AdminMeDTO;
 import com.hms.hms.dto.AdminResponseDTO;
+import com.hms.hms.dto.AssignComplaintRequest;
+import com.hms.hms.dto.FeePaymentDTO;
 import com.hms.hms.dto.PasswordChangeRequest;
 import com.hms.hms.dto.RegisterRequest;
+import com.hms.hms.dto.ResolveComplaintRequest;
+import com.hms.hms.dto.StudentFeeSummaryDTO;
 import com.hms.hms.entity.Admin;
+import com.hms.hms.service.FeePaymentService;
 import com.hms.hms.service.AdminService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +34,9 @@ public class AdminController {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private FeePaymentService feePaymentService;
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<AdminResponseDTO>>> getAllAdmins() {
@@ -105,6 +115,104 @@ public class AdminController {
     public ResponseEntity<ApiResponse<String>> deleteAdmin(@PathVariable Long id) {
         String result = adminService.deleteAdmin(id);
         return ResponseEntity.ok(ApiResponse.success(result, null));
+    }
+
+    // ── Admin Fees API ───────────────────────────────────────────
+    @GetMapping("/fees")
+    public ResponseEntity<ApiResponse<List<StudentFeeSummaryDTO>>> getAllFeeRecords() {
+        List<StudentFeeSummaryDTO> records = feePaymentService.getAllFeeRecords();
+        return ResponseEntity.ok(ApiResponse.success("Fee records fetched", records));
+    }
+
+    @GetMapping("/fees/student/{studentId}")
+    public ResponseEntity<ApiResponse<List<StudentFeeSummaryDTO>>> getStudentFeeRecords(@PathVariable Long studentId) {
+        List<StudentFeeSummaryDTO> records = feePaymentService.getFeeRecordsByStudent(studentId);
+        return ResponseEntity.ok(ApiResponse.success("Student fee records fetched", records));
+    }
+
+    @GetMapping("/fees/student/{studentId}/payments")
+    public ResponseEntity<ApiResponse<List<FeePaymentDTO>>> getStudentFeePayments(@PathVariable Long studentId) {
+        List<FeePaymentDTO> payments = feePaymentService.getPaymentsByStudent(studentId);
+        return ResponseEntity.ok(ApiResponse.success("Student payments fetched", payments));
+    }
+
+    @GetMapping("/fees/payments")
+    public ResponseEntity<ApiResponse<List<FeePaymentDTO>>> getAllFeePayments() {
+        List<FeePaymentDTO> payments = feePaymentService.getAllPayments();
+        return ResponseEntity.ok(ApiResponse.success("All fee payments fetched", payments));
+    }
+
+    @PutMapping("/fees/payments/{paymentId}/verify")
+    public ResponseEntity<ApiResponse<FeePaymentDTO>> verifyPayment(
+            Authentication authentication,
+            @PathVariable String paymentId,
+            @RequestBody(required = false) AdminPaymentUpdateRequest request
+    ) {
+        String adminEmail = authentication != null ? authentication.getName() : "ADMIN";
+        String note = request != null ? request.getNotes() : null;
+        FeePaymentDTO verified = feePaymentService.verifyPayment(paymentId, adminEmail, note);
+        return ResponseEntity.ok(ApiResponse.success("Payment verified", verified));
+    }
+
+    @PutMapping("/fees/payments/{paymentId}/reject")
+    public ResponseEntity<ApiResponse<FeePaymentDTO>> rejectPayment(
+            Authentication authentication,
+            @PathVariable String paymentId,
+            @RequestBody(required = false) AdminPaymentUpdateRequest request
+    ) {
+        String adminEmail = authentication != null ? authentication.getName() : "ADMIN";
+        String note = request != null ? request.getNotes() : null;
+        FeePaymentDTO rejected = feePaymentService.rejectPayment(paymentId, adminEmail, note);
+        return ResponseEntity.ok(ApiResponse.success("Payment rejected", rejected));
+    }
+
+    // ── Admin Complaints API ──────────────────────────────────────
+    @GetMapping("/complaints")
+    public ResponseEntity<ApiResponse<List<AdminComplaintDTO>>> getAllComplaints() {
+        try {
+            List<AdminComplaintDTO> complaints = adminService.getAllComplaints();
+            return ResponseEntity.ok(ApiResponse.success("Complaints fetched successfully", complaints));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                .body(ApiResponse.error("Failed to fetch complaints: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/complaints/{id}")
+    public ResponseEntity<ApiResponse<AdminComplaintDTO>> getComplaintById(@PathVariable Long id) {
+        try {
+            AdminComplaintDTO complaint = adminService.getComplaintById(id);
+            return ResponseEntity.ok(ApiResponse.success("Complaint fetched successfully", complaint));
+        } catch (Exception e) {
+            return ResponseEntity.status(404)
+                .body(ApiResponse.error("Complaint not found: " + e.getMessage()));
+        }
+    }
+
+    @PutMapping("/complaints/{id}/assign")
+    public ResponseEntity<ApiResponse<AdminComplaintDTO>> assignComplaint(
+            @PathVariable Long id,
+            @RequestBody AssignComplaintRequest request) {
+        try {
+            AdminComplaintDTO complaint = adminService.assignComplaint(id, request);
+            return ResponseEntity.ok(ApiResponse.success("Warden assigned successfully", complaint));
+        } catch (Exception e) {
+            return ResponseEntity.status(400)
+                .body(ApiResponse.error("Failed to assign warden: " + e.getMessage()));
+        }
+    }
+
+    @PutMapping("/complaints/{id}/resolve")
+    public ResponseEntity<ApiResponse<AdminComplaintDTO>> resolveComplaint(
+            @PathVariable Long id,
+            @RequestBody ResolveComplaintRequest request) {
+        try {
+            AdminComplaintDTO complaint = adminService.resolveComplaint(id, request);
+            return ResponseEntity.ok(ApiResponse.success("Complaint status updated successfully", complaint));
+        } catch (Exception e) {
+            return ResponseEntity.status(400)
+                .body(ApiResponse.error("Failed to update complaint: " + e.getMessage()));
+        }
     }
 
     private AdminResponseDTO toDTO(Admin a) {

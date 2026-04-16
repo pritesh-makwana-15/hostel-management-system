@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
   Search, Filter, Download, Plus, Edit, PowerOff,
   Shield, Layers, Clock, MoreVertical, X
@@ -9,7 +8,6 @@ import { adminRoomApi } from '../../../services/adminRoomApi';
 import '../../../styles/admin/fees/feeStructure.css';
 
 const FeeStructure = () => {
-  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [feeStructures, setFeeStructures] = useState([]);
@@ -18,6 +16,9 @@ const FeeStructure = () => {
   const [editData, setEditData] = useState(null);
   const [hostelBlocks, setHostelBlocks] = useState([]);
   const [submitting, setSubmitting] = useState(false);
+  const [checkingDuplicate, setCheckingDuplicate] = useState(false);
+  const [remoteDuplicateSelected, setRemoteDuplicateSelected] = useState(false);
+  const [formError, setFormError] = useState('');
   const [formData, setFormData] = useState({
     hostelBlock: '',
     roomType: 'AC',
@@ -30,11 +31,85 @@ const FeeStructure = () => {
 
   const perPage = 5;
 
+  const normalizeValue = (value) => (value || '').trim().toLowerCase();
+
+  const isCombinationTaken = (hostelBlock, roomType, excludeId = null) => {
+    const normalizedBlock = normalizeValue(hostelBlock);
+    const normalizedRoom = normalizeValue(roomType);
+
+    if (!normalizedBlock || !normalizedRoom) {
+      return false;
+    }
+
+    return feeStructures.some((structure) => {
+      if (excludeId && structure.id === excludeId) {
+        return false;
+      }
+      return (
+        normalizeValue(structure.hostelBlock) === normalizedBlock &&
+        normalizeValue(structure.roomType) === normalizedRoom
+      );
+    });
+  };
+
+  const duplicateCombinationSelected = isCombinationTaken(
+    formData.hostelBlock,
+    formData.roomType,
+    editData?.id || null
+  );
+
+  const combinationAlreadyExists = duplicateCombinationSelected || remoteDuplicateSelected;
+
   useEffect(() => {
     fetchFeeStructures();
     fetchHostelBlocks();
     testApiConnection();
   }, []);
+
+  useEffect(() => {
+    if (!showModal || !formData.hostelBlock || !formData.roomType) {
+      setRemoteDuplicateSelected(false);
+      setCheckingDuplicate(false);
+      return;
+    }
+
+    if (duplicateCombinationSelected) {
+      setRemoteDuplicateSelected(false);
+      setCheckingDuplicate(false);
+      return;
+    }
+
+    let cancelled = false;
+    setCheckingDuplicate(true);
+
+    const timer = setTimeout(async () => {
+      try {
+        const response = await feeStructureApi.exists(
+          formData.hostelBlock,
+          formData.roomType,
+          editData?.id || null
+        );
+        if (!cancelled) {
+          const exists = response.data?.status === 'success' && response.data?.data === true;
+          setRemoteDuplicateSelected(Boolean(exists));
+        }
+      } catch (error) {
+        console.error('Error checking fee structure combination:', error);
+        if (!cancelled) {
+          setRemoteDuplicateSelected(false);
+        }
+      } finally {
+        if (!cancelled) {
+          setCheckingDuplicate(false);
+        }
+      }
+    }, 200);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [showModal, formData.hostelBlock, formData.roomType, editData?.id, duplicateCombinationSelected]);
 
   const testApiConnection = async () => {
     try {
@@ -70,6 +145,8 @@ const FeeStructure = () => {
   const paged = filtered.slice((currentPage - 1) * perPage, currentPage * perPage);
 
   const handleOpenModal = (structure = null) => {
+    setFormError('');
+    setRemoteDuplicateSelected(false);
     if (structure) {
       setEditData(structure);
       setFormData({
@@ -99,15 +176,26 @@ const FeeStructure = () => {
   const handleCloseModal = () => {
     setShowModal(false);
     setEditData(null);
+    setFormError('');
+    setRemoteDuplicateSelected(false);
+    setCheckingDuplicate(false);
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    setFormError('');
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setFormError('');
+
+    if (combinationAlreadyExists) {
+      setFormError(`Fee structure already exists for ${formData.hostelBlock} + ${formData.roomType}. Please edit the existing one.`);
+      return;
+    }
+
     setSubmitting(true);
     try {
       const data = {
@@ -137,14 +225,16 @@ const FeeStructure = () => {
         fetchFeeStructures();
         handleCloseModal();
       } else {
-        console.error('API returned error:', response.data);
-        console.error('Full response structure:', response);
+        setFormError(response.data?.message || 'Unable to save fee structure. Please try again.');
       }
     } catch (error) {
       console.error('Error saving fee structure:', error);
       if (error.response) {
         console.error('Status:', error.response.status);
         console.error('Data:', error.response.data);
+        setFormError(error.response.data?.message || 'Unable to save fee structure.');
+      } else {
+        setFormError('Unable to save fee structure. Please check your connection and try again.');
       }
     } finally {
       setSubmitting(false);
@@ -344,10 +434,35 @@ const FeeStructure = () => {
                 <div className="form-group">
                   <label>Room Type</label>
                   <select name="roomType" value={formData.roomType} onChange={handleInputChange} required>
-                    <option value="AC">AC</option>
-                    <option value="Non-AC">Non-AC</option>
+                    <option
+                      value="AC"
+                      disabled={
+                        Boolean(formData.hostelBlock) &&
+                        isCombinationTaken(formData.hostelBlock, 'AC', editData?.id || null)
+                      }
+                    >
+                      AC
+                    </option>
+                    <option
+                      value="Non-AC"
+                      disabled={
+                        Boolean(formData.hostelBlock) &&
+                        isCombinationTaken(formData.hostelBlock, 'Non-AC', editData?.id || null)
+                      }
+                    >
+                      Non-AC
+                    </option>
                   </select>
                 </div>
+                {combinationAlreadyExists && (
+                  <div className="form-warning">
+                    This combination already exists. Please select a different Hostel Block or Room Type.
+                  </div>
+                )}
+                {checkingDuplicate && (
+                  <div className="form-warning">Checking combination availability...</div>
+                )}
+                {formError && <div className="form-error">{formError}</div>}
                 <div className="form-row">
                   <div className="form-group">
                     <label>Monthly Fee (₹)</label>
@@ -378,8 +493,8 @@ const FeeStructure = () => {
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn-secondary" onClick={handleCloseModal}>Cancel</button>
-                <button type="submit" className="btn-primary" disabled={submitting}>
-                  {submitting ? 'Saving...' : (editData ? 'Update' : 'Create')}
+                <button type="submit" className="btn-primary" disabled={submitting || checkingDuplicate || combinationAlreadyExists}>
+                  {submitting ? 'Saving...' : (checkingDuplicate ? 'Checking...' : (editData ? 'Update' : 'Create'))}
                 </button>
               </div>
             </form>
