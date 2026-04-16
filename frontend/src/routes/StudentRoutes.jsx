@@ -8,6 +8,7 @@ import DashboardLayout from '../layouts/DashboardLayout';
 const StudentDashboard     = lazy(() => import('../pages/student/dashboard/StudentDashboard'));
 const StudentRoomDetails   = lazy(() => import('../pages/student/Room'));
 const RoommateProfile      = lazy(() => import('../pages/student/room/RoommateProfile'));
+const LeaveApplication     = lazy(() => import('../pages/student/LeaveApplication'));
 
 // Complaints Module
 const StudentComplaints    = lazy(() => import('../pages/student/complaints/Complaints'));
@@ -48,6 +49,7 @@ const StudentRoutes = () => (
         {/* ── Core Modules ── */}
         <Route path="room" element={<StudentRoomDetails />} />
         <Route path="roommates/:studentId" element={<RoommateProfile />} />
+        <Route path="leave" element={<LeaveApplication />} />
 
         {/* ── Complaints Module ── */}
         <Route path="complaints"        element={<StudentComplaints />} />
@@ -60,6 +62,7 @@ const StudentRoutes = () => (
 
         {/* ── Fee Module (sub-routes) ── */}
         <Route path="fees"                   element={<FeeDetails />} />
+        <Route path="fees/request"           element={<PayFee />} />
         <Route path="fees/pay"               element={<PayFee />} />
         <Route path="fees/history"           element={<PaymentHistory />} />
         <Route path="fees/certificate"       element={<FeeCertificateRequest />} />

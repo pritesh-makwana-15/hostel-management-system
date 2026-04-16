@@ -43,6 +43,9 @@ public class FeePaymentTransaction {
     @Column(name = "transaction_id", nullable = false, unique = true, length = 80)
     public String transactionId;
 
+    @Column(name = "proof_file", length = 255)
+    public String proofFile;
+
     @Column(name = "payment_date")
     public LocalDate paymentDate;
 

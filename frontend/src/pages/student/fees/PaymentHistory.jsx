@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Download, Search, Filter, Eye, MoreHorizontal,
@@ -20,7 +20,7 @@ const ROWS_PER_PAGE = 6;
 
 const mapStatus = (status) => {
   const normalized = String(status || '').toUpperCase();
-  if (normalized === 'VERIFIED') return 'Paid';
+  if (normalized === 'VERIFIED') return 'Verified from Admin';
   if (normalized === 'REJECTED') return 'Failed';
   return 'Pending';
 };
@@ -44,8 +44,7 @@ const PaymentHistory = () => {
   const [studentProfile, setStudentProfile] = useState(null);
   const [allTransactions, setAllTransactions] = useState([]);
 
-  useEffect(() => {
-    const loadStudentPayments = async () => {
+  const loadStudentPayments = useCallback(async () => {
       try {
         setLoading(true);
         const [profileResponse, paymentsResponse] = await Promise.all([
@@ -75,10 +74,20 @@ const PaymentHistory = () => {
       } finally {
         setLoading(false);
       }
+    }, []);
+
+  useEffect(() => {
+    loadStudentPayments();
+  }, [loadStudentPayments]);
+
+  useEffect(() => {
+    const onFocus = () => {
+      loadStudentPayments();
     };
 
-    loadStudentPayments();
-  }, []);
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, [loadStudentPayments]);
 
   const filtered = allTransactions.filter((txn) => {
     const matchSearch = !search || txn.id?.toLowerCase().includes(search.toLowerCase());
@@ -173,7 +182,7 @@ const PaymentHistory = () => {
               onChange={(e) => setStatus(e.target.value)}
             >
               <option value="">All Status</option>
-              <option value="Paid">Paid</option>
+              <option value="Verified from Admin">Verified from Admin</option>
               <option value="Pending">Pending</option>
               <option value="Failed">Failed</option>
             </select>

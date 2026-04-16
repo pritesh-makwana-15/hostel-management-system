@@ -1,20 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   CreditCard, Clock, Download, History, FileText,
-  HelpCircle, CheckCircle, AlertCircle, AlertTriangle,
+  HelpCircle, CheckCircle,
   ChevronRight, TrendingUp, Zap, Wrench, Home
 } from 'lucide-react';
 import { studentFeeApi } from '../../../services/adminFeeApi';
 import '../../../styles/student/fees/fee-details.css';
 
 const fmt = (n) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
-
-const statusConfig = {
-  PAID: { label: 'PAID', color: '#22c55e', bg: '#F0FDF4', border: '#bbf7d0' },
-  PARTIAL: { label: 'PARTIAL', color: '#F59E0B', bg: '#FFF8E7', border: '#fde68a' },
-  PENDING: { label: 'PENDING', color: '#EF4444', bg: '#FEF2F2', border: '#fecaca' },
-};
 
 const txnStatusCfg = {
   VERIFIED: { color: '#22c55e', bg: '#F0FDF4' },
@@ -36,8 +30,7 @@ const FeeDetails = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchData = async () => {
+  const fetchData = useCallback(async () => {
       try {
         setError('');
         const [summaryResponse, paymentsResponse] = await Promise.all([
@@ -60,10 +53,28 @@ const FeeDetails = () => {
       } finally {
         setLoading(false);
       }
+    }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  useEffect(() => {
+    const onFocus = () => {
+      fetchData();
     };
 
-    fetchData();
-  }, []);
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, [fetchData]);
+
+  useEffect(() => {
+    const intervalId = globalThis.setInterval(() => {
+      fetchData();
+    }, 15000);
+
+    return () => globalThis.clearInterval(intervalId);
+  }, [fetchData]);
 
   const totalFee = Number(feeSummary?.totalFee || 0);
   const paidAmount = Number(feeSummary?.paidAmount || 0);
@@ -72,7 +83,6 @@ const FeeDetails = () => {
 
   const progressPercent = totalFee > 0 ? Math.min(100, Math.round((paidAmount / totalFee) * 100)) : 0;
   const progressColor = progressColorByStatus[currentStatus] || '#EF4444';
-  const statusUi = statusConfig[currentStatus] || statusConfig.PENDING;
 
   const data = feeSummary
     ? {
@@ -127,8 +137,8 @@ const FeeDetails = () => {
             <History size={15} /> View History
           </button>
           {feeSummary && remainingFee > 0 && (
-            <button className="fd-btn-primary" onClick={() => navigate('/student/fees/pay')}>
-              <CreditCard size={15} /> Pay Fee
+            <button className="fd-btn-primary" onClick={() => navigate('/student/fees/request')}>
+              <CreditCard size={15} /> Submit Payment Request
             </button>
           )}
         </div>
@@ -136,51 +146,6 @@ const FeeDetails = () => {
 
       <div className="fd-main-grid">
         <div className="fd-left">
-          <div className="fd-summary-card">
-            <div className="fd-summary-top">
-              <div>
-                <div className="fd-summary-badge" style={{ color: statusUi.color, background: statusUi.bg, border: `1px solid ${statusUi.border}` }}>
-                  {data.status === 'PAID' && <CheckCircle size={12} />}
-                  {data.status === 'PARTIAL' && <AlertCircle size={12} />}
-                  {data.status === 'PENDING' && <AlertTriangle size={12} />}
-                  {statusUi.label}
-                </div>
-                <h2 className="fd-summary-title">Fee Summary: {data.month}</h2>
-                <p className="fd-summary-msg">{data.message}</p>
-              </div>
-              <div className="fd-summary-due">
-                <Clock size={13} />
-                Due Date: {data.dueDate}
-              </div>
-            </div>
-
-            <div className="fd-summary-stats">
-              <div className="fd-stat-box">
-                <span className="fd-stat-label">TOTAL FEE</span>
-                <span className="fd-stat-value">{fmt(data.totalFee)}</span>
-              </div>
-              <div className="fd-stat-box">
-                <span className="fd-stat-label">AMOUNT PAID</span>
-                <span className="fd-stat-value" style={{ color: '#22c55e' }}>{fmt(data.paidAmount)}</span>
-              </div>
-              <div className="fd-stat-box">
-                <span className="fd-stat-label">BALANCE DUE</span>
-                <span className="fd-stat-value" style={{ color: data.remaining > 0 ? '#EF4444' : '#22c55e' }}>
-                  {fmt(data.remaining)}
-                </span>
-              </div>
-            </div>
-
-            {data.remaining > 0 && feeSummary && (
-              <div className="fd-pay-now-strip">
-                <span><Clock size={13} /> ₹{Number(data.remaining).toLocaleString('en-IN')} remaining</span>
-                <button className="fd-btn-primary fd-btn-sm" onClick={() => navigate('/student/fees/pay')}>
-                  Pay Fee Now <ChevronRight size={14} />
-                </button>
-              </div>
-            )}
-          </div>
-
           <div className="fd-card">
             <div className="fd-card-header">
               <div>
@@ -353,8 +318,8 @@ const FeeDetails = () => {
               { icon: History, label: 'View Payment History', onClick: () => navigate('/student/fees/history') },
               {
                 icon: CreditCard,
-                label: 'Pay Fee',
-                onClick: () => (remainingFee > 0 ? navigate('/student/fees/pay') : navigate('/student/fees/history')),
+                label: 'Submit Payment Request',
+                onClick: () => (remainingFee > 0 ? navigate('/student/fees/request') : navigate('/student/fees/history')),
               },
               { icon: FileText, label: 'Request Fee Certificate', onClick: () => navigate('/student/fees/certificate') },
             ].map((action) => {

@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { jsPDF } from 'jspdf';
 import {
   ArrowLeft, Printer, Download, CheckCircle, Clock,
   User, MapPin, Calendar, CreditCard, Hash, Shield,
@@ -13,7 +14,7 @@ const fmt = (n) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
 
 const mapStatus = (status) => {
   const normalized = String(status || '').toUpperCase();
-  if (normalized === 'VERIFIED') return 'Paid';
+  if (normalized === 'VERIFIED') return 'Verified from Admin';
   if (normalized === 'REJECTED') return 'Failed';
   return 'Pending';
 };
@@ -38,17 +39,15 @@ const PaymentReceipt = () => {
     const loadReceipt = async () => {
       try {
         setLoading(true);
-        const [profileResponse, receiptResponse, summaryResponse] = await Promise.all([
+        const [profileResponse, receiptResponse] = await Promise.all([
           studentApi.getProfile(),
           studentFeeApi.getPaymentById(id),
-          studentFeeApi.getMyRecord(),
         ]);
 
         const profile = profileResponse?.data?.data || null;
         setStudentProfile(profile);
 
         const payment = receiptResponse?.data?.data || null;
-        const summary = summaryResponse?.data?.data || null;
 
         const studentReceipt = payment
           ? {
@@ -61,13 +60,8 @@ const PaymentReceipt = () => {
               date: payment.paymentDate,
               method: mapMethod(payment.paymentMethod),
               txnId: payment.transactionId,
+              proofFile: payment.proofFile,
               generatedOn: payment.createdAt,
-              feeBreakdown: {
-                monthly: Number(summary?.monthlyFee || 0),
-                utilities: Number(summary?.utilities || 0),
-                lateFee: Number(summary?.lateFee || 0),
-                securityDeposit: Number(summary?.securityDeposit || 0),
-              },
             }
           : null;
 
@@ -85,15 +79,76 @@ const PaymentReceipt = () => {
 
   const active = (receipt?.status || 'Pending') === 'Paid';
 
-  const breakdown = useMemo(() => {
-    const source = receipt?.feeBreakdown || {};
-    return {
-      monthly: Number(source.monthly || 0),
-      utilities: Number(source.utilities || 0),
-      lateFee: Number(source.lateFee || 0),
-      securityDeposit: Number(source.securityDeposit || 0),
-    };
-  }, [receipt]);
+  const receiptMetadata = useMemo(() => [
+    { label: 'PAYMENT AMOUNT', value: fmt(receipt?.amount) },
+    { label: 'PAYMENT METHOD', value: receipt?.method || '-' },
+    { label: 'TRANSACTION ID', value: receipt?.txnId || '-' },
+    { label: 'PROOF FILE', value: receipt?.proofFile || 'Not provided' },
+  ], [receipt]);
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const handleDownloadPdf = () => {
+    if (!receipt) {
+      return;
+    }
+
+    const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+    let y = 56;
+    const left = 48;
+
+    doc.setFontSize(18);
+    doc.text('Hostel Management System', left, y);
+    y += 24;
+    doc.setFontSize(14);
+    doc.text('Payment Receipt', left, y);
+
+    y += 24;
+    doc.setFontSize(11);
+    doc.text(`Receipt ID: ${receipt.id || '-'}`, left, y);
+    y += 16;
+    doc.text(`Status: ${receipt.status || '-'}`, left, y);
+    y += 16;
+    doc.text(`Generated On: ${receipt.generatedOn || '-'}`, left, y);
+
+    y += 24;
+    doc.setFontSize(13);
+    doc.text('Student Information', left, y);
+    y += 16;
+    doc.setFontSize(11);
+    doc.text(`Name: ${receipt.studentName || studentProfile?.name || '-'}`, left, y);
+    y += 16;
+    doc.text(`Student ID: ${receipt.studentId || studentProfile?.enrollmentNo || '-'}`, left, y);
+    y += 16;
+    doc.text(`Room: ${receipt.room || '-'}`, left, y);
+
+    y += 24;
+    doc.setFontSize(13);
+    doc.text('Transaction Details', left, y);
+    y += 16;
+    doc.setFontSize(11);
+    doc.text(`Payment Date: ${receipt.date || '-'}`, left, y);
+    y += 16;
+    doc.text(`Payment Method: ${receipt.method || '-'}`, left, y);
+    y += 16;
+    doc.text(`Transaction ID: ${receipt.txnId || '-'}`, left, y);
+
+    y += 24;
+    doc.setFontSize(13);
+    doc.text('Payment Amount', left, y);
+    y += 16;
+    doc.setFontSize(11);
+    doc.text(`Amount: INR ${Number(receipt.amount || 0).toLocaleString('en-IN')}`, left, y);
+
+    y += 24;
+    doc.setFontSize(10);
+    doc.text('This is a system-generated receipt for a single payment transaction.', left, y);
+
+    const fileName = `${receipt.id || 'payment-receipt'}.pdf`;
+    doc.save(fileName);
+  };
 
   if (loading) {
     return (
@@ -139,8 +194,8 @@ const PaymentReceipt = () => {
         </button>
         <div className="pr-topbar-right">
           <span className="pr-gen-date">Receipt generated on {receipt.generatedOn || '-'}</span>
-          <button className="pr-icon-btn"><Printer size={15} /> Print</button>
-          <button className="pr-icon-btn pr-icon-btn--primary"><Download size={15} /> Download PDF</button>
+          <button className="pr-icon-btn" onClick={handlePrint}><Printer size={15} /> Print</button>
+          <button className="pr-icon-btn pr-icon-btn--primary" onClick={handleDownloadPdf}><Download size={15} /> Download PDF</button>
         </div>
       </div>
 
@@ -165,8 +220,8 @@ const PaymentReceipt = () => {
                     <CheckCircle size={14} /> VERIFIED
                   </div>
                   <div className="pr-rec-actions">
-                    <button className="pr-icon-btn"><Printer size={14} /> Print</button>
-                    <button className="pr-icon-btn pr-icon-btn--primary"><Download size={14} /> Download PDF</button>
+                    <button className="pr-icon-btn" onClick={handlePrint}><Printer size={14} /> Print</button>
+                    <button className="pr-icon-btn pr-icon-btn--primary" onClick={handleDownloadPdf}><Download size={14} /> Download PDF</button>
                   </div>
                 </>
               ) : (
@@ -231,13 +286,15 @@ const PaymentReceipt = () => {
             <div className="pr-info-section">
               <h4 className="pr-info-section-title">
                 <span className="pr-info-accent" aria-hidden="true" />{' '}
-                <span>FEE BREAKDOWN</span>
+                <span>PAYMENT DETAILS</span>
               </h4>
               <div className="pr-info-rows">
-                <div className="pr-info-row"><div className="pr-info-key">MONTHLY FEE</div><span className="pr-info-val">{fmt(breakdown.monthly)}</span></div>
-                <div className="pr-info-row"><div className="pr-info-key">UTILITIES</div><span className="pr-info-val">{fmt(breakdown.utilities)}</span></div>
-                <div className="pr-info-row"><div className="pr-info-key">LATE FEE</div><span className="pr-info-val">{fmt(breakdown.lateFee)}</span></div>
-                <div className="pr-info-row"><div className="pr-info-key">SECURITY DEPOSIT</div><span className="pr-info-val">{fmt(breakdown.securityDeposit)}</span></div>
+                {receiptMetadata.map((item) => (
+                  <div className="pr-info-row" key={item.label}>
+                    <div className="pr-info-key">{item.label}</div>
+                    <span className="pr-info-val">{item.value}</span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>

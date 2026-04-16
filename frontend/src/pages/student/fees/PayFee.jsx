@@ -80,6 +80,7 @@ const PayFee = () => {
   const outstandingAmount = Number(
     feeRecordSummary?.balance ?? amountBreakdown.totalPayable ?? 0
   );
+  const isFullyPaid = outstandingAmount <= 0;
 
   const amountNumber = Number(amount || 0);
   const receiptStudentName = studentProfile?.name || 'Student';
@@ -106,9 +107,19 @@ const PayFee = () => {
   };
 
   const handleSubmit = async () => {
+    if (isFullyPaid) {
+      setSubmitError('You have already paid fees for this cycle.');
+      return;
+    }
+
     const parsedAmount = Number(amount || outstandingAmount || 0);
     if (!parsedAmount || parsedAmount <= 0) {
       setSubmitError('Please enter a valid payment amount.');
+      return;
+    }
+
+    if (parsedAmount > outstandingAmount) {
+      setSubmitError(`Payment amount cannot exceed remaining balance of ₹${outstandingAmount.toLocaleString('en-IN')}.`);
       return;
     }
 
@@ -131,6 +142,7 @@ const PayFee = () => {
         amount: parsedAmount,
         paymentMethod: apiMethod,
         transactionId: generatedTxnId,
+        proofFile: file?.name || null,
         paymentDate: date,
         notes,
       };
@@ -139,7 +151,7 @@ const PayFee = () => {
         payload.academicCycle = academicCycle;
       }
 
-      const response = await studentFeeApi.submitPayment(payload);
+      const response = await studentFeeApi.submitPaymentRequest(payload);
       paymentId = response?.data?.data?.paymentId || paymentId;
     } catch (error) {
       setSubmitError(error?.response?.data?.message || 'Unable to submit payment right now. Please try again.');
@@ -155,11 +167,52 @@ const PayFee = () => {
   };
 
   const selectedMethod = METHODS.find((m) => m.id === method);
-  let submitButtonLabel = 'Submit Payment Proof';
+  let submitButtonLabel = 'Submit Verification Request';
   if (submitted) {
     submitButtonLabel = 'Submitted!';
   } else if (submitting) {
     submitButtonLabel = 'Submitting...';
+  }
+
+  if (!loadingFee && !feeError && isFullyPaid) {
+    return (
+      <div className="pf-page">
+        <div className="pf-breadcrumb">
+          <button className="pf-back-btn" onClick={() => navigate('/student/fees')}>
+            <ArrowLeft size={15} />
+            Fee Details
+          </button>
+          <span className="pf-bc-sep">›</span>
+          <span className="pf-bc-current">Payment Request (Offline)</span>
+        </div>
+
+        <div className="pf-header">
+          <div>
+            <h1 className="pf-title">Offline Payment Request</h1>
+            <p className="pf-subtitle">You have already paid fees for this cycle.</p>
+          </div>
+        </div>
+
+        <div className="pf-main-grid">
+          <div className="pf-form-card">
+            <h3 className="pf-section-title">Fees Already Paid</h3>
+            <p className="pf-section-sub">
+              Your payment is fully verified from admin side. No further payment request is required.
+            </p>
+            <div className="pf-form-footer" style={{ marginTop: 18 }}>
+              <div className="pf-footer-actions">
+                <button className="pf-btn-cancel" onClick={() => navigate('/student/fees/history')}>
+                  View Payment History
+                </button>
+                <button className="pf-btn-submit" onClick={() => navigate('/student/fees')}>
+                  Back to Fee Details
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -172,14 +225,14 @@ const PayFee = () => {
           Fee Details
         </button>
         <span className="pf-bc-sep">›</span>
-        <span className="pf-bc-current">Pay Fee (Offline)</span>
+        <span className="pf-bc-current">Payment Request (Offline)</span>
       </div>
 
       <div className="pf-header">
         <div>
-          <h1 className="pf-title">Offline Fee Submission</h1>
+          <h1 className="pf-title">Offline Payment Request</h1>
           <p className="pf-subtitle">
-            Paid manually via Cash or Bank Transfer? Submit your payment details here for administrative verification and receipt generation.
+            Paid manually via Cash or Bank Transfer? Submit a payment request for administrative verification and receipt generation.
           </p>
           <p className="pf-subtitle" style={feeStatusMessage.color ? { color: feeStatusMessage.color } : undefined}>
             {feeStatusMessage.text}
@@ -217,8 +270,8 @@ const PayFee = () => {
 
         {/* ── Form ── */}
         <div className="pf-form-card">
-          <h3 className="pf-section-title">Payment Transaction Details</h3>
-          <p className="pf-section-sub">Enter the details as per your bank transaction or cash deposit slip.</p>
+          <h3 className="pf-section-title">Payment Request Details</h3>
+          <p className="pf-section-sub">Enter the details from your bank transaction or cash deposit slip.</p>
 
           {/* Method Selection */}
           <div className="pf-field-group">
@@ -259,6 +312,11 @@ const PayFee = () => {
               {feeStructure && (
                 <span className="pf-hint">
                   Suggested payable amount: {payableAmountDisplay} (Monthly: ₹{amountBreakdown.monthly.toLocaleString('en-IN')}, Utilities: ₹{amountBreakdown.utilities.toLocaleString('en-IN')}, Late Fee: ₹{amountBreakdown.lateFee.toLocaleString('en-IN')})
+                </span>
+              )}
+              {isFullyPaid && (
+                <span className="pf-hint" style={{ color: '#16a34a' }}>
+                  This fee cycle is fully paid. New payment submissions are disabled.
                 </span>
               )}
             </div>
@@ -357,7 +415,7 @@ const PayFee = () => {
               <button
                 className={`pf-btn-submit ${submitted ? 'pf-btn-submitted' : ''}`}
                 onClick={handleSubmit}
-                disabled={submitted || submitting || loadingFee || !studentProfile?.id || Number(amount || outstandingAmount || 0) <= 0}
+                disabled={submitted || submitting || loadingFee || !studentProfile?.id || isFullyPaid || Number(amount || outstandingAmount || 0) <= 0}
               >
                 {submitted ? <><CheckCircle size={15} /> {submitButtonLabel}</> : <>{submitButtonLabel}</>}
               </button>

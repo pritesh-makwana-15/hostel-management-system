@@ -13,6 +13,7 @@ public class SubmitFeePaymentRequest {
     private BigDecimal amount;
     private String paymentMethod;
     private String transactionId;
+    private String proofFile;
     private String paymentDate;
     private String notes;
 }

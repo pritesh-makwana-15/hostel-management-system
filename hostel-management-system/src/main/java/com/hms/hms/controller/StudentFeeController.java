@@ -100,6 +100,15 @@ public class StudentFeeController {
         return ResponseEntity.ok(ApiResponse.success("Payment submitted for verification", payment));
     }
 
+    @PostMapping("/fees/request")
+    public ResponseEntity<ApiResponse<FeePaymentDTO>> submitFeePaymentRequest(
+            @AuthenticationPrincipal org.springframework.security.core.userdetails.User user,
+            @RequestBody SubmitFeePaymentRequest request
+    ) {
+        FeePaymentDTO payment = feePaymentService.submitPayment(user.getUsername(), request);
+        return ResponseEntity.ok(ApiResponse.success("Payment request submitted for admin verification", payment));
+    }
+
     @GetMapping("/fees/payments")
     public ResponseEntity<ApiResponse<List<FeePaymentDTO>>> getMyFeePayments(
             @AuthenticationPrincipal org.springframework.security.core.userdetails.User user
