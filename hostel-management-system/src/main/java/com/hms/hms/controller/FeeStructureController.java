@@ -84,4 +84,15 @@ public class FeeStructureController {
         List<FeeStructureDTO> feeStructures = feeStructureService.getFeeStructuresByRoomType(roomType);
         return ResponseEntity.ok(ApiResponse.success("Fee structures fetched successfully", feeStructures));
     }
+
+    @GetMapping("/exists")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<Boolean>> feeStructureExists(
+            @RequestParam String hostelBlock,
+            @RequestParam String roomType,
+            @RequestParam(required = false) Long excludeId
+    ) {
+        boolean exists = feeStructureService.feeStructureExists(hostelBlock, roomType, excludeId);
+        return ResponseEntity.ok(ApiResponse.success("Fee structure existence checked", exists));
+    }
 }

@@ -361,7 +361,7 @@ const RealTimeRoomData = () => {
                           <p className="srd-roommate-name">{rm.name}</p>
                           <p className="srd-roommate-id">{rm.studentId}</p>
                         </div>
-                        <button 
+                        <button
                           className="srd-mini-profile-btn"
                           onClick={() => navigate(`/student/roommates/${rm.studentId}`)}
                           title="View Full Profile"
@@ -383,6 +383,12 @@ const RealTimeRoomData = () => {
                           <span>{rm.bedId}</span>
                         </div>
                       </div>
+                      <button
+                        className="srd-profile-btn"
+                        onClick={() => navigate(`/student/roommates/${rm.studentId}`)}
+                      >
+                        <Eye size={14} /> View Profile
+                      </button>
                     </div>
                   )
                 )

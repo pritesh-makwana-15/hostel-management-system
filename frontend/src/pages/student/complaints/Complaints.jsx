@@ -23,12 +23,11 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import {
-  complaintsData,
-  getComplaintStats,
   statusOptions,
   priorityOptions,
   complaintTypes,
 } from '../../../data/complaintsData';
+import { studentApi } from '../../../services/studentApi';
 import '../../../styles/student/complaints/complaints.css';
 
 /* ── helpers ────────────────────────────────────────────── */
@@ -68,29 +67,57 @@ const getCategoryIcon = (type) => {
 /* ── Component ──────────────────────────────────────────── */
 const Complaints = () => {
   const navigate = useNavigate();
-  const stats = getComplaintStats();
 
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('All Status');
   const [categoryFilter, setCategoryFilter] = useState('All Categories');
   const [priorityFilter, setPriorityFilter] = useState('All Priority');
-  const [filtered, setFiltered] = useState(complaintsData);
+  const [complaints, setComplaints] = useState([]);
+  const [filtered, setFiltered] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
+  const stats = {
+    total: complaints.length,
+    open: complaints.filter((c) => c.status === 'Open').length,
+    inProgress: complaints.filter((c) => c.status === 'In Progress').length,
+    resolved: complaints.filter((c) => c.status === 'Resolved').length,
+  };
+
+  useEffect(() => {
+    const fetchComplaints = async () => {
+      try {
+        setLoading(true);
+        const response = await studentApi.getComplaints();
+        const list = Array.isArray(response?.data?.data) ? response.data.data : [];
+        setComplaints(list);
+        setFiltered(list);
+      } catch (error) {
+        console.error('Failed to fetch student complaints:', error);
+        setComplaints([]);
+        setFiltered([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchComplaints();
+  }, []);
+
   const applyFilters = () => {
-    let result = [...complaintsData];
+    let result = [...complaints];
     if (search) {
       const q = search.toLowerCase();
       result = result.filter(
         (c) =>
-          c.id.toLowerCase().includes(q) ||
-          c.category.toLowerCase().includes(q) ||
-          c.complaintType.toLowerCase().includes(q)
+          (c.id || '').toLowerCase().includes(q) ||
+          (c.title || '').toLowerCase().includes(q) ||
+          (c.category || '').toLowerCase().includes(q)
       );
     }
     if (statusFilter !== 'All Status') result = result.filter((c) => c.status === statusFilter);
-    if (categoryFilter !== 'All Categories') result = result.filter((c) => c.complaintType === categoryFilter);
+    if (categoryFilter !== 'All Categories') result = result.filter((c) => c.category === categoryFilter);
     if (priorityFilter !== 'All Priority') result = result.filter((c) => c.priority === priorityFilter);
     setFiltered(result);
     setPage(1);
@@ -101,7 +128,7 @@ const Complaints = () => {
     setStatusFilter('All Status');
     setCategoryFilter('All Categories');
     setPriorityFilter('All Priority');
-    setFiltered(complaintsData);
+    setFiltered(complaints);
     setPage(1);
   };
 
@@ -230,7 +257,7 @@ const Complaints = () => {
                   <td colSpan={8}>
                     <div className="empty-state">
                       <MessageSquare size={40} />
-                      <p>No complaints found matching your filters.</p>
+                      <p>{loading ? 'Loading complaints...' : 'No complaints found matching your filters.'}</p>
                     </div>
                   </td>
                 </tr>
@@ -242,22 +269,22 @@ const Complaints = () => {
                         className="complaint-id-link"
                         onClick={() => navigate(`/student/complaints/${c.id}`)}
                       >
-                        #{c.id}
+                        {c.id}
                       </span>
                     </td>
                     <td>
                       <div className="complaint-title-cell">
-                        <div className="title">{c.category}</div>
+                        <div className="title">{c.title}</div>
                         <div className="meta">
-                          <span><MessageSquare size={11} /> {c.timeline.length}</span>
-                          <span><Paperclip size={11} /> {c.attachments.length}</span>
+                          <span><MessageSquare size={11} /> 1</span>
+                          <span><Paperclip size={11} /> 0</span>
                         </div>
                       </div>
                     </td>
                     <td>
                       <div className="category-cell">
-                        <span className="category-icon">{getCategoryIcon(c.complaintType)}</span>
-                        {c.complaintType}
+                        <span className="category-icon">{getCategoryIcon(c.category)}</span>
+                        {c.category}
                       </div>
                     </td>
                     <td>
@@ -265,7 +292,7 @@ const Complaints = () => {
                         {c.priority}
                       </span>
                     </td>
-                    <td>{new Date(c.submittedDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+                    <td>{c.submittedDate ? new Date(c.submittedDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}</td>
                     <td>{c.assignedWarden || <span style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>Waiting...</span>}</td>
                     <td>
                       <span className={`status-badge ${getStatusClass(c.status)}`}>

@@ -8,7 +8,8 @@ CREATE TABLE IF NOT EXISTS fee_structures (
     utilities DECIMAL(10,2),
     late_fee DECIMAL(10,2),
     status VARCHAR(20) DEFAULT 'Active',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uk_fee_structures_block_room_type UNIQUE (hostel_block, room_type)
 );
 
 -- Add indexes for better performance

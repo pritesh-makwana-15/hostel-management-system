@@ -7,6 +7,7 @@ import DashboardLayout from '../layouts/DashboardLayout';
 // ── Lazy Load Student Pages ───────────────────────────────────
 const StudentDashboard     = lazy(() => import('../pages/student/dashboard/StudentDashboard'));
 const StudentRoomDetails   = lazy(() => import('../pages/student/Room'));
+const RoommateProfile      = lazy(() => import('../pages/student/room/RoommateProfile'));
 
 // Complaints Module
 const StudentComplaints    = lazy(() => import('../pages/student/complaints/Complaints'));
@@ -27,6 +28,7 @@ const FeeDetails       = lazy(() => import('../pages/student/fees/FeeDetails'));
 const PayFee           = lazy(() => import('../pages/student/fees/PayFee'));
 const PaymentHistory   = lazy(() => import('../pages/student/fees/PaymentHistory'));
 const PaymentReceipt   = lazy(() => import('../pages/student/fees/PaymentReceipt'));
+const FeeCertificateRequest = lazy(() => import('../pages/student/fees/FeeCertificateRequest'));
 // ─────────────────────────────────────────────────────────────
 
 const StudentRoutes = () => (
@@ -45,6 +47,7 @@ const StudentRoutes = () => (
 
         {/* ── Core Modules ── */}
         <Route path="room" element={<StudentRoomDetails />} />
+        <Route path="roommates/:studentId" element={<RoommateProfile />} />
 
         {/* ── Complaints Module ── */}
         <Route path="complaints"        element={<StudentComplaints />} />
@@ -59,6 +62,7 @@ const StudentRoutes = () => (
         <Route path="fees"                   element={<FeeDetails />} />
         <Route path="fees/pay"               element={<PayFee />} />
         <Route path="fees/history"           element={<PaymentHistory />} />
+        <Route path="fees/certificate"       element={<FeeCertificateRequest />} />
         <Route path="fees/receipt/:id"       element={<PaymentReceipt />} />
 
         {/* ── Profile Module ── */}
