@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import React, { useState } from 'react';
 import { Clock } from 'lucide-react';
 
@@ -10,6 +11,20 @@ const statusStyle = (status) => {
 
 const RecentActivity = ({ activities }) => {
   const [filter, setFilter] = useState('Last 24 Hours');
+
+  const now = Date.now();
+  const last24Hours = 24 * 60 * 60 * 1000;
+
+  const filteredActivities = (activities || []).filter((activity) => {
+    if (filter !== 'Last 24 Hours') return true;
+
+    if (!activity.timestamp) return false;
+
+    const ts = new Date(activity.timestamp).getTime();
+    if (Number.isNaN(ts)) return false;
+
+    return now - ts <= last24Hours;
+  });
 
   return (
     <div className="warden-section-card">
@@ -43,7 +58,7 @@ const RecentActivity = ({ activities }) => {
             </tr>
           </thead>
           <tbody>
-            {activities.map((a) => (
+            {filteredActivities.map((a) => (
               <tr key={a.id}>
                 <td className="warden-act-type">{a.type}</td>
                 <td className="warden-act-desc">{a.description}</td>
@@ -58,13 +73,18 @@ const RecentActivity = ({ activities }) => {
                 </td>
               </tr>
             ))}
+            {filteredActivities.length === 0 && (
+              <tr>
+                <td colSpan={4} className="warden-act-empty">No activities found.</td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
 
       {/* Mobile Cards */}
       <div className="warden-activity-mobile">
-        {activities.map((a) => (
+        {filteredActivities.map((a) => (
           <div key={a.id} className="warden-act-card">
             <div className="warden-act-card-header">
               <span className="warden-act-type">{a.type}</span>
@@ -76,6 +96,11 @@ const RecentActivity = ({ activities }) => {
             <span className="warden-act-time">{a.dateTime}</span>
           </div>
         ))}
+        {filteredActivities.length === 0 && (
+          <div className="warden-act-card">
+            <p className="warden-act-desc">No activities found.</p>
+          </div>
+        )}
       </div>
     </div>
   );
