@@ -11,6 +11,8 @@ import java.util.Optional;
 public interface FeeStructureRepository extends JpaRepository<FeeStructure, Long> {
     List<FeeStructure> findByHostelBlock(String hostelBlock);
     Optional<FeeStructure> findByHostelBlockAndRoomType(String hostelBlock, String roomType);
+    boolean existsByHostelBlockIgnoreCaseAndRoomTypeIgnoreCase(String hostelBlock, String roomType);
+    boolean existsByHostelBlockIgnoreCaseAndRoomTypeIgnoreCaseAndIdNot(String hostelBlock, String roomType, Long id);
     List<FeeStructure> findByStatus(String status);
     List<FeeStructure> findByRoomType(String roomType);
 }

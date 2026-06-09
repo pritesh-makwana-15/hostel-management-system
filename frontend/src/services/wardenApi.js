@@ -20,6 +20,18 @@ export const wardenApi = {
   // POST /api/warden/logout-all — logout from all devices
   logoutAllDevices: () => api.post('/api/warden/logout-all'),
 
+  // GET /api/warden/dashboard/stats — get dashboard stat cards
+  getDashboardStats: () => api.get('/api/warden/dashboard/stats'),
+
+  // GET /api/warden/complaints/pending — get latest pending complaints
+  getPendingComplaints: () => api.get('/api/warden/complaints/pending'),
+
+  // GET /api/warden/alerts — get dashboard alerts
+  getAlerts: () => api.get('/api/warden/alerts'),
+
+  // GET /api/warden/activities — get recent activities from DB
+  getActivities: () => api.get('/api/warden/activities'),
+
   // ── Announcements API for Wardens ──────────────────────────
 
   // GET /api/announcements/active — get active announcements for wardens

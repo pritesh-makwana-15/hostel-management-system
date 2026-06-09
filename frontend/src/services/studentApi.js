@@ -31,6 +31,13 @@ export const studentApi = {
   // Used by: StudentProfile.jsx
   getComplaints: () => api.get('/api/student/complaints'),
 
+  // GET /api/student/complaints/{complaintId}
+  // Returns: ApiResponse<StudentComplaintDTO>
+  getComplaintById: (complaintId) => api.get(`/api/student/complaints/${complaintId}`),
+
+  // DELETE /api/student/complaints/{complaintId}
+  deleteComplaint: (complaintId) => api.delete(`/api/student/complaints/${complaintId}`),
+
   // POST /api/student/complaints
   // body: { category, description }
   // Used by: NewTicket.jsx

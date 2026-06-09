@@ -1,15 +1,55 @@
-import React from 'react';
-import { dashboardData } from '../../data/dashboardData';
+import React, { useEffect, useState } from 'react';
+import { adminDashboardApi } from '../../services/adminDashboardApi';
 import '../../styles/admin/Alerts.css';
 
 const Alerts = () => {
+  const [pendingComplaints, setPendingComplaints] = useState([]);
+  const [pendingFees, setPendingFees] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const loadAlerts = async () => {
+      try {
+        setLoading(true);
+        setError('');
+        const response = await adminDashboardApi.getAlerts();
+        if (response.data?.status === 'success') {
+          const alerts = response.data.data || {};
+          setPendingComplaints(alerts.pendingComplaints || []);
+          setPendingFees(alerts.pendingFees || []);
+        } else {
+          setPendingComplaints([]);
+          setPendingFees([]);
+          setError('Failed to load alerts');
+        }
+      } catch {
+        setPendingComplaints([]);
+        setPendingFees([]);
+        setError('Failed to load alerts');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadAlerts();
+  }, []);
+
+  if (loading) {
+    return <div className="alerts-container"><div className="loading">Loading alerts...</div></div>;
+  }
+
+  if (error) {
+    return <div className="alerts-container"><div className="error" style={{ color: '#EF4444' }}>{error}</div></div>;
+  }
+
   return (
     <div className="alerts-container">
       {/* Pending Complaints */}
       <div className="alert-card">
         <h2 className="section-title">Pending Complaints</h2>
         <div className="alert-list">
-          {dashboardData.pendingComplaints.map((complaint) => (
+          {pendingComplaints.map((complaint) => (
             <div key={complaint.id} className="alert-item">
               <div className="alert-content">
                 <h4 className="alert-title">{complaint.title}</h4>
@@ -36,11 +76,11 @@ const Alerts = () => {
       <div className="alert-card">
         <h2 className="section-title">Pending Fees</h2>
         <div className="alert-list">
-          {dashboardData.pendingFees.map((fee) => (
+          {pendingFees.map((fee) => (
             <div key={fee.id} className="alert-item">
               <div className="alert-content">
                 <h4 className="alert-title">{fee.student}</h4>
-                <p className="alert-subtitle">{fee.amount}</p>
+                <p className="alert-subtitle">₹{Number(fee.amount || 0).toLocaleString('en-IN')}</p>
               </div>
               <div className="alert-actions">
                 <span 

@@ -5,7 +5,12 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "fee_structures")
+@Table(
+    name = "fee_structures",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uq_fee_structures_block_room", columnNames = {"hostel_block", "room_type"})
+        }
+)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -17,10 +22,10 @@ public class FeeStructure {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     public Long id;
 
-    @Column(nullable = false)
+    @Column(name = "hostel_block", nullable = false)
     public String hostelBlock;
 
-    @Column(nullable = false)
+    @Column(name = "room_type", nullable = false)
     public String roomType; // AC, Non-AC
 
     @Column(nullable = false)

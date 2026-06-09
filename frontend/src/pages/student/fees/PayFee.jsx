@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Smartphone, Building2, Banknote,
   Calendar, Hash, Upload, FileText, AlertCircle,
   CheckCircle, Clock, Info
 } from 'lucide-react';
+import { studentApi } from '../../../services/studentApi';
+import { studentFeeApi } from '../../../services/adminFeeApi';
 import '../../../styles/student/fees/pay-fee.css';
 
 const today = new Date().toISOString().split('T')[0];
@@ -25,6 +27,75 @@ const PayFee = () => {
   const [notes, setNotes]     = useState('');
   const [file, setFile]       = useState(null);
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+  const [loadingFee, setLoadingFee] = useState(true);
+  const [feeError, setFeeError] = useState('');
+  const [studentProfile, setStudentProfile] = useState(null);
+  const [feeStructure, setFeeStructure] = useState(null);
+  const [feeRecordSummary, setFeeRecordSummary] = useState(null);
+
+  useEffect(() => {
+    const loadFeeData = async () => {
+      try {
+        setLoadingFee(true);
+        setFeeError('');
+
+        const [profileResponse, feeResponse, feeRecordResponse] = await Promise.all([
+          studentApi.getProfile(),
+          studentFeeApi.getMyFee(),
+          studentFeeApi.getMyRecord(),
+        ]);
+
+        setStudentProfile(profileResponse?.data?.data || null);
+        setFeeStructure(feeResponse?.data?.data || null);
+        setFeeRecordSummary(feeRecordResponse?.data?.data || null);
+      } catch (error) {
+        console.error('Error loading student fee data:', error);
+        setFeeError(error?.response?.data?.message || 'Unable to load fee structure for your room and room type.');
+      } finally {
+        setLoadingFee(false);
+      }
+    };
+
+    loadFeeData();
+  }, []);
+
+  const amountBreakdown = useMemo(() => {
+    const monthly = Number(feeStructure?.monthlyFee || 0);
+    const utilities = Number(feeStructure?.utilities || 0);
+    const lateFee = Number(feeStructure?.lateFee || 0);
+    const securityDeposit = Number(feeStructure?.securityDeposit || 0);
+    const totalPayable = monthly + utilities + lateFee;
+
+    return {
+      monthly,
+      utilities,
+      lateFee,
+      securityDeposit,
+      totalPayable,
+    };
+  }, [feeStructure]);
+
+  const outstandingAmount = Number(
+    feeRecordSummary?.balance ?? amountBreakdown.totalPayable ?? 0
+  );
+  const isFullyPaid = outstandingAmount <= 0;
+
+  const amountNumber = Number(amount || 0);
+  const receiptStudentName = studentProfile?.name || 'Student';
+  const receiptRoom = studentProfile?.roomNo || 'Not Assigned';
+  const receiptBlock = feeStructure?.hostelBlock || studentProfile?.hostelBlock || 'Not Assigned';
+  const receiptRoomType = feeStructure?.roomType || studentProfile?.roomType || 'Not Assigned';
+  const payableAmountDisplay = `₹${outstandingAmount.toLocaleString('en-IN')}`;
+  let feeStatusMessage = { text: 'No fee structure is mapped to your current room assignment.', color: '#b45309' };
+  if (loadingFee) {
+    feeStatusMessage = { text: 'Loading fee structure based on your room assignment...', color: undefined };
+  } else if (feeError) {
+    feeStatusMessage = { text: feeError, color: '#dc2626' };
+  } else if (feeStructure) {
+    feeStatusMessage = { text: `Showing fee structure for Block ${receiptBlock} and ${receiptRoomType} room.`, color: undefined };
+  }
 
   const handleFileChange = (e) => {
     if (e.target.files[0]) setFile(e.target.files[0]);
@@ -35,14 +106,114 @@ const PayFee = () => {
     if (e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    if (isFullyPaid) {
+      setSubmitError('You have already paid fees for this cycle.');
+      return;
+    }
+
+    const parsedAmount = Number(amount || outstandingAmount || 0);
+    if (!parsedAmount || parsedAmount <= 0) {
+      setSubmitError('Please enter a valid payment amount.');
+      return;
+    }
+
+    if (parsedAmount > outstandingAmount) {
+      setSubmitError(`Payment amount cannot exceed remaining balance of ₹${outstandingAmount.toLocaleString('en-IN')}.`);
+      return;
+    }
+
+    setSubmitError('');
+    setSubmitting(true);
+
+    const generatedTxnId = txnId || `OFFLINE-${Date.now()}`;
+    let apiMethod = 'CASH';
+    if (method === 'upi') {
+      apiMethod = 'UPI';
+    } else if (method === 'bank') {
+      apiMethod = 'BANK_TRANSFER';
+    }
+    const academicCycle = feeRecordSummary?.academicCycle;
+
+    let paymentId = `RCP-${new Date().getFullYear()}-${Math.floor(10000 + Math.random() * 90000)}`;
+
+    try {
+      const payload = {
+        amount: parsedAmount,
+        paymentMethod: apiMethod,
+        transactionId: generatedTxnId,
+        proofFile: file?.name || null,
+        paymentDate: date,
+        notes,
+      };
+
+      if (academicCycle) {
+        payload.academicCycle = academicCycle;
+      }
+
+      const response = await studentFeeApi.submitPaymentRequest(payload);
+      paymentId = response?.data?.data?.paymentId || paymentId;
+    } catch (error) {
+      setSubmitError(error?.response?.data?.message || 'Unable to submit payment right now. Please try again.');
+      setSubmitting(false);
+      return;
+    }
+
     setSubmitted(true);
+    setSubmitting(false);
     setTimeout(() => {
-      navigate('/student/fees/receipt/RCP-2024-99021');
+      navigate(`/student/fees/receipt/${paymentId}`);
     }, 1500);
   };
 
   const selectedMethod = METHODS.find((m) => m.id === method);
+  let submitButtonLabel = 'Submit Verification Request';
+  if (submitted) {
+    submitButtonLabel = 'Submitted!';
+  } else if (submitting) {
+    submitButtonLabel = 'Submitting...';
+  }
+
+  if (!loadingFee && !feeError && isFullyPaid) {
+    return (
+      <div className="pf-page">
+        <div className="pf-breadcrumb">
+          <button className="pf-back-btn" onClick={() => navigate('/student/fees')}>
+            <ArrowLeft size={15} />
+            Fee Details
+          </button>
+          <span className="pf-bc-sep">›</span>
+          <span className="pf-bc-current">Payment Request (Offline)</span>
+        </div>
+
+        <div className="pf-header">
+          <div>
+            <h1 className="pf-title">Offline Payment Request</h1>
+            <p className="pf-subtitle">You have already paid fees for this cycle.</p>
+          </div>
+        </div>
+
+        <div className="pf-main-grid">
+          <div className="pf-form-card">
+            <h3 className="pf-section-title">Fees Already Paid</h3>
+            <p className="pf-section-sub">
+              Your payment is fully verified from admin side. No further payment request is required.
+            </p>
+            <div className="pf-form-footer" style={{ marginTop: 18 }}>
+              <div className="pf-footer-actions">
+                <button className="pf-btn-cancel" onClick={() => navigate('/student/fees/history')}>
+                  View Payment History
+                </button>
+                <button className="pf-btn-submit" onClick={() => navigate('/student/fees')}>
+                  Back to Fee Details
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="pf-page">
@@ -54,14 +225,17 @@ const PayFee = () => {
           Fee Details
         </button>
         <span className="pf-bc-sep">›</span>
-        <span className="pf-bc-current">Pay Fee (Offline)</span>
+        <span className="pf-bc-current">Payment Request (Offline)</span>
       </div>
 
       <div className="pf-header">
         <div>
-          <h1 className="pf-title">Offline Fee Submission</h1>
+          <h1 className="pf-title">Offline Payment Request</h1>
           <p className="pf-subtitle">
-            Paid manually via Cash or Bank Transfer? Submit your payment details here for administrative verification and receipt generation.
+            Paid manually via Cash or Bank Transfer? Submit a payment request for administrative verification and receipt generation.
+          </p>
+          <p className="pf-subtitle" style={feeStatusMessage.color ? { color: feeStatusMessage.color } : undefined}>
+            {feeStatusMessage.text}
           </p>
         </div>
       </div>
@@ -72,7 +246,7 @@ const PayFee = () => {
           <div className="pf-sum-icon"><Clock size={18} /></div>
           <div>
             <p className="pf-sum-label">Total Outstanding</p>
-            <p className="pf-sum-value">₹12,500.00</p>
+            <p className="pf-sum-value">{payableAmountDisplay}</p>
           </div>
         </div>
         <div className="pf-sum-card">
@@ -86,7 +260,7 @@ const PayFee = () => {
           <div className="pf-sum-icon pf-sum-icon--dark"><CheckCircle size={18} /></div>
           <div>
             <p className="pf-sum-label">Payable Amount</p>
-            <p className="pf-sum-value">₹12,500.00</p>
+            <p className="pf-sum-value">{payableAmountDisplay}</p>
           </div>
         </div>
       </div>
@@ -96,12 +270,12 @@ const PayFee = () => {
 
         {/* ── Form ── */}
         <div className="pf-form-card">
-          <h3 className="pf-section-title">Payment Transaction Details</h3>
-          <p className="pf-section-sub">Enter the details as per your bank transaction or cash deposit slip.</p>
+          <h3 className="pf-section-title">Payment Request Details</h3>
+          <p className="pf-section-sub">Enter the details from your bank transaction or cash deposit slip.</p>
 
           {/* Method Selection */}
           <div className="pf-field-group">
-            <label className="pf-label">Select Payment Method</label>
+            <p className="pf-label">Select Payment Method</p>
             <div className="pf-method-row">
               {METHODS.map((m) => {
                 const Icon = m.icon;
@@ -122,10 +296,11 @@ const PayFee = () => {
           {/* Amount + Date */}
           <div className="pf-row-2">
             <div className="pf-field-group">
-              <label className="pf-label">Payment Amount (₹)</label>
+              <label className="pf-label" htmlFor="payment-amount">Payment Amount (₹)</label>
               <div className="pf-input-wrap">
                 <span className="pf-input-icon">₹</span>
                 <input
+                  id="payment-amount"
                   type="number"
                   className="pf-input pf-input--icon"
                   placeholder="e.g. 8500"
@@ -134,12 +309,23 @@ const PayFee = () => {
                 />
               </div>
               <span className="pf-hint">Enter the exact amount mentioned on your receipt.</span>
+              {feeStructure && (
+                <span className="pf-hint">
+                  Suggested payable amount: {payableAmountDisplay} (Monthly: ₹{amountBreakdown.monthly.toLocaleString('en-IN')}, Utilities: ₹{amountBreakdown.utilities.toLocaleString('en-IN')}, Late Fee: ₹{amountBreakdown.lateFee.toLocaleString('en-IN')})
+                </span>
+              )}
+              {isFullyPaid && (
+                <span className="pf-hint" style={{ color: '#16a34a' }}>
+                  This fee cycle is fully paid. New payment submissions are disabled.
+                </span>
+              )}
             </div>
             <div className="pf-field-group">
-              <label className="pf-label">Payment Date</label>
+              <label className="pf-label" htmlFor="payment-date">Payment Date</label>
               <div className="pf-input-wrap">
                 <span className="pf-input-icon"><Calendar size={15} /></span>
                 <input
+                  id="payment-date"
                   type="date"
                   className="pf-input pf-input--icon"
                   value={date}
@@ -153,10 +339,11 @@ const PayFee = () => {
           {/* Transaction ID + Upload */}
           <div className="pf-row-2">
             <div className="pf-field-group">
-              <label className="pf-label">Transaction / Reference ID</label>
+              <label className="pf-label" htmlFor="transaction-id">Transaction / Reference ID</label>
               <div className="pf-input-wrap">
                 <span className="pf-input-icon"><Hash size={15} /></span>
                 <input
+                  id="transaction-id"
                   type="text"
                   className="pf-input pf-input--icon"
                   placeholder="e.g. TXN982103321"
@@ -169,8 +356,9 @@ const PayFee = () => {
               )}
             </div>
             <div className="pf-field-group">
-              <label className="pf-label">Upload Payment Proof (Receipt/Screenshot)</label>
-              <div
+              <label className="pf-label" htmlFor="pf-file-input">Upload Payment Proof (Receipt/Screenshot)</label>
+              <button
+                type="button"
                 className={`pf-upload-zone ${file ? 'pf-upload-filled' : ''}`}
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={handleDrop}
@@ -195,15 +383,16 @@ const PayFee = () => {
                     <span className="pf-upload-types">JPG / PNG / PDF</span>
                   </>
                 )}
-              </div>
+              </button>
               <span className="pf-hint">Max size: 5MB. Clear visuals only.</span>
             </div>
           </div>
 
           {/* Notes */}
           <div className="pf-field-group">
-            <label className="pf-label">Internal Notes (Optional)</label>
+            <label className="pf-label" htmlFor="payment-notes">Internal Notes (Optional)</label>
             <textarea
+              id="payment-notes"
               className="pf-textarea"
               rows={4}
               placeholder="Add any specific details like branch name, UPI app used, or payment reason..."
@@ -218,6 +407,7 @@ const PayFee = () => {
               <AlertCircle size={14} />
               <em>Incomplete or incorrect details will lead to payment rejection.</em>
             </div>
+            {submitError && <div className="pf-footer-warn" style={{ color: '#dc2626' }}>{submitError}</div>}
             <div className="pf-footer-actions">
               <button className="pf-btn-cancel" onClick={() => navigate('/student/fees')}>
                 Cancel
@@ -225,13 +415,9 @@ const PayFee = () => {
               <button
                 className={`pf-btn-submit ${submitted ? 'pf-btn-submitted' : ''}`}
                 onClick={handleSubmit}
-                disabled={submitted}
+                disabled={submitted || submitting || loadingFee || !studentProfile?.id || isFullyPaid || Number(amount || outstandingAmount || 0) <= 0}
               >
-                {submitted ? (
-                  <><CheckCircle size={15} /> Submitted!</>
-                ) : (
-                  <>Submit Payment Proof</>
-                )}
+                {submitted ? <><CheckCircle size={15} /> {submitButtonLabel}</> : <>{submitButtonLabel}</>}
               </button>
             </div>
           </div>
@@ -258,7 +444,7 @@ const PayFee = () => {
               <div className="pf-rp-row">
                 <div>
                   <span className="pf-rp-label">STUDENT NAME</span>
-                  <span className="pf-rp-val">Alex Johnson</span>
+                  <span className="pf-rp-val">{receiptStudentName}</span>
                 </div>
                 <div>
                   <span className="pf-rp-label">DATE ISSUED</span>
@@ -266,11 +452,34 @@ const PayFee = () => {
                 </div>
               </div>
 
+              <div className="pf-rp-row">
+                <div>
+                  <span className="pf-rp-label">HOSTEL / ROOM</span>
+                  <span className="pf-rp-val">{receiptBlock} / {receiptRoom}</span>
+                </div>
+                <div>
+                  <span className="pf-rp-label">ROOM TYPE</span>
+                  <span className="pf-rp-val">{receiptRoomType}</span>
+                </div>
+              </div>
+
               <div className="pf-rp-divider" />
 
               <div className="pf-rp-line">
-                <span>Hostel Fees (April 2024)</span>
-                <span className="pf-rp-fee">{amount ? `₹${Number(amount).toLocaleString('en-IN')}` : '₹0.00'}</span>
+                <span>Monthly Fee</span>
+                <span className="pf-rp-fee">₹{amountBreakdown.monthly.toLocaleString('en-IN')}</span>
+              </div>
+              <div className="pf-rp-line">
+                <span>Utilities</span>
+                <span className="pf-rp-fee">₹{amountBreakdown.utilities.toLocaleString('en-IN')}</span>
+              </div>
+              <div className="pf-rp-line">
+                <span>Late Fee</span>
+                <span className="pf-rp-fee">₹{amountBreakdown.lateFee.toLocaleString('en-IN')}</span>
+              </div>
+              <div className="pf-rp-line">
+                <span>Security Deposit</span>
+                <span className="pf-rp-fee">₹{amountBreakdown.securityDeposit.toLocaleString('en-IN')}</span>
               </div>
               <div className="pf-rp-line">
                 <span>Payment Method</span>
@@ -281,7 +490,7 @@ const PayFee = () => {
 
               <div className="pf-rp-total-row">
                 <span>Total Amount Paid</span>
-                <span className="pf-rp-total-val">{amount ? `₹${Number(amount).toLocaleString('en-IN')}` : '₹0.00'}</span>
+                <span className="pf-rp-total-val">{amount ? `₹${amountNumber.toLocaleString('en-IN')}` : payableAmountDisplay}</span>
               </div>
 
               <div className="pf-rp-note">

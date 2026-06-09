@@ -1,12 +1,15 @@
 package com.hms.hms.service;
 
 import com.hms.hms.dto.RegisterRequest;
+import com.hms.hms.dto.StudentComplaintDTO;
 import com.hms.hms.dto.StudentProfileDTO;
+import com.hms.hms.entity.Complaint;
 import com.hms.hms.entity.Student;
 import com.hms.hms.entity.User;
 import com.hms.hms.entity.Warden;
 import com.hms.hms.entity.Room;
 import com.hms.hms.entity.Bed;
+import com.hms.hms.repository.ComplaintRepository;
 import com.hms.hms.repository.StudentRepository;
 import com.hms.hms.repository.UserRepository;
 import com.hms.hms.repository.WardenRepository;
@@ -21,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Map;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,6 +35,7 @@ public class StudentService {
     @Autowired private WardenRepository wardenRepository;
     @Autowired private RoomRepository roomRepository;
     @Autowired private BedRepository bedRepository;
+    @Autowired private ComplaintRepository complaintRepository;
     @Autowired private PasswordEncoder passwordEncoder;
 
     // Create
@@ -118,11 +123,12 @@ public class StudentService {
         Double currentOutstanding = 0.0;
         String feeStatus = "N/A";
 
-        // Complaint summary - placeholder
-        Integer totalComplaints = 0;
-        Integer openComplaints = 0;
-        Integer resolvedComplaints = 0;
-        String lastComplaint = "None";
+        Integer totalComplaints = (int) complaintRepository.countByStudentId(id);
+        Integer openComplaints = (int) complaintRepository.countByStudentIdAndStatus(id, "Open");
+        Integer resolvedComplaints = (int) complaintRepository.countByStudentIdAndStatus(id, "Resolved");
+        String lastComplaint = complaintRepository.findTopByStudentIdOrderByCreatedAtDesc(id)
+            .map(Complaint::getTitle)
+            .orElse("None");
 
         return StudentProfileDTO.builder()
                 .id(s.id)
@@ -389,9 +395,80 @@ public class StudentService {
 
     // Create complaint
     @Transactional
-    public String createComplaint(Long studentId, String category, String description) {
-        // TODO: Implement complaint creation logic
-        return "Complaint created successfully";
+    public StudentComplaintDTO createComplaint(Long studentId, String title, String category, String priority, String description, String roomNumber) {
+        Student student = getById(studentId);
+
+        if (title == null || title.isBlank()) {
+            throw new RuntimeException("Complaint title is required");
+        }
+        if (category == null || category.isBlank()) {
+            throw new RuntimeException("Complaint category is required");
+        }
+        if (description == null || description.isBlank()) {
+            throw new RuntimeException("Complaint description is required");
+        }
+
+        LocalDate today = LocalDate.now();
+        long sequence = complaintRepository.countByStudentId(studentId) + 1;
+        String complaintCode = String.format("CMP-%d-%04d", today.getYear(), sequence);
+
+        Complaint complaint = Complaint.builder()
+                .complaintCode(complaintCode)
+                .student(student)
+                .title(title)
+                .category(category)
+                .priority((priority == null || priority.isBlank()) ? "Medium" : priority)
+                .description(description)
+                .roomNumber((roomNumber == null || roomNumber.isBlank()) ? student.roomNo : roomNumber)
+                .warden(student.warden)
+                .status("Open")
+                .submittedDate(today)
+                .submittedTime(java.time.LocalTime.now().format(DateTimeFormatter.ofPattern("hh:mm a")))
+                .build();
+
+        Complaint saved = complaintRepository.save(complaint);
+        return mapToStudentComplaintDTO(saved);
+    }
+
+    public List<StudentComplaintDTO> getComplaints(Long studentId) {
+        return complaintRepository.findByStudentIdOrderByCreatedAtDesc(studentId)
+                .stream()
+                .map(this::mapToStudentComplaintDTO)
+                .collect(Collectors.toList());
+    }
+
+    public StudentComplaintDTO getComplaintById(Long studentId, String complaintId) {
+        Complaint complaint = complaintRepository.findByComplaintCodeAndStudentId(complaintId, studentId)
+                .orElseThrow(() -> new RuntimeException("Complaint not found: " + complaintId));
+
+        return mapToStudentComplaintDTO(complaint);
+    }
+
+    @Transactional
+    public void deleteComplaint(Long studentId, String complaintId) {
+        Complaint complaint = complaintRepository.findByComplaintCodeAndStudentId(complaintId, studentId)
+                .orElseThrow(() -> new RuntimeException("Complaint not found: " + complaintId));
+
+        complaintRepository.delete(complaint);
+    }
+
+    private StudentComplaintDTO mapToStudentComplaintDTO(Complaint complaint) {
+        return StudentComplaintDTO.builder()
+                .id(complaint.complaintCode)
+                .title(complaint.title)
+                .category(complaint.category)
+                .priority(complaint.priority)
+                .description(complaint.description)
+                .roomNumber(complaint.roomNumber)
+                .hostelBlock(complaint.student != null ? complaint.student.hostelBlock : null)
+                .studentName(complaint.student != null && complaint.student.user != null ? complaint.student.user.name : null)
+                .studentId(complaint.student != null ? complaint.student.enrollmentNo : null)
+                .status(complaint.status)
+                .assignedWarden(complaint.warden != null && complaint.warden.user != null ? complaint.warden.user.name : null)
+                .assignedWardenId(complaint.warden != null ? complaint.warden.id : null)
+                .submittedDate(complaint.submittedDate)
+                .submittedTime(complaint.submittedTime)
+                .build();
     }
 
     // Get roommates by room number

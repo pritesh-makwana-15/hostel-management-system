@@ -1,25 +1,58 @@
 // src/pages/admin/complaints/ComplaintDetails.jsx
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  ArrowLeft, Tag, User, MapPin, Calendar, AlertCircle,
+  ArrowLeft, Tag, User, MapPin, Calendar, AlertCircle, Loader,
   Phone, Mail, UserCheck, MessageSquare, RefreshCw, Paperclip
 } from 'lucide-react';
-import { getComplaintById, wardensData } from '../../../data/complaintsData';
+import { adminComplaintApi } from '../../../services/adminOtherApi';
 import '../../../styles/admin/complaints/complaintDetails.css';
 
 const ComplaintDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const complaint = getComplaintById(id);
+  const [complaint, setComplaint] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  if (!complaint) {
+  useEffect(() => {
+    const fetchComplaint = async () => {
+      try {
+        setLoading(true);
+        const res = await adminComplaintApi.getById(id);
+        if (res.data && res.data.data) {
+          setComplaint(res.data.data);
+          setError(null);
+        }
+      } catch (err) {
+        console.error('Error fetching complaint:', err);
+        setError('Failed to fetch complaint');
+        setComplaint(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchComplaint();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="cd-page">
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+          <Loader size={40} style={{ animation: 'spin 1s linear infinite' }} />
+          <span style={{ marginLeft: '10px' }}>Loading complaint details...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !complaint) {
     return (
       <div className="cd-page">
         <div className="cd-not-found">
           <AlertCircle size={48} />
-          <h2>Complaint Not Found</h2>
-          <p>The complaint "{id}" does not exist.</p>
+          <h2>{error ? 'Error Loading Complaint' :'Complaint Not Found'}</h2>
+          <p>{error || `The complaint "${id}" does not exist.`}</p>
           <button className="cd-btn-primary" onClick={() => navigate('/admin/complaints')}>
             Back to List
           </button>
@@ -28,7 +61,9 @@ const ComplaintDetails = () => {
     );
   }
 
-  const warden = wardensData.find(w => w.id === complaint.assignedWardenId);
+  const attachments = Array.isArray(complaint.attachments) ? complaint.attachments : [];
+  const wardenName = complaint.assignedWardenName || 'Not Assigned';
+  const warden = complaint.assignedWardenId ? { id: complaint.assignedWardenId, name: wardenName } : null;
 
   const getPriorityClass = (p) => {
     if (p === 'High') return 'cd-badge-priority cd-priority-high';
@@ -120,9 +155,9 @@ const ComplaintDetails = () => {
           {/* Attachments */}
           <div className="cd-card">
             <h2 className="cd-card-title">Attachments &amp; Evidence</h2>
-            {complaint.attachments.length > 0 ? (
+            {attachments.length > 0 ? (
               <div className="cd-attachments">
-                {complaint.attachments.map((src, i) => (
+                {attachments.map((src, i) => (
                   <div key={i} className="cd-attachment-thumb">
                     <img src={src} alt={`Attachment ${i + 1}`} />
                   </div>
@@ -146,16 +181,11 @@ const ComplaintDetails = () => {
             {warden ? (
               <div className="cd-warden-info">
                 <div className="cd-warden-avatar-wrap">
-                  <div className="cd-warden-avatar">{warden.avatar}</div>
+                  <div className="cd-warden-avatar">{warden.name?.charAt(0)?.toUpperCase() || 'W'}</div>
                   <div className="cd-warden-status-dot" />
                 </div>
                 <div className="cd-warden-name">{warden.name}</div>
-                <div className="cd-warden-role">{warden.designation} ({warden.block.split(' ')[1]})</div>
-                <div className="cd-warden-contacts">
-                  <div className="cd-warden-contact"><Phone size={14} /> {warden.phone}</div>
-                  <div className="cd-warden-contact"><Mail size={14} /> {warden.email}</div>
-                </div>
-                <button className="cd-btn-outline" onClick={() => navigate(`/admin/complaints/${id}/assign`)}>
+                <button className="cd-btn-outline" onClick={() => navigate(`/admin/complaints/assign/${id}`)}>
                   Change Warden
                 </button>
               </div>
@@ -163,7 +193,7 @@ const ComplaintDetails = () => {
               <div className="cd-no-warden">
                 <User size={40} />
                 <p>No warden assigned yet</p>
-                <button className="cd-btn-primary" onClick={() => navigate(`/admin/complaints/${id}/assign`)}>
+                <button className="cd-btn-primary" onClick={() => navigate(`/admin/complaints/assign/${id}`)}>
                   <UserCheck size={15} /> Assign Warden
                 </button>
               </div>
@@ -182,13 +212,13 @@ const ComplaintDetails = () => {
           </div>
         </div>
         <div className="cd-action-bar-buttons">
-          <button className="cd-btn-outline-sm" onClick={() => navigate(`/admin/complaints/${id}/assign`)}>
+          <button className="cd-btn-outline-sm" onClick={() => navigate(`/admin/complaints/assign/${id}`)}>
             <UserCheck size={15} /> Assign Warden
           </button>
-          <button className="cd-btn-outline-sm" onClick={() => navigate(`/admin/complaints/${id}/response`)}>
+          <button className="cd-btn-outline-sm" onClick={() => navigate(`/admin/complaints/response/${id}`)}>
             <MessageSquare size={15} /> Reply to Student
           </button>
-          <button className="cd-btn-primary-sm" onClick={() => navigate(`/admin/complaints/${id}/response`)}>
+          <button className="cd-btn-primary-sm" onClick={() => navigate(`/admin/complaints/response/${id}`)}>
             <RefreshCw size={15} /> Update Status
           </button>
         </div>

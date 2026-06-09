@@ -1,5 +1,5 @@
 // src/pages/student/complaints/ComplaintDetails.jsx
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   ChevronLeft,
@@ -24,10 +24,7 @@ import {
   Circle,
   Plus,
 } from 'lucide-react';
-import {
-  getComplaintById,
-  getWardenById,
-} from '../../../data/complaintsData';
+import { studentApi } from '../../../services/studentApi';
 import '../../../styles/student/complaints/complaints.css';
 
 /* ── helpers ──────────────────────────────────────────────── */
@@ -90,9 +87,65 @@ const ComplaintDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const complaint = getComplaintById(id);
-  const [messages, setMessages] = useState(complaint?.timeline || []);
+  const [complaint, setComplaint] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [deleting, setDeleting] = useState(false);
+  const [loadError, setLoadError] = useState('');
+  const [messages, setMessages] = useState([]);
   const [replyText, setReplyText] = useState('');
+
+  useEffect(() => {
+    const fetchComplaint = async () => {
+      try {
+        setLoading(true);
+        setLoadError('');
+
+        try {
+          const response = await studentApi.getComplaintById(id);
+          const data = response?.data?.data || null;
+          setComplaint(data);
+          setMessages([]);
+          return;
+        } catch (singleFetchError) {
+          // Fallback path: load all complaints and resolve by id.
+          const listResponse = await studentApi.getComplaints();
+          const list = Array.isArray(listResponse?.data?.data) ? listResponse.data.data : [];
+          const matched = list.find((item) => item?.id === id);
+
+          if (matched) {
+            setComplaint(matched);
+            setMessages([]);
+            return;
+          }
+
+          throw singleFetchError;
+        }
+      } catch (error) {
+        console.error('Failed to fetch complaint details:', error);
+        setComplaint(null);
+        setLoadError(error?.response?.data?.message || 'Complaint not found or could not be loaded.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchComplaint();
+    }
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="complaint-details-page">
+        <button className="details-back-link" onClick={() => navigate('/student/complaints')}>
+          <ChevronLeft size={16} /> Back to My Complaints
+        </button>
+        <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-secondary)' }}>
+          <p style={{ fontSize: 16 }}>Loading complaint...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!complaint) {
     return (
@@ -102,13 +155,26 @@ const ComplaintDetails = () => {
         </button>
         <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-secondary)' }}>
           <HelpCircle size={48} style={{ opacity: 0.3, marginBottom: 12 }} />
-          <p style={{ fontSize: 16 }}>Complaint not found.</p>
+          <p style={{ fontSize: 16 }}>{loadError || 'Complaint not found.'}</p>
         </div>
       </div>
     );
   }
 
-  const warden = complaint.assignedWardenId ? getWardenById(complaint.assignedWardenId) : null;
+  const warden = complaint.assignedWarden
+    ? {
+        avatar: complaint.assignedWarden
+          .split(' ')
+          .filter(Boolean)
+          .slice(0, 2)
+          .map((part) => part[0])
+          .join('')
+          .toUpperCase(),
+        name: complaint.assignedWarden,
+        designation: 'Warden',
+        block: complaint.hostelBlock || 'Hostel',
+      }
+    : null;
   const sla = getSLAInfo(complaint.priority);
   const timelineSteps = getTimelineSteps(complaint);
 
@@ -116,7 +182,7 @@ const ComplaintDetails = () => {
     if (!replyText.trim()) return;
     const newMsg = {
       id: Date.now(),
-      user: 'Rahul Sharma',
+      user: complaint.studentName || 'Student',
       role: 'Student',
       action: 'reply',
       actionLabel: 'Replied',
@@ -132,6 +198,30 @@ const ComplaintDetails = () => {
   };
 
   const msgCount = messages.filter((m) => m.action === 'reply' || m.action === 'submission').length;
+
+  const handleCloseComplaint = async () => {
+    if (!complaint?.id || deleting) return;
+
+    const confirmed = window.confirm(
+      'Close this complaint? This will permanently delete it from your complaint list.'
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setDeleting(true);
+      await studentApi.deleteComplaint(complaint.id);
+      navigate('/student/complaints', {
+        replace: true,
+        state: { message: 'Complaint deleted successfully.' },
+      });
+    } catch (error) {
+      console.error('Failed to delete complaint:', error);
+      alert(error?.response?.data?.message || 'Failed to delete complaint. Please try again.');
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   return (
     <div className="complaint-details-page">
@@ -152,8 +242,8 @@ const ComplaintDetails = () => {
           <button className="btn-export">
             <Download size={14} /> Export PDF
           </button>
-          <button className="btn-close-complaint">
-            <XCircle size={14} /> Close Complaint
+          <button className="btn-close-complaint" onClick={handleCloseComplaint} disabled={deleting}>
+            <XCircle size={14} /> {deleting ? 'Closing...' : 'Close Complaint'}
           </button>
         </div>
       </div>
@@ -184,11 +274,11 @@ const ComplaintDetails = () => {
               </div>
               <div className="info-item">
                 <label>STUDENT NAME</label>
-                <div className="info-value">{complaint.studentName}</div>
+                <div className="info-value">{complaint.studentName || '-'}</div>
               </div>
               <div className="info-item">
                 <label>STUDENT ID</label>
-                <div className="info-value mono">{complaint.studentId}</div>
+                <div className="info-value mono">{complaint.studentId || '-'}</div>
               </div>
               <div className="info-item">
                 <label>STATUS</label>
@@ -198,7 +288,7 @@ const ComplaintDetails = () => {
               </div>
               <div className="info-item">
                 <label>HOSTEL / BLOCK</label>
-                <div className="info-value">{complaint.hostelBlock}</div>
+                <div className="info-value">{complaint.hostelBlock || '-'}</div>
               </div>
               <div className="info-item">
                 <label>ROOM NUMBER</label>
@@ -207,9 +297,9 @@ const ComplaintDetails = () => {
               <div className="info-item">
                 <label>SUBMITTED DATE</label>
                 <div className="info-value">
-                  {new Date(complaint.submittedDate).toLocaleDateString('en-IN', {
+                  {complaint.submittedDate ? new Date(complaint.submittedDate).toLocaleDateString('en-IN', {
                     day: '2-digit', month: 'short', year: 'numeric',
-                  })} - {complaint.submittedTime}
+                  }) : '-'} - {complaint.submittedTime || '-'}
                 </div>
               </div>
             </div>
@@ -224,13 +314,13 @@ const ComplaintDetails = () => {
           </div>
 
           {/* Attachments */}
-          {complaint.attachments.length > 0 && (
+          {(complaint.attachments || []).length > 0 && (
             <div className="details-card">
               <div className="details-card-title">
                 <Paperclip size={16} style={{ color: 'var(--primary)' }} /> Attachments &amp; Evidence
               </div>
               <div className="attachments-grid">
-                {complaint.attachments.map((src, i) => (
+                {(complaint.attachments || []).map((src, i) => (
                   <div className="attachment-thumb" key={i}>
                     <img src={src} alt={`Attachment ${i + 1}`} />
                   </div>

@@ -1,12 +1,12 @@
 // src/pages/warden/complaints/WardenComplaints.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Eye, Edit3, MoreVertical, Download,
   Search, RotateCcw, SlidersHorizontal,
-  ClipboardList, Clock, CheckCircle2, ChevronLeft, ChevronRight
+  ClipboardList, Clock, CheckCircle2, ChevronLeft, ChevronRight, Loader2
 } from 'lucide-react';
-import { complaintsData, hostelBlocks, statusOptions, getComplaintStats } from '../../../data/complaintsData';
+import { wardenComplaintsApi } from '../../../services/wardenComplaintsApi';
 import '../../../styles/warden/complaints/complaints.css';
 
 const WardenComplaints = () => {
@@ -19,15 +19,51 @@ const WardenComplaints = () => {
   const [openMenu, setOpenMenu] = useState(null);
   const itemsPerPage = 6;
 
-  const stats = getComplaintStats();
+  // Real data state
+  const [complaints, setComplaints] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [stats, setStats] = useState({ total: 0, open: 0, resolved: 0 });
 
-  const filtered = complaintsData.filter(c => {
+  // Fetch complaints on component mount
+  useEffect(() => {
+    fetchComplaints();
+  }, []);
+
+  // Fetch real complaints from API
+  const fetchComplaints = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const res = await wardenComplaintsApi.getAll();
+      const complaintsData = res.data.data || [];
+      setComplaints(complaintsData);
+
+      // Calculate stats from real data
+      const total = complaintsData.length;
+      const open = complaintsData.filter(c => c.status === 'Open').length;
+      const resolved = complaintsData.filter(c => c.status === 'Resolved').length;
+      setStats({ total, open, resolved });
+    } catch (err) {
+      setError('Failed to load complaints. Please try again.');
+      console.error('Error fetching complaints:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Get unique blocks and statuses from real data
+  const hostelBlocks = [...new Set(complaints.map(c => c.hostelBlock).filter(Boolean))];
+  const statusOptions = ['Open', 'In Progress', 'Resolved', 'Closed'];
+
+  const filtered = complaints.filter(c => {
     const q = search.toLowerCase();
     const matchSearch =
       !q ||
-      c.studentName.toLowerCase().includes(q) ||
-      c.id.toLowerCase().includes(q) ||
-      c.roomNumber.toLowerCase().includes(q);
+      (c.studentName && c.studentName.toLowerCase().includes(q)) ||
+      (c.complaintCode && c.complaintCode.toLowerCase().includes(q)) ||
+      (c.complaintCode && c.complaintCode.split('-')[0].toLowerCase().includes(q)) ||
+      (c.roomNumber && c.roomNumber.toLowerCase().includes(q));
     const matchStatus = !statusFilter || c.status === statusFilter;
     const matchBlock = !blockFilter || c.hostelBlock === blockFilter;
     return matchSearch && matchStatus && matchBlock;
@@ -75,16 +111,17 @@ const WardenComplaints = () => {
     return pages;
   };
 
-  // Complaint title from type
+  // Complaint title from real data
   const getComplaintTitle = (c) => {
-    const map = {
-      'Plumbing': 'Plumbing Leak in Washroom',
-      'Electrical': 'Broken Ceiling Fan',
-      'Internet': 'Wi-Fi Connection Issues',
-      'Furniture': 'Bed Frame Repair',
-      'Cleaning': 'Hygiene Issue in Bathroom',
-    };
-    return map[c.complaintType] || c.complaintType + ' Issue';
+    return c.title || 'Complaint';
+  };
+
+  const openComplaintDetails = (complaint) => {
+    const complaintId = complaint?.complaintCode || complaint?.id;
+    if (!complaintId) return;
+    navigate(`/warden/complaints/view/${encodeURIComponent(complaintId)}`, {
+      state: { complaint },
+    });
   };
 
   return (
@@ -100,13 +137,39 @@ const WardenComplaints = () => {
           <h1 className="wc-title">Complaints Management</h1>
         </div>
         <div className="wc-header-actions">
+          <button className="wc-btn-outline" onClick={fetchComplaints}>
+            <RotateCcw size={15} /> Refresh
+          </button>
           <button className="wc-btn-outline">
             <Download size={15} /> Export Data
           </button>
         </div>
       </div>
 
+      {/* Loading state */}
+      {loading && (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px', gap: '10px' }}>
+          <Loader2 size={24} className="animate-spin" style={{ animation: 'spin 1s linear infinite' }} />
+          <span>Loading complaints...</span>
+        </div>
+      )}
+
+      {/* Error state */}
+      {error && !loading && (
+        <div style={{
+          padding: '16px',
+          backgroundColor: '#FEF2F2',
+          color: '#EF4444',
+          borderRadius: '8px',
+          marginBottom: '16px'
+        }}>
+          {error}
+        </div>
+      )}
+
       {/* Stat Cards */}
+      {!loading && (
+        <>
       <div className="wc-stats-grid">
         <div className="wc-stat-card">
           <div className="wc-stat-info">
@@ -220,13 +283,13 @@ const WardenComplaints = () => {
                   <td>
                     <span
                       className="wc-complaint-id"
-                      onClick={() => navigate(`/warden/complaints/view/${c.id}`)}
+                      onClick={() => openComplaintDetails(c)}
                     >
-                      #{c.id}
+                      {c.complaintCode || c.id}
                     </span>
                   </td>
-                  <td className="wc-student-name">{c.studentName}</td>
-                  <td>{c.roomNumber}</td>
+                  <td className="wc-student-name">{c.studentName || 'N/A'}</td>
+                  <td>{c.roomNumber || 'N/A'}</td>
                   <td className="wc-complaint-title">{getComplaintTitle(c)}</td>
                   <td className="wc-date">{c.submittedDate}</td>
                   <td>
@@ -239,7 +302,7 @@ const WardenComplaints = () => {
                       <button
                         className="wc-action-btn"
                         title="View"
-                        onClick={() => navigate(`/warden/complaints/view/${c.id}`)}
+                        onClick={() => openComplaintDetails(c)}
                       >
                         <Eye size={16} />
                       </button>
@@ -256,7 +319,7 @@ const WardenComplaints = () => {
                         </button>
                         {openMenu === c.id && (
                           <div className="wc-more-menu">
-                            <button onClick={() => { navigate(`/warden/complaints/view/${c.id}`); setOpenMenu(null); }}>View Details</button>
+                            <button onClick={() => { openComplaintDetails(c); setOpenMenu(null); }}>View Details</button>
                             <button onClick={() => setOpenMenu(null)}>Update Status</button>
                             <button onClick={() => setOpenMenu(null)}>Assign Warden</button>
                           </div>
@@ -309,6 +372,8 @@ const WardenComplaints = () => {
           <a href="#">Terms of Service</a>
         </span>
       </div>
+        </>
+      )}
     </div>
   );
 };

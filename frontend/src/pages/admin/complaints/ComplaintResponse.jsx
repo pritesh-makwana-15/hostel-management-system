@@ -1,11 +1,11 @@
 // src/pages/admin/complaints/ComplaintResponse.jsx
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Clock, MessageSquare, Send, Paperclip, RefreshCw,
-  AlertCircle, X
+  AlertCircle, X, Loader
 } from 'lucide-react';
-import { getComplaintById, statusOptions } from '../../../data/complaintsData';
+import { adminComplaintApi } from '../../../services/adminOtherApi';
 import '../../../styles/admin/complaints/complaintResponse.css';
 
 const roleColors = {
@@ -21,45 +21,98 @@ const actionIcons = {
   reply: <MessageSquare size={13} />,
 };
 
+const statusOptions = ['Open', 'In Progress', 'Resolved', 'Closed'];
+
 const ComplaintResponse = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const complaint = getComplaintById(id);
 
-  const [currentStatus, setCurrentStatus] = useState(complaint?.status || 'Open');
+  const [complaint, setComplaint] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [currentStatus, setCurrentStatus] = useState('Open');
   const [resolutionNotes, setResolutionNotes] = useState('');
   const [message, setMessage] = useState('');
   const [attachments, setAttachments] = useState([]);
   const [statusSaved, setStatusSaved] = useState(false);
   const [replySent, setReplySent] = useState(false);
-  const [timeline, setTimeline] = useState(complaint?.timeline || []);
+  const [updating, setUpdating] = useState(false);
+  const [timeline, setTimeline] = useState([]);
 
-  if (!complaint) {
+  useEffect(() => {
+    const fetchComplaint = async () => {
+      try {
+        setLoading(true);
+        const res = await adminComplaintApi.getById(id);
+        const data = res?.data?.data;
+        if (!data) {
+          setError('Complaint not found');
+          setComplaint(null);
+          return;
+        }
+
+        setComplaint(data);
+        setCurrentStatus(data.status || 'Open');
+        setTimeline([]);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching complaint:', err);
+        setError(err?.response?.data?.message || 'Failed to fetch complaint');
+        setComplaint(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchComplaint();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="cr-page">
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+          <Loader size={40} style={{ animation: 'spin 1s linear infinite' }} />
+          <span style={{ marginLeft: '10px' }}>Loading complaint...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !complaint) {
     return (
       <div className="cr-page">
         <div className="cr-not-found">
           <AlertCircle size={48} />
-          <h2>Complaint Not Found</h2>
+          <h2>{error ? 'Error Loading Complaint' : 'Complaint Not Found'}</h2>
+          <p>{error || `The complaint "${id}" does not exist.`}</p>
           <button className="cr-btn-primary" onClick={() => navigate('/admin/complaints')}>Back to List</button>
         </div>
       </div>
     );
   }
 
-  const handleStatusUpdate = () => {
-    setStatusSaved(true);
-    const newEntry = {
-      id: timeline.length + 1,
-      user: 'Admin User',
-      role: 'Admin',
-      action: 'status change',
-      actionLabel: 'Updated status',
-      message: `Status updated to "${currentStatus}".${resolutionNotes ? ' ' + resolutionNotes : ''}`,
-      timestamp: new Date().toLocaleString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }),
-      avatar: 'AU',
-    };
-    setTimeline(prev => [...prev, newEntry]);
-    setTimeout(() => setStatusSaved(false), 2000);
+  const handleStatusUpdate = async () => {
+    try {
+      setUpdating(true);
+      const res = await adminComplaintApi.resolve(id, {
+        status: currentStatus,
+        resolutionNotes,
+      });
+
+      const updated = res?.data?.data;
+      if (updated) {
+        setComplaint(updated);
+        setCurrentStatus(updated.status || currentStatus);
+      }
+
+      setStatusSaved(true);
+      setTimeout(() => setStatusSaved(false), 2000);
+    } catch (err) {
+      console.error('Error updating status:', err);
+      alert(err?.response?.data?.message || 'Failed to update complaint status');
+    } finally {
+      setUpdating(false);
+    }
   };
 
   const handleSendReply = () => {
@@ -139,9 +192,10 @@ const ComplaintResponse = () => {
           <button
             className={`cr-btn-primary cr-btn-full ${statusSaved ? 'cr-btn-saved' : ''}`}
             onClick={handleStatusUpdate}
+            disabled={updating}
           >
-            <RefreshCw size={15} />
-            {statusSaved ? 'Status Updated!' : 'Update Status'}
+            {updating ? <Loader size={15} /> : <RefreshCw size={15} />}
+            {updating ? 'Updating...' : statusSaved ? 'Status Updated!' : 'Update Status'}
           </button>
         </div>
 

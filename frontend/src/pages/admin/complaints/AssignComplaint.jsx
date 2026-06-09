@@ -1,38 +1,75 @@
 // src/pages/admin/complaints/AssignComplaint.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  ArrowLeft, Info, Hash, User, MapPin, Tag, AlertCircle,
+  ArrowLeft, Info, Hash, User, MapPin, Tag, AlertCircle, Loader,
   UserCheck, Users, StickyNote, Save, CheckCircle, Calendar
 } from 'lucide-react';
-import {
-  getComplaintById, wardensData, hostelBlocks, getWardensByBlock
-} from '../../../data/complaintsData';
+import { adminComplaintApi } from '../../../services/adminOtherApi';
+import { adminWardenApi } from '../../../services/adminWardenApi';
 import '../../../styles/admin/complaints/assignComplaint.css';
 
 const AssignComplaint = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const complaint = getComplaintById(id);
-
-  const [selectedBlock, setSelectedBlock] = useState(complaint?.hostelBlock || '');
+  
+  const [complaint, setComplaint] = useState(null);
+  const [wardens, setWardens] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [selectedWarden, setSelectedWarden] = useState('');
   const [notes, setNotes] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [assigning, setAssigning] = useState(false);
 
-  if (!complaint) {
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [complaintRes, wardensRes] = await Promise.all([
+          adminComplaintApi.getById(id),
+          adminWardenApi.getAll()
+        ]);
+        
+        if (complaintRes.data?.data) setComplaint(complaintRes.data.data);
+        if (wardensRes.data?.data) setWardens(wardensRes.data.data);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching data:', err);
+        setError('Failed to load complaint or wardens');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, [id]);
+
+  if (loading) {
     return (
       <div className="ac-page">
-        <div className="ac-not-found">
-          <AlertCircle size={48} />
-          <h2>Complaint Not Found</h2>
-          <button className="ac-btn-primary" onClick={() => navigate('/admin/complaints')}>Back to List</button>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+          <Loader size={40} style={{ animation: 'spin 1s linear infinite' }} />
+          <span style={{ marginLeft: '10px' }}>Loading...</span>
         </div>
       </div>
     );
   }
 
-  const filteredWardens = selectedBlock ? getWardensByBlock(selectedBlock) : wardensData;
+  if (error || !complaint) {
+    return (
+      <div className="ac-page">
+        <div className="ac-not-found">
+          <AlertCircle size={48} />
+          <h2>{error ? 'Error' : 'Complaint Not Found'}</h2>
+          <p>{error || `The complaint "${id}" does not exist.`}</p>
+          <button className="ac-btn-primary" onClick={() => navigate('/admin/complaints')}>
+            Back to List
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const getPriorityClass = (p) => {
     if (p === 'High') return 'ac-badge-high';
@@ -40,17 +77,28 @@ const AssignComplaint = () => {
     return 'ac-badge-low';
   };
 
-  const handleAssign = () => {
-    if (!selectedWarden) { alert('Please select a warden.'); return; }
-    setSubmitted(true);
-    setTimeout(() => {
-      navigate(`/admin/complaints/${id}`);
-    }, 1500);
+  const handleAssign = async () => {
+    if (!selectedWarden) {
+      alert('Please select a warden.');
+      return;
+    }
+    
+    try {
+      setAssigning(true);
+      await adminComplaintApi.assign(id, { wardenId: parseInt(selectedWarden), notes });
+      setSubmitted(true);
+      setTimeout(() => {
+        navigate(`/admin/complaints/${id}`);
+      }, 1500);
+    } catch (err) {
+      console.error('Error assigning complaint:', err);
+      alert('Failed to assign warden: ' + (err.response?.data?.message || err.message));
+      setAssigning(false);
+    }
   };
 
-  const selectedWardenData = wardensData.find(w => w.id === selectedWarden);
-  const recommendedWarden = filteredWardens.reduce((min, w) =>
-    w.activeComplaints < (min?.activeComplaints ?? Infinity) ? w : min, null);
+  const selectedWardenData = wardens.find(w => w.id === parseInt(selectedWarden));
+  const uniqBlocks = [...new Set(wardens.map(w => w.hostelBlock || ''))].filter(Boolean);
 
   if (submitted) {
     return (
@@ -123,30 +171,17 @@ const AssignComplaint = () => {
         <h2 className="ac-section-title">Assign Warden</h2>
         <p className="ac-section-sub">Select the appropriate warden to handle this resolution.</p>
 
-        <div className="ac-form-row">
-          <div className="ac-form-group">
-            <label className="ac-form-label"><Users size={14} /> Hostel Block</label>
-            <select className="ac-form-select" value={selectedBlock}
-              onChange={e => { setSelectedBlock(e.target.value); setSelectedWarden(''); }}>
-              <option value="">All Blocks</option>
-              {hostelBlocks.map(b => <option key={b} value={b}>{b}</option>)}
-            </select>
-            {selectedBlock && (
-              <span className="ac-filter-note">Filtering wardens assigned to this block.</span>
-            )}
-          </div>
-          <div className="ac-form-group">
-            <label className="ac-form-label"><UserCheck size={14} /> Select Warden</label>
-            <select className="ac-form-select" value={selectedWarden}
-              onChange={e => setSelectedWarden(e.target.value)}>
-              <option value="">Choose a warden</option>
-              {filteredWardens.map(w => (
-                <option key={w.id} value={w.id}>
-                  {w.name} ({w.activeComplaints} active)
-                </option>
-              ))}
-            </select>
-          </div>
+        <div className="ac-form-group">
+          <label className="ac-form-label"><UserCheck size={14} /> Select Warden</label>
+          <select className="ac-form-select" value={selectedWarden}
+            onChange={e => setSelectedWarden(e.target.value)}>
+            <option value="">Choose a warden</option>
+            {wardens.map(w => (
+              <option key={w.id} value={w.id}>
+                {w.name} - {w.hostelBlock || 'All Blocks'}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* Notes */}
@@ -167,42 +202,10 @@ const AssignComplaint = () => {
             <ArrowLeft size={15} /> Cancel
           </button>
           <div className="ac-form-actions-right">
-            <button className="ac-btn-secondary"><Save size={15} /> Save Draft</button>
-            <button className="ac-btn-primary" onClick={handleAssign}>
-              <UserCheck size={15} /> Assign Complaint
+            <button className="ac-btn-primary" onClick={handleAssign} disabled={assigning}>
+              {assigning ? <Loader size={15} style={{ marginRight: '8px', animation: 'spin 1s linear infinite' }} /> : <UserCheck size={15} />}
+              {assigning ? 'Assigning...' : 'Assign Complaint'}
             </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Hint Cards */}
-      <div className="ac-hints-grid">
-        <div className="ac-hint-card">
-          <div className="ac-hint-icon ac-hint-icon-blue"><Users size={18} /></div>
-          <div className="ac-hint-body">
-            <div className="ac-hint-title">Balanced Workload</div>
-            {recommendedWarden ? (
-              <div className="ac-hint-text">
-                Assigning to {recommendedWarden.name} is recommended based on their low current task count ({recommendedWarden.activeComplaints} active).
-              </div>
-            ) : (
-              <div className="ac-hint-text">Select a block to see workload suggestions.</div>
-            )}
-          </div>
-        </div>
-        <div className="ac-hint-card">
-          <div className="ac-hint-icon ac-hint-icon-teal"><Calendar size={18} /></div>
-          <div className="ac-hint-body">
-            <div className="ac-hint-title">SLA Target</div>
-            <div className="ac-hint-text">
-              Resolution should be completed by tomorrow 4:00 PM (24h Window).
-            </div>
-          </div>
-        </div>
-        <div className="ac-hint-card ac-hint-card-link">
-          <div className="ac-hint-body">
-            <div className="ac-hint-title-sm">Need help?</div>
-            <button className="ac-hint-link">View Assignment Guidelines</button>
           </div>
         </div>
       </div>

@@ -1,5 +1,5 @@
 // src/pages/student/complaints/SubmitComplaint.jsx
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Info,
@@ -17,6 +17,7 @@ import {
   Trash2,
   Plus,
 } from 'lucide-react';
+import { studentApi } from '../../../services/studentApi';
 import '../../../styles/student/complaints/complaints.css';
 
 const CATEGORIES = [
@@ -48,6 +49,26 @@ const SubmitComplaint = () => {
   const [description, setDescription] = useState('');
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [dragOver, setDragOver] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [studentName, setStudentName] = useState('');
+  const [studentRoomNumber, setStudentRoomNumber] = useState('');
+
+  useEffect(() => {
+    const loadStudentProfile = async () => {
+      try {
+        const response = await studentApi.getProfile();
+        const profile = response?.data?.data;
+        if (profile) {
+          setStudentName(profile.name || '');
+          setStudentRoomNumber(profile.roomNo || '');
+        }
+      } catch (error) {
+        console.error('Failed to load student profile for complaint form:', error);
+      }
+    };
+
+    loadStudentProfile();
+  }, []);
 
   /* Fake file upload simulation */
   const handleFiles = (files) => {
@@ -84,13 +105,30 @@ const SubmitComplaint = () => {
 
   const removeFile = (id) => setUploadedFiles((prev) => prev.filter((f) => f.id !== id));
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!title || !category || !description) {
       alert('Please fill in all required fields.');
       return;
     }
-    alert(`Complaint submitted successfully!\n\nTitle: ${title}\nCategory: ${category}\nPriority: ${priority}`);
-    navigate('/student/complaints');
+
+    try {
+      setSubmitting(true);
+      await studentApi.createComplaint({
+        title,
+        category,
+        priority,
+        description,
+        roomNumber: studentRoomNumber,
+      });
+
+      alert(`Complaint submitted successfully!\n\nTitle: ${title}\nCategory: ${category}\nPriority: ${priority}`);
+      navigate('/student/complaints');
+    } catch (error) {
+      const message = error?.response?.data?.message || 'Unable to submit complaint. Please try again.';
+      alert(message);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -184,7 +222,7 @@ const SubmitComplaint = () => {
                   <input
                     type="text"
                     className="form-input"
-                    value="402 - B (Wing A)"
+                    value={studentRoomNumber}
                     readOnly
                   />
                   <Link
@@ -220,15 +258,15 @@ const SubmitComplaint = () => {
             {/* Submit Footer */}
             <div className="submit-footer">
               <div className="submit-footer-info">
-                <strong>Submitting as Rahul Sharma</strong>
-                Room 402-B | Student STU-2024-045
+                <strong>Submitting as {studentName || 'Student'}</strong>
+                Room {studentRoomNumber || '-'} | Student
               </div>
               <div className="submit-footer-btns">
                 <button className="btn-secondary" onClick={() => navigate('/student/complaints')}>
                   Cancel
                 </button>
-                <button className="btn-primary" onClick={handleSubmit}>
-                  Submit Complaint
+                <button className="btn-primary" onClick={handleSubmit} disabled={submitting}>
+                  {submitting ? 'Submitting...' : 'Submit Complaint'}
                 </button>
               </div>
             </div>

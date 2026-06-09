@@ -58,5 +58,6 @@ export const studentComplaintApi = {
 
 export const studentFeeApi = {
   getMy: ()     => api.get('/api/student/fees'),
-  pay:   (data) => api.post('/api/student/fees/pay', data),
+  request: (data) => api.post('/api/student/fees/request', data),
+  pay:   (data) => api.post('/api/student/fees/request', data),
 };

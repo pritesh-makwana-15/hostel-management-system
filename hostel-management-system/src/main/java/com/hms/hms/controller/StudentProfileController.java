@@ -2,6 +2,7 @@ package com.hms.hms.controller;
 
 import com.hms.hms.dto.ApiResponse;
 import com.hms.hms.dto.RegisterRequest;
+import com.hms.hms.dto.StudentComplaintDTO;
 import com.hms.hms.dto.StudentProfileDTO;
 import com.hms.hms.service.StudentService;
 import com.hms.hms.repository.StudentRepository;
@@ -13,6 +14,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -86,22 +88,51 @@ public class StudentProfileController {
     // GET /api/student/complaints
     @GetMapping("/complaints")
     @PreAuthorize("hasRole('STUDENT')")
-    public ResponseEntity<ApiResponse<StudentProfileDTO>> getComplaints() {
+    public ResponseEntity<ApiResponse<List<StudentComplaintDTO>>> getComplaints() {
         Long studentId = getCurrentStudentId();
-        StudentProfileDTO profile = studentService.getProfile(studentId);
-        return ResponseEntity.ok(ApiResponse.success("Complaints fetched", profile));
+        List<StudentComplaintDTO> complaints = studentService.getComplaints(studentId);
+        return ResponseEntity.ok(ApiResponse.success("Complaints fetched", complaints));
+    }
+
+    // GET /api/student/complaints/{complaintId}
+    @GetMapping("/complaints/{complaintId}")
+    @PreAuthorize("hasRole('STUDENT')")
+    public ResponseEntity<ApiResponse<StudentComplaintDTO>> getComplaintById(@PathVariable String complaintId) {
+        Long studentId = getCurrentStudentId();
+        StudentComplaintDTO complaint = studentService.getComplaintById(studentId, complaintId);
+        return ResponseEntity.ok(ApiResponse.success("Complaint fetched", complaint));
+    }
+
+    // DELETE /api/student/complaints/{complaintId}
+    @DeleteMapping("/complaints/{complaintId}")
+    @PreAuthorize("hasRole('STUDENT')")
+    public ResponseEntity<ApiResponse<String>> deleteComplaint(@PathVariable String complaintId) {
+        Long studentId = getCurrentStudentId();
+        studentService.deleteComplaint(studentId, complaintId);
+        return ResponseEntity.ok(ApiResponse.success("Complaint deleted successfully", null));
     }
 
     // POST /api/student/complaints
     @PostMapping("/complaints")
     @PreAuthorize("hasRole('STUDENT')")
-    public ResponseEntity<ApiResponse<String>> createComplaint(@RequestBody Map<String, String> complaintData) {
+    public ResponseEntity<ApiResponse<StudentComplaintDTO>> createComplaint(@RequestBody Map<String, String> complaintData) {
         Long studentId = getCurrentStudentId();
+        String title = complaintData.get("title");
         String category = complaintData.get("category");
+        String priority = complaintData.get("priority");
         String description = complaintData.get("description");
-        
-        String result = studentService.createComplaint(studentId, category, description);
-        return ResponseEntity.ok(ApiResponse.success(result, null));
+        String roomNumber = complaintData.get("roomNumber");
+
+        StudentComplaintDTO complaint = studentService.createComplaint(
+            studentId,
+            title,
+            category,
+            priority,
+            description,
+            roomNumber
+        );
+
+        return ResponseEntity.ok(ApiResponse.success("Complaint created successfully", complaint));
     }
 
     // POST /api/student/logout-all

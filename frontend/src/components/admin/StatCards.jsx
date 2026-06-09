@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Building2, Bed, BedDouble, Briefcase, IndianRupee } from 'lucide-react';
 import { adminDashboardApi } from '../../services/adminDashboardApi';
-import { dashboardData } from '../../data/dashboardData';
 import '../../styles/admin/StatCards.css';
 
 const StatCards = () => {
@@ -16,13 +15,12 @@ const StatCards = () => {
   const fetchDashboardStats = async () => {
     try {
       setLoading(true);
+      setError('');
       const res = await adminDashboardApi.getStats();
-      console.log('StatCards: Dashboard stats response:', res);
-      
-      if (res.data && res.data.status === 'success') {
+
+      if (res.data?.status === 'success') {
         const dbStats = res.data.data || {};
-        
-        // Map database stats to the expected format
+
         const mappedStats = [
           {
             id: 1,
@@ -72,25 +70,21 @@ const StatCards = () => {
           {
             id: 6,
             title: 'Monthly Fee Collection',
-            value: '₹0', // Would need separate API for fee data
+            value: `₹${Number(dbStats.monthlyFeeCollection || 0).toLocaleString('en-IN')}`,
             description: 'From database',
             icon: IndianRupee,
             iconBg: '#FFF9C4',
             iconColor: '#F57F17'
           }
         ];
-        
+
         setStats(mappedStats);
       } else {
-        // Use dummy data as fallback if API fails
-        console.log('StatCards: Using dummy data as fallback');
-        setStats(dashboardData.stats);
+        setStats([]);
+        setError('Failed to load dashboard stats');
       }
-    } catch (error) {
-      console.error('StatCards: Error fetching dashboard stats:', error);
-      console.log('StatCards: Using dummy data as fallback');
-      // Use dummy data as fallback
-      setStats(dashboardData.stats);
+    } catch {
+      setStats([]);
       setError('Failed to load dashboard stats');
     } finally {
       setLoading(false);

@@ -97,17 +97,15 @@ const Navbar = ({ onMenuClick, userRole = 'admin' }) => {
       </div>
 
       <div className="navbar-right">
-        <div className="navbar-search">
+        {/* <div className="navbar-search">
           <Search size={20} />
           <input type="text" placeholder="Search..." />
-        </div>
-        <button className="navbar-icon-btn navbar-search-mobile">
-          <Search size={20} />
-        </button>
-        <button className="navbar-icon-btn">
+        </div> */}
+        {/* <buxon> */}
+        {/* <button className="navbar-icon-btn">
           <Bell size={20} />
           <span className="navbar-badge">3</span>
-        </button>
+        </button> */}
 
         <div className="navbar-profile" ref={dropdownRef}>
           <button
